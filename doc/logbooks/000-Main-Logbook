@@ -1,0 +1,29 @@
+
+================================================================================
+Overarching philosophy
+================================================================================
+Encourage users to be able to tweak the design
+Templating:
+    Design templates to be small bite-size snippets, each with clear intent
+    Templates shall be extendable
+    Templates shall be easy/intuitive
+Output:
+    Output shall be beautiful. Consistent and clean formatting/whitespace builds trust
+    Output has comments. Users will be looking at it.
+
+================================================================================
+On templating...
+================================================================================
+Everything should be written out to a single file
+The only exception is if a struct port interface is used, then the appropriate
+struct package is also written out (or lumped into the same file?)
+
+Each layer should actually be its own separate template.
+
+Use helper functions to abstract away details about identifier implementation.
+Similarly, some fields will end up with additional port-level signals inferred.
+For example, if the user set the field's "anded=true" property
+the template would do something like:
+    {{output_signal(field, "anded")}} = &{{field_value(field)}};
+
+Basically, i'd define a ton of helper functions that return the signal identifier.

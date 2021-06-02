@@ -1,0 +1,10 @@
+Holy smokes this is complicated
+
+Keep this exporter in Alpha/Beta for a while
+Add some text in the readme or somewhere:
+    - No guarantees of correctness! This is always true with open source software,
+      but even more here!
+      Be sure to do your own validation before using this in production.
+    - Alpha means the implementation may change drastically!
+      Unlike official sem-ver, I am not making any guarantees on compatibility
+    - I need your help! Validating, finding edge cases, etc...

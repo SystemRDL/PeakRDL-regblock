@@ -1,0 +1,27 @@
+
+addrmap top {
+    reg {
+        field {
+            hw=r; sw=rw;
+        } y = 0;
+    } whee[2][8];
+
+    regfile {
+        reg {
+            field {
+                hw=r; sw=rw;
+            } abc[16:2] = 0;
+            field {
+                hw=r; sw=rw;
+            } def[4] = 0;
+        } aaa[4];
+        reg {
+            field {
+                hw=r; sw=rw;
+            } abc = 0;
+            field {
+                hw=r; sw=rw;
+            } def = 0;
+        } bbb;
+    } asdf[20];
+};

@@ -1,0 +1,19 @@
+I need some sort of signal "dereferencer" that can be easily used to translate references
+to stuff via a normalized interface.
+
+For example, if RDL defines:
+    my_field->next = my_other_field
+Then in Python (or a template) I could do:
+    x = my_field.get_property("next")
+    y = dereferencer.get(x)
+and trust that I'll get a value/identifier/whatever that accurately represents
+the value being referenced
+
+Values:
+    If X is a field reference:
+        ... that implements storage, return its DFF value reference
+        ... no storage, but has a hw input, grab from the hwif input
+        ... no storage, and no hw input, return its constant reset value?
+    If X is a property reference... do whats right...
+        my_field->anded === (&path.to.my_field)
+    if X is a static value, return the literal

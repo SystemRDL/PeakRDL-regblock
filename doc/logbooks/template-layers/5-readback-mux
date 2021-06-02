@@ -1,0 +1,65 @@
+--------------------------------------------------------------------------------
+Readback mux layer
+--------------------------------------------------------------------------------
+
+Implementation:
+    - Big always_comb block
+    - Initialize default rd_data value
+    - Lotsa if statements that operate on reg strb to assign rd_data
+    - Merges all fields together into reg
+    - pulls value from storage element struct, or input struct
+    - Provision for optional flop stage?
+
+Mux Strategy:
+    Flat case statement:
+        -- Cant parameterize
+        + better performance?
+
+    Flatten array then mux:
+        - First, flatten ALL readback values into an array
+            Round up the size of the array to next ^2
+                needs to be fully addressable anyways!
+            This can be in a combinational block
+            Initialize the array to the default readback value
+            then, assign all register values. Use loops where necessary.
+            Append an extra 'is-valid' bit if I need to slverr on bad reads
+        - Next, use the read address as an index into this array
+        - If needed, I can do a staged decode!
+            Compute the most balanced fanin staging in Python. eg:
+                64 regs --mux--> 8x8 --mux--> 1
+                128 regs --mux--> 8x16 --mux--> 1
+                    Favor smaller fanin first. Latter stage should have more fanin since routing congestion will be easier
+                256 regs --mux--> 16x16 --mux--> 1
+        - Potential sparseness of this makes me uncomfortable,
+          but its synthesis SEEMS like it would be really efficient!
+        - TODO: Rethink this
+            I feel like people will complain about this
+            It will likely also be pretty sim-inefficient?
+    Flat 1-hot array then OR reduce: <-- DO THIS
+        - Create a bus-wide flat array
+            eg: 32-bits x N readable registers
+        - Assign each element:
+            the readback value of each register
+            ... masked by the register's access strobe
+        - I could also stuff an extra bit into the array that denotes the read is valid
+            A missed read will OR reduce down to a 0
+        - Finally, OR reduce all the elements in the array down to a flat 32-bit bus
+        - Retiming the large OR fanin can be done by chopping up the array into stages
+            for 2 stages, sqrt(N) gives each stage's fanin size. Round to favor
+            more fanin on 2nd stage
+            3 stages uses cube-root. etc...
+        - This has the benefit of re-using the address decode logic.
+          synth can choose to replicate logic if fanout is bad
+
+
+WARNING:
+    Beware of read/write flop stage asymmetry & race conditions.
+    Eg. If a field is rclr, dont want to sample it after it gets read:
+        addr --> strb --> clear
+        addr --> loooong...retime --> sample rd value
+    Should guarantee that read-sampling happens at the same cycle as any read-modify
+
+
+Forwards response strobe back up to cpu interface layer
+
+Dont forget about alias registers here

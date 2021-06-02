@@ -1,0 +1,11 @@
+================================================================================
+Resets
+================================================================================
+use whatever is defined in RDL based on cpuif_reset and field_reset signals
+Otherwise, provide configuration that defines what the default is:
+    a single reset that is active high/low, or sync/async
+
+If cpuif_reset is specified, what do fields use?
+    I assume they still use the default reset separately?
+    YES. Agnisys appears to be wrong.
+    cpuif_reset has no influence on the fields' reset according to the spec

@@ -1,0 +1,18 @@
+
+Interrupts seem to be pretty well-described.
+Basically...
+
+    - If a register contains one or more fields that use the intr property,
+      then it is implied to be an interrupt register
+        --> Add RegNode.has_intr and RegNode.has_halt properties?
+    - This register implies that there is an output irq signal that is propagated to the top, and it is the OR of all interrupt field bits
+    - BUT in the multilevel interrupt example, perhaps this output gets suppressed?
+        Suppress the output signal if Reg->intr gets referenced, since this means
+        the user is doing a multi-level interrupt.
+        This means that the register's interrupt signal is "consumed" by a second-level interrupt register
+
+    - WTF about the "halt" concept?
+      I assume this does NOT auto-imply an output?
+      Mayby only imply a default halt output if:
+        - an interrupt register has fields that use haltenable/haltmask
+        - AND the interrupt register's reg->halt has not been referenced

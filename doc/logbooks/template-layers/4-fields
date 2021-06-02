@@ -1,0 +1,35 @@
+--------------------------------------------------------------------------------
+Field storage / next value layer
+--------------------------------------------------------------------------------
+Where all the magic happens!!
+
+Any field that implements storage is defined here.
+Bigass struct that only contains storage elements
+
+Each field consists of:
+    - an always_ff block
+    - series of if/else statements that assign the next value in the storage element
+        Think of this as a flat list of "next state" conditons, ranked by their precedence as follows:
+            - reset
+            - sw access (if sw precedence)
+                - onread/onwrite
+            - hw access
+                - Counter
+                - next
+                - etc
+            - sw access (if hw precedence)
+                - onread/onwrite
+
+TODO:
+    What about stuff like read-clear counters that cant lose a count?
+    In a traditional if/else chain, i need to be aware of the fact that its a counter
+    when handling the swaccess case
+    Is it possible to code this in a way where I can isolate the need to know every nuanced case here?
+        this may actually only apply to counters...
+    This is trivial in a 2-process implementation, but i'd rather avoid the overheads
+
+
+Implementation
+    Makes sense to use a listener class
+
+Be sure to skip alias registers

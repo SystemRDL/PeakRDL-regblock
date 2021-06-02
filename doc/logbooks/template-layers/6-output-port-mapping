@@ -1,0 +1,9 @@
+--------------------------------------------------------------------------------
+Output Port mapping layer
+--------------------------------------------------------------------------------
+
+Assign to output struct port
+
+Still TBD if this will actually be a distinct layer.
+Cosmetically, this might be nicer to interleave with the field section above
+Assign storage element & other derived values as requested by properties

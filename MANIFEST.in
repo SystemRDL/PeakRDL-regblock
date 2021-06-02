@@ -1,0 +1,2 @@
+#recursive-include peakrdl/regblock/XXX *
+recursive-exclude test *

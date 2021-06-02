@@ -1,0 +1,51 @@
+--------------------------------------------------------------------------------
+Port Declaration
+--------------------------------------------------------------------------------
+Generates the port declaration of the module:
+    - Parameters
+        - rd/wr error response/data behavior
+            Do missed accesses cause a SLVERR?
+            Do reads respond with a magic value?
+        - Pipeline enables
+            Enable reg stages in various places
+
+    - RDL-derived Parameters:
+        Someday in the future if i ever get around to this: https://github.com/SystemRDL/systemrdl-compiler/issues/58
+
+    - Clock/Reset
+        Single clk
+        One or more resets
+
+    - CPU Bus Interface
+        Given the bus interface object, emits the IO
+        This can be flattened ports, or a SV Interface
+        Regardless, it shall be malleable so that the user can use their favorite
+        declaration style
+
+    - Hardware interface
+        Two options:
+            - 2-port struct interface
+                Everything is rolled into two unpacked structs - inputs and outputs
+            - Flattened --> NOT DOING
+                Flatten/Unroll everything
+                No. not doing. I hate this and dont want to waste time implementing this.
+                This will NEVER be able to support parameterized regmaps, and just
+                creates a ton of corner cases i dont care to deal with.
+
+Other IO Signals I need to be aware of:
+    any signals declared, and used in any references:
+        field.resetsignal
+        field.next
+        ... etc ...
+    any signals declared and marked as cpuif_reset, or field_reset
+        These override the default rst
+        If both are defined, be sure to not emit the default
+        Pretty straightforward (see 17.1)
+        Also have some notes on this in my general Logbook
+            Will have to make a call on how these propagate if multiple defined
+            in different hierarchies
+    interrupt/halt outputs
+        See "Interrupts" logbook for explanation
+    addrmap.errextbus, regfile.errextbus, reg.errextbus
+        ???
+        Apparently these are inputs

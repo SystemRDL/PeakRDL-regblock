@@ -1,0 +1,60 @@
+
+================================================================================
+Things that need validation by the compiler
+================================================================================
+Many of these are probably already covered, but being paranoid.
+Make a list of things as I think of them.
+
+Mark these as follows:
+    X = Yes, confirmed that the compiler covers this
+    ! = No! Confirmed that the compiler does not check this
+    (blank) = TBD
+
+--------------------------------------------------------------------------------
+
+X resetsignal width
+    reset signals shall have width of 1
+
+X Field has no knowable value
+    - does not implement storage
+    - hw is not writable
+    - sw is readable
+    - No reset value specified
+
+    --> emit a warning?
+
+! multiple field_reset in the same hierarchy
+    there can only be one signal declared with field_reset
+    in a given hierarchy
+
+! multiple cpuif_reset in the same hierarchy
+    there can only be one signal declared with cpuif_reset
+    in a given hierarchy
+
+! incrwidth/incrvalue & decrvalue/decrwidth
+    these pairs are mutually exclusive.
+    Make sure they are not both set after elaboration
+    Compiler checks for mutex within the same scope, but
+    i dont think I check for mutexes post-elaborate
+
+    ... or, make these properties clear each-other on assignment
+
+================================================================================
+Things that need validation by this exporter
+================================================================================
+List of stuff in case I forget.
+
+    ! = No! exporter does not enforce this yet
+    x = Yes! I already implemented this.
+
+--------------------------------------------------------------------------------
+! "bridge" addrmap not supported
+    export shall refuse to process an addrmap marked as a "bridge"
+    Only need to check top-level. Compiler will enforce that child nodes arent bridges
+
+cpuif_resets
+    ! Warn/error on any signal with cpuif_reset set, that is not in the top-level
+        addrmap. At the very least, warn that it will be ignored
+
+    ! multiple cpuif_reset
+        there can be only one cpuif reset

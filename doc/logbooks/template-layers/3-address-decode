@@ -1,0 +1,51 @@
+
+--------------------------------------------------------------------------------
+Address Decode layer
+--------------------------------------------------------------------------------
+A bunch of combinational address decodes that generate individual register
+req strobes
+
+Possible decode logic styles:
+    - Big case statement
+        + Probably more sim-efficient
+        - Hard to do loop parameterization
+        - More annoying to do multiple regs per address
+    - Big always_comb + One if/else chain
+        + Easy to nest loops & parameterize if needed
+        - sim has a lot to evaluate each time
+        - More annoying to do multiple regs per address
+        - implies precedence? Synth tools should be smart enough?
+    - Big always_comb + inline conditionals <---- DO THIS
+        + Easy to nest loops & parameterize if needed
+        - sim has a lot to evaluate each time
+        + Multiple regs per address possible
+        + implies address decode parallelism.
+        ?? Should I try using generate loops + assigns?
+            This would be more explicit parallelism, however some tools may
+            get upset at multiple assignments to a common struct
+
+Implementation:
+    Jinja is inappropriate here
+        Very logic-heavy. Jinja may end up being annoying
+        Also, not much need for customization here
+        This may even make sense as a visitor that dumps lines
+            - visit each reg
+            - upon entering an array, create for loops
+            - upon exiting an array, emit 'end'
+    Make the strobe struct declared locally
+        No need for it to leave the block
+    Error handling
+        If no strobe generated, respond w error?
+        This is actually pretty expensive to do for writes.
+            Hold off on this for now.
+            Reads get this effectively for free in the readback mux.
+    Implement write response strobes back upstream to cpuif
+    Eventually allow for optional register stage for strobe struct
+        Will need to also pipeline the other cpuif signals
+        ok to discard the cpuif_addr. no longer needed
+
+
+Downstream Signals:
+    - access strobes
+        Encase these into a struct datatype
+    - is_write + wr_data/wr_bitstrobe

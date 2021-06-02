@@ -1,0 +1,23 @@
+
+1. Scan design. Collect information
+    - Check for unsupported constructs. Throw errors as appropriate
+        - Uniform regwidth, accesswidth, etc.
+
+    - Collect reset signals
+        cpuif_reset, field_reset
+        explicitly assigned to field->resetsignal
+
+    - Collect any other misc user signals that are referenced in the design
+
+    - Top-level interrupts
+        Collect X & Y:
+            X = set of all registers that have an interrupt field
+            Y = set of all interrupt registers that are referenced by a field
+        Top level interrupt registers are the set in X, but not in Y
+        (and probably other caveats. See notes)
+
+2. Create intermediate template objects
+
+3. Render top-level IO struct package (if applicable)
+
+4. Render top-level module template

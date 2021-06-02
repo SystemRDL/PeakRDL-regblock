@@ -1,0 +1,77 @@
+================================================================================
+Summary
+================================================================================
+
+RTL interface that provides access to per-field context signals
+
+Regarding signals:
+    I think RDL-declared signals should actually be part of the hwif input
+    structure.
+    Exceptions:
+        - if the signal instance is at the top-level, it will get promoted to the
+          top level port list for convenience, and therefore omitted from the struct
+
+================================================================================
+Naming Scheme
+================================================================================
+
+hwif_out
+    .my_regblock
+        .my_reg[X][Y]
+            .my_field
+                .value
+                .anded
+
+hwif_in
+    .my_regblock
+        .my_reg[X][Y]
+            .my_field
+                .value
+                .we
+                .my_signal
+        .my_fieldreset_signal
+
+================================================================================
+Flattened mode? --> NO
+================================================================================
+If user wants a flattened list of ports,
+still use the same hwif_in/out struct internally.
+Rather than declaring hwif_in and hwif_out in the port list, declare it internally
+
+Add a mapping layer in the body of the module that performs a ton of assign statements
+to map flat signals <-> struct
+
+Alternatively, don't do this at all.
+If I want to add a flattened mode, generate a wrapper module instead.
+
+Marking this as YAGNI for now.
+
+
+================================================================================
+IO Signals
+================================================================================
+
+Outputs:
+    field value
+        If hw readable
+    bitwise reductions
+        if anded, ored, xored == True, output a signal
+    swmod/swacc
+        event strobes
+
+Inputs:
+    field value
+        If hw writable
+    we/wel
+        if either is boolean, and true
+        not part of external hwif if reference
+        mutually exclusive
+    hwclr/hwset
+        if either is boolean, and true
+        not part of external hwif if reference
+    incr/decr
+        if counter=true, generate BOTH
+    incrvalue/decrvalue
+        if either incrwidth/decrwidth are set
+    signals!
+        any signal instances instantiated in the scope

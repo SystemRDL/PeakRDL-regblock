@@ -1,0 +1,72 @@
+--------------------------------------------------------------------------------
+CPU Bus interface layer
+--------------------------------------------------------------------------------
+Provides an abstraction layer between the outside SoC's bus interface, and the
+internal register block's implementation.
+Converts a user-selectable bus protocol to generic register file signals.
+
+Upstream Signals:
+    Signal names are defined in the bus interface class and shall be malleable
+    to the user.
+    User can choose a flat signal interface, or a SV interface.
+    SV interface shall be easy to tweak since various orgs will use different
+    naming conventions in their library of interface definitions
+
+Downstream Signals:
+    - cpuif_req
+        - Single-cycle pulse
+        - Qualifies the following child signals:
+            - cpuif_req_is_wr
+                1 denotes this is a write transfer
+            - cpuif_addr
+                Byte address
+            - cpuif_wr_data
+            - cpuif_wr_bitstrb
+                per-bit strobes
+                some protocols may opt to tie this to all 1's
+    - cpuif_rd_ack
+        - Single-cycle pulse
+        - Qualifies the following child signals:
+            - cpuif_rd_data
+            - cpuif_rd_err
+
+    - cpuif_wr_ack
+        - Single-cycle pulse
+        - Qualifies the following child signals:
+            - cpuif_wr_err
+
+
+Misc thoughts
+- Internal cpuif_* signals use a strobe-based protocol:
+    - Unknown, but fixed latency
+    - Makes for easy pipelining if needed
+- Decided to keep cpuif_req signals common for read write:
+    This will allow address decode logic to be shared for read/write
+    Downside is split protocols like axi-lite can't have totally separate rd/wr
+    access lanes, but who cares?
+- separate response strobes
+    Not necessary to use, but this lets me independently pipeline read/write paths.
+    read path will need more time if readback mux is large
+- On multiple outstanding transactions
+    Currently, cpuif doesnt really support this. Goal was to make it easily pipelineable
+    without having to backfeed stall logic.
+    Could still be possible to do a "fly-by" pipeline with a more intelligent cpuif layer
+    Not worrying about this now.
+
+
+Implementation:
+    Implement this mainly as a Jinja template.
+    Upstream bus intf signals are fetched via busif class properties. Ex:
+        {{busif.signal('pready')}} <= '1;
+    This allows the actual SV or flattened signal to be emitted
+
+What protocols do I care about?
+    - AXI4 Lite
+        - Ignore AxPROT?
+    - APB3
+    - APB4
+        - Ignore pprot?
+    - AHB?
+    - Wishbone
+    - Generic
+        breakout the above signals as-is (reassign with a prefix or something)
