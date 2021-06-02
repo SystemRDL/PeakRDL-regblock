@@ -1,0 +1,10 @@
+**/__pycache__
+**/.vscode
+**/.venv
+**/.coverage
+**/*.rpt
+
+build/
+dist/
+*.egg-info/
+.eggs/
