@@ -7,26 +7,30 @@ Any field that implements storage is defined here.
 Bigass struct that only contains storage elements
 
 Each field consists of:
+    - an always_comb block:
+        - generates the "next value" combinational signal
+        - May generate other intermediate strobes?
+            incr/decr?
+        - series of if/else statements that assign the next value in the storage element
+            Think of this as a flat list of "next state" conditons, ranked by their precedence as follows:
+                - reset
+                    Actually, handle this in the always_ff
+                - sw access (if sw precedence)
+                    - onread/onwrite
+                - hw access
+                    - Counter
+                        beware of clear events and incr/decr events happening simultaneously
+                    - next
+                    - etc
+                - sw access (if hw precedence)
+                    - onread/onwrite
+        - always_comb block to also generate write-enable strobes for the actual
+          storage element
+          This is better for low-power design
     - an always_ff block
-    - series of if/else statements that assign the next value in the storage element
-        Think of this as a flat list of "next state" conditons, ranked by their precedence as follows:
-            - reset
-            - sw access (if sw precedence)
-                - onread/onwrite
-            - hw access
-                - Counter
-                - next
-                - etc
-            - sw access (if hw precedence)
-                - onread/onwrite
-
-TODO:
-    What about stuff like read-clear counters that cant lose a count?
-    In a traditional if/else chain, i need to be aware of the fact that its a counter
-    when handling the swaccess case
-    Is it possible to code this in a way where I can isolate the need to know every nuanced case here?
-        this may actually only apply to counters...
-    This is trivial in a 2-process implementation, but i'd rather avoid the overheads
+        Implements the actual storage element
+        Also a tidy place to abstract the specifics of activehigh/activelow field reset
+        selection.
 
 TODO:
     Scour the RDL spec.

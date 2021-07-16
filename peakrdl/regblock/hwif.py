@@ -1,16 +1,22 @@
-from typing import Union, List, TYPE_CHECKING
-
-from systemrdl.node import Node, AddressableNode, FieldNode, SignalNode
-
-from .base import HwifBase
+from typing import TYPE_CHECKING, Union, List
+from systemrdl.node import Node, SignalNode, FieldNode, AddressableNode
+from systemrdl.rdltypes import PropertyReference
 
 if TYPE_CHECKING:
-    from ..exporter import RegblockExporter
+    from .exporter import RegblockExporter
 
-class StructHwif(HwifBase):
+class Hwif:
+    """
+    Defines how the hardware input/output signals are generated:
+    - Field outputs
+    - Field inputs
+    - Signal inputs (except those that are promoted to the top)
+    """
 
-    def __init__(self, exporter:'RegblockExporter', top_node:Node, package_name:str):
-        super().__init__(exporter, top_node, package_name)
+    def __init__(self, exporter: 'RegblockExporter', top_node: Node, package_name: str):
+        self.exporter = exporter
+        self.top_node = top_node
+        self.package_name = package_name
 
         self.has_input_struct = None
         self.has_output_struct = None
@@ -18,6 +24,9 @@ class StructHwif(HwifBase):
 
 
     def get_package_declaration(self) -> str:
+        """
+        If this hwif requires a package, generate the string
+        """
         lines = []
 
         lines.append(f"package {self.package_name};")
@@ -48,6 +57,7 @@ class StructHwif(HwifBase):
             lines.append(f"output {self.package_name}::{self._get_struct_name(self.top_node, is_input=False)} hwif_out")
 
         return ",\n".join(lines)
+
 
     #---------------------------------------------------------------------------
     # Struct generation functions
@@ -180,3 +190,58 @@ class StructHwif(HwifBase):
         """
 
         return contents
+
+    #---------------------------------------------------------------------------
+    # hwif utility functions
+    #---------------------------------------------------------------------------
+    def has_value_input(self, obj: Union[FieldNode, SignalNode]) -> bool:
+        """
+        Returns True if the object infers an input wire in the hwif
+        """
+        if isinstance(obj, FieldNode):
+            return obj.is_hw_writable
+        elif isinstance(obj, SignalNode):
+            # Signals are implicitly always inputs
+            return True
+        else:
+            raise RuntimeError
+
+
+    def has_value_output(self, obj: FieldNode) -> bool:
+        """
+        Returns True if the object infers an output wire in the hwif
+        """
+        # TODO: Extend this for signals and prop references?
+        return obj.is_hw_readable
+
+
+    def get_input_identifier(self, obj: Union[FieldNode, SignalNode, PropertyReference]) -> str:
+        """
+        Returns the identifier string that best represents the input object.
+
+        if obj is:
+            Field: the fields input value port
+            Signal: signal input value
+            Prop reference:
+                could be an implied hwclr/hwset/swwe/swwel/we/wel input
+                Raise a runtime error if an illegal prop ref is requested, or if
+                the prop ref is not actually implied, but explicitly ref a component
+
+        TODO: finish this
+        raises an exception if obj is invalid
+        """
+        raise NotImplementedError()
+
+
+    def get_output_identifier(self, obj: FieldNode) -> str:
+        """
+        Returns the identifier string that best represents the output object.
+
+        if obj is:
+            Field: the fields output value port
+            Property ref: this is also part of the struct
+            TODO: finish this
+
+        raises an exception if obj is invalid
+        """
+        raise NotImplementedError()

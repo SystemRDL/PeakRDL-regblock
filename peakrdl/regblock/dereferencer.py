@@ -4,7 +4,7 @@ from systemrdl.rdltypes import PropertyReference
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
-    from .hwif.base import HwifBase
+    from .hwif import Hwif
     from .field_logic import FieldLogic
     from .addr_decode import AddressDecode
 
@@ -13,7 +13,7 @@ class Dereferencer:
     This class provides an interface to convert conceptual SystemRDL references
     into Verilog identifiers
     """
-    def __init__(self, exporter:'RegblockExporter', top_node:Node, hwif:'HwifBase', address_decode: 'AddressDecode', field_logic: 'FieldLogic'):
+    def __init__(self, exporter:'RegblockExporter', top_node:Node, hwif:'Hwif', address_decode: 'AddressDecode', field_logic: 'FieldLogic'):
         self.exporter = exporter
         self.hwif = hwif
         self.address_decode = address_decode
