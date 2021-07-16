@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING, List
 
 from systemrdl.node import Node, AddressableNode, RegNode, FieldNode
@@ -27,10 +28,22 @@ class FieldLogic:
     #---------------------------------------------------------------------------
     # Field utility functions
     #---------------------------------------------------------------------------
-    def get_storage_identifier(self, obj: FieldNode):
-        assert obj.implements_storage
+    def get_storage_identifier(self, node: FieldNode):
+        assert node.implements_storage
 
-        return "TODO: implement get_storage_identifier()"
+        path = node.get_rel_path(self.top_node, empty_array_suffix="[!]")
+
+        # replace unknown indexes with incrementing iterators i0, i1, ...
+        class repl:
+            def __init__(self):
+                self.i = 0
+            def __call__(self, match):
+                s = f'i{self.i}'
+                self.i += 1
+                return s
+        path = re.sub(r'!', repl(), path)
+
+        return "field_storage." + path
 
 
     #---------------------------------------------------------------------------

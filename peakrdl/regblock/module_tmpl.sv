@@ -48,15 +48,25 @@ module {{module_name}} #(
     // Address Decode
     //--------------------------------------------------------------------------
     {{address_decode.get_strobe_struct()|indent}}
-    access_strb_t access_strb;
+    decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_req;
+    logic decoded_req_is_wr;
+    logic [DATA_WIDTH-1:0] decoded_wr_data;
+    logic [DATA_WIDTH-1:0] decoded_wr_bitstrb;
 
     always_comb begin
         {{address_decode.get_implementation()|indent(8)}}
     end
 
-    // Writes are always posted with no error response
+    // Writes are always granted with no error response
     assign cpuif_wr_ack = cpuif_req & cpuif_req_is_wr;
     assign cpuif_wr_err = '0;
+
+    // Pass down signals to next stage
+    assign decoded_req = cpuif_req;
+    assign decoded_req_is_wr = cpuif_req_is_wr;
+    assign decoded_wr_data = cpuif_wr_data;
+    assign decoded_wr_bitstrb = cpuif_wr_bitstrb;
 
     //--------------------------------------------------------------------------
     // Field logic

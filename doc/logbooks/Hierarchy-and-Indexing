@@ -1,0 +1,67 @@
+--------------------------------------------------------------------------------
+Preserve Hierarchy
+--------------------------------------------------------------------------------
+I *reaaaally* want to be able to make deferred RDL parameters a reality in the
+future. (https://github.com/SystemRDL/systemrdl-compiler/issues/58)
+
+Proactively design templates to retain "real" hierarchy. This means:
+- Do not flatten/unroll signals. Use SV structs & arrays
+- Do not flatten/unroll logic. Use nested for loops
+
+Sticking to the above should make adding parameter support somewhat less painful.
+
+--------------------------------------------------------------------------------
+Indexing & references
+--------------------------------------------------------------------------------
+Need to define a consistent scheme for referencing hierarchical elements.
+
+When inside a nesting of for loops, and array indexes are intended to increment,
+always use an incrementing indexing scheme when generating iterators:
+    i0, i1, i2, i3, ... i9, i10, i11, etc...
+For example:
+    access_strb.2d_array[i0][i1].array[i3]
+
+Sometimes, an RDL input may create the need to reference an element with
+partially constant indexes.
+For example, given this RDL:
+
+    addrmap top {
+        regfile {
+            reg {
+                field {} f1;
+            } x[8];
+
+            reg {
+                field {} f2;
+            } y;
+
+            y.f2->next = x[3].f1;
+
+        } rf_loop[16];
+    };
+
+The 'next' assignment will have a reference that has the following hierarchcial
+path:
+    top.rf_loop[].x[3].f1
+                |   |
+                |   +--- known index
+                +--- unknown index
+
+It is provable that any RDL references will always follow these truths:
+    - a reference may have a mix of known/unknown indexes in its path
+    - unknown indexes (if any) will always precede known indexes
+    - unknown indexes are not actually part of the relative reference path, and
+      represent replication of the reference.
+      It is impossible for the reference itself to introduce unknown indexes.
+
+When generating SystemVerilog, be sure to generate code such that "unknown" indexes
+are always implicitly known due to the reference being used from within a for loop.
+For example:
+
+    for(int i0=0; i0<16; i0++) begin : rf_loop_array
+        top.rf_loop[i0].y.f2 = top.rf_loop[i0].x[3].f1
+    end
+
+This should be a reasonable thing to accomplish, since unknown indexes should
+only show up in situations where the consumer of the reference is being
+replicated as well, and is therefore implicitly going to be inside a for loop.

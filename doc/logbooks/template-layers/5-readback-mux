@@ -62,4 +62,8 @@ WARNING:
 
 Forwards response strobe back up to cpu interface layer
 
-Dont forget about alias registers here
+TODO:
+    Dont forget about alias registers here
+
+TODO:
+    Does the endinness the user sets matter anywhere?

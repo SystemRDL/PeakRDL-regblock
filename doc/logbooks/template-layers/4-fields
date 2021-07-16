@@ -28,6 +28,16 @@ TODO:
         this may actually only apply to counters...
     This is trivial in a 2-process implementation, but i'd rather avoid the overheads
 
+TODO:
+    Scour the RDL spec.
+    Does this "next state" precedence model hold true in all situations?
+
+TODO:
+    Think about user-extensibility
+    Provide a mechanism for users to extend/override field behavior
+
+TODO:
+    Does the endinness the user sets matter anywhere?
 
 Implementation
     Makes sense to use a listener class

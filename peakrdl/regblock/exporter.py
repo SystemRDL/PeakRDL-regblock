@@ -69,7 +69,7 @@ class RegblockExporter:
         cpuif = cpuif_cls(
             self,
             cpuif_reset=cpuif_reset, # TODO:
-            data_width=32, # TODO:
+            data_width=32, # TODO: derive from the accesswidth used by regs
             addr_width=32 # TODO:
         )
 
@@ -82,7 +82,7 @@ class RegblockExporter:
         address_decode = AddressDecode(self, node)
         field_logic = FieldLogic(self, node)
         readback_mux = ReadbackMux(self, node)
-        dereferencer = Dereferencer(self, hwif, field_logic, node)
+        dereferencer = Dereferencer(self, node, hwif, address_decode, field_logic)
 
         # Build Jinja template context
         context = {

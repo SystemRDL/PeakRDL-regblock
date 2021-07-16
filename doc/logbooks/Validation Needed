@@ -4,11 +4,12 @@ Things that need validation by the compiler
 ================================================================================
 Many of these are probably already covered, but being paranoid.
 Make a list of things as I think of them.
+Keep them here in case I forget and re-think of them.
 
 Mark these as follows:
     X = Yes, confirmed that the compiler covers this
-    ! = No! Confirmed that the compiler does not check this
-    (blank) = TBD
+    ! = No! Confirmed that the compiler does not check this, and should.
+    ? = TBD
 
 --------------------------------------------------------------------------------
 
@@ -23,11 +24,26 @@ X Field has no knowable value
 
     --> emit a warning?
 
-! multiple field_reset in the same hierarchy
+X References to a component or component property must use unambiguous array indexing
+    For example, if "array_o_regs" is an array...
+    The following is illegal:
+        my_reg.my_field->next = array_o_regs.thing
+        my_reg.my_field->next = array_o_regs.thing->anded
+    This is ok:
+        my_reg.my_field->next = array_o_regs[2].thing
+        my_reg.my_field->next = array_o_regs[2].thing->anded
+
+    NEVERMIND - compiler does not allow indefinite array references at all!
+    References are guaranteed to be unambiguous:
+        "Incompatible number of index dimensions after 'CTRL'. Expected 1, found 0."
+
+X Clause 10.6.1-f (wide registers cannot have access side-effects)
+
+X multiple field_reset in the same hierarchy
     there can only be one signal declared with field_reset
     in a given hierarchy
 
-! multiple cpuif_reset in the same hierarchy
+X multiple cpuif_reset in the same hierarchy
     there can only be one signal declared with cpuif_reset
     in a given hierarchy
 
@@ -39,13 +55,26 @@ X Field has no knowable value
 
     ... or, make these properties clear each-other on assignment
 
+? If a node ispresent=true, and any of it's properties are a reference,
+    then thse references' its ispresent shall also be true
+    Pretty sure this is an explicit clause in the spec.
+    Make sure it is actually implemented
+
+
+? Illegal property references:
+    - reference any of the counter property references to something that isn't a counter
+    - reference hwclr or hwset, but the owner node has them set to False
+        means that the actual inferred signal doesnt exist!
+    - reference swwe/swwel or we/wel, but the owner node has them, AND their complement set to False
+        means that the actual inferred signal doesnt exist!
+
+
 ================================================================================
 Things that need validation by this exporter
 ================================================================================
 List of stuff in case I forget.
-
+    X = Yes! I already implemented this.
     ! = No! exporter does not enforce this yet
-    x = Yes! I already implemented this.
 
 --------------------------------------------------------------------------------
 ! "bridge" addrmap not supported
@@ -56,5 +85,25 @@ cpuif_resets
     ! Warn/error on any signal with cpuif_reset set, that is not in the top-level
         addrmap. At the very least, warn that it will be ignored
 
-    ! multiple cpuif_reset
-        there can be only one cpuif reset
+! async data signals
+    Only supporting async signals if they are exclusively used in resets.
+    Anyhting else declared as "async" shall be an error
+    I have zero interest in implementing resynchronizers
+
+! regwidth/accesswidth is sane
+    ! accesswidth is the same for all registers in the regblock
+        - accesswidth is what implies the cpuif bus width
+    ! accesswidth == regwidth
+        Enforce this for now. Dont feel like supporting fancy modes yet
+        X regwidth < accesswidth
+            This is illegal and is enforced by the compiler.
+        ! regwidth > accesswidth
+            Need to extend address decode strobes to have multiple bits
+            this is where looking at endinaness matters to determine field placement
+
+
+! Contents of target are all internal. No external regs
+! Does not contain any mem components
+
+! Do not allow unaligned addresses
+    All offsets & strides shall be a multiple of the accesswidth used

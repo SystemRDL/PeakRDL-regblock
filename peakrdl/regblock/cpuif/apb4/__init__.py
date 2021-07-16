@@ -16,16 +16,16 @@ class APB4_Cpuif_flattened(APB4_Cpuif):
     def port_declaration(self) -> str:
         # TODO: Reference data/addr width from verilog parameter perhaps?
         lines = [
-            "input wire %s" % self.signal("psel"),
-            "input wire %s" % self.signal("penable"),
-            "input wire %s" % self.signal("pwrite"),
-            "input wire %s" % self.signal("pprot"),
-            "input wire [%d-1:0] %s" % (self.addr_width, self.signal("paddr")),
-            "input wire [%d-1:0] %s" % (self.data_width, self.signal("pwdata")),
-            "input wire [%d-1:0] %s" % (self.data_width / 8, self.signal("pstrb")),
-            "output logic %s" % self.signal("pready"),
-            "output logic [%d-1:0] %s" % (self.data_width, self.signal("prdata")),
-            "output logic %s" % self.signal("pslverr"),
+            "input wire " + self.signal("psel"),
+            "input wire " + self.signal("penable"),
+            "input wire " + self.signal("pwrite"),
+            "input wire " + self.signal("pprot"),
+            f"input wire [{self.addr_width-1}:0] " + self.signal("paddr"),
+            f"input wire [{self.data_width-1}:0] " + self.signal("pwdata"),
+            f"input wire [{(self.data_width / 8)-1}:0] " + self.signal("pstrb"),
+            "output logic " + self.signal("pready"),
+            f"output logic [{self.data_width-1}:0] " + self.signal("prdata"),
+            "output logic " + self.signal("pslverr"),
         ]
         return ",\n".join(lines)
 

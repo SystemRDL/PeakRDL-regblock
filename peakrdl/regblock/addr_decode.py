@@ -1,7 +1,7 @@
 import re
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 
-from systemrdl.node import Node, AddressableNode, RegNode
+from systemrdl.node import Node, AddressableNode, RegNode, FieldNode
 
 
 if TYPE_CHECKING:
@@ -27,6 +27,26 @@ class AddressDecode:
         self._do_address_decode_node(lines, self.top_node)
         return "\n".join(lines)
 
+    def get_access_strobe(self, node: Union[RegNode, FieldNode]) -> str:
+        """
+        Returns the Verilog string that represents the register/field's access strobe.
+        """
+        if isinstance(node, FieldNode):
+            node = node.parent
+
+        path = node.get_rel_path(self.top_node, empty_array_suffix="[!]")
+
+        # replace unknown indexes with incrementing iterators i0, i1, ...
+        class repl:
+            def __init__(self):
+                self.i = 0
+            def __call__(self, match):
+                s = f'i{self.i}'
+                self.i += 1
+                return s
+        path = re.sub(r'!', repl(), path)
+
+        return "decoded_reg_strb." + path
 
     #---------------------------------------------------------------------------
     # Struct generation functions
@@ -55,7 +75,7 @@ class AddressDecode:
         self._indent_level -= 1
 
         if is_top:
-            lines.append(f"{self._indent}}} access_strb_t;")
+            lines.append(f"{self._indent}}} decoded_reg_strb_t;")
         else:
             lines.append(f"{self._indent}}} {node.inst_name}{self._get_node_array_suffix(node)};")
 
@@ -96,26 +116,11 @@ class AddressDecode:
             a += f" + i{i}*'h{stride:x}"
         return a
 
-    def _get_strobe_str(self, node:AddressableNode) -> str:
-        path = node.get_rel_path(self.top_node, array_suffix="[!]", empty_array_suffix="[!]")
-
-        class repl:
-            def __init__(self):
-                self.i = 0
-            def __call__(self, match):
-                s = f'i{self.i}'
-                self.i += 1
-                return s
-
-        path = re.sub(r'!', repl(), path)
-        strb = "access_strb." + path
-        return strb
-
     def _do_address_decode_node(self, lines:List[str], node:AddressableNode) -> None:
         for child in node.children():
             if isinstance(child, RegNode):
                 self._push_array_dims(lines, child)
-                lines.append(f"{self._indent}{self._get_strobe_str(child)} = cpuif_req & (cpuif_addr == {self._get_address_str(child)});")
+                lines.append(f"{self._indent}{self.get_access_strobe(child)} = cpuif_req & (cpuif_addr == {self._get_address_str(child)});")
                 self._pop_array_dims(lines, child)
             elif isinstance(child, AddressableNode):
                 self._push_array_dims(lines, child)

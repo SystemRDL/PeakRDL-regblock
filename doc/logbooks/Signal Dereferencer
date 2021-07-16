@@ -17,3 +17,6 @@ Values:
     If X is a property reference... do whats right...
         my_field->anded === (&path.to.my_field)
     if X is a static value, return the literal
+
+
+See `Hierarchy and Indexing` on details onhow to build path references to stuff

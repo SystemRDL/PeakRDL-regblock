@@ -26,7 +26,7 @@ class StructHwif(HwifBase):
         self.has_output_struct = self._do_struct_addressable(lines, self.top_node, is_input=False)
         self._indent_level -= 1
         lines.append("")
-        lines.append(f"endpackage")
+        lines.append("endpackage")
 
         return "\n".join(lines)
 
