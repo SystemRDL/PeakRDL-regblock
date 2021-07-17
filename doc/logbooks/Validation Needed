@@ -47,6 +47,10 @@ X multiple cpuif_reset in the same hierarchy
     there can only be one signal declared with cpuif_reset
     in a given hierarchy
 
+X Mutually-exclusive property checking
+    --> Yes. compiler now auto-clears mutex partners on assign, so it is
+        implicitly handled
+
 ! incrwidth/incrvalue & decrvalue/decrwidth
     these pairs are mutually exclusive.
     Make sure they are not both set after elaboration
@@ -67,6 +71,7 @@ X multiple cpuif_reset in the same hierarchy
         means that the actual inferred signal doesnt exist!
     - reference swwe/swwel or we/wel, but the owner node has them, AND their complement set to False
         means that the actual inferred signal doesnt exist!
+
 
 
 ================================================================================

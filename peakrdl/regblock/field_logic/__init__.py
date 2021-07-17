@@ -2,6 +2,9 @@ import re
 from typing import TYPE_CHECKING, List
 
 from systemrdl.node import Node, AddressableNode, RegNode, FieldNode
+from systemrdl.rdltypes import PropertyReference
+
+from ..utils import get_indexed_path
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -28,23 +31,31 @@ class FieldLogic:
     #---------------------------------------------------------------------------
     # Field utility functions
     #---------------------------------------------------------------------------
-    def get_storage_identifier(self, node: FieldNode):
+    def get_storage_identifier(self, node: FieldNode) -> str:
+        """
+        Returns the Verilog string that represents the storage register element
+        for the referenced field
+        """
         assert node.implements_storage
-
-        path = node.get_rel_path(self.top_node, empty_array_suffix="[!]")
-
-        # replace unknown indexes with incrementing iterators i0, i1, ...
-        class repl:
-            def __init__(self):
-                self.i = 0
-            def __call__(self, match):
-                s = f'i{self.i}'
-                self.i += 1
-                return s
-        path = re.sub(r'!', repl(), path)
-
+        path = get_indexed_path(self.top_node, node)
         return "field_storage." + path
 
+    def get_field_next_identifier(self, node: FieldNode) -> str:
+        """
+        Returns a Verilog string that represents the field's next-state.
+        This is specifically for use in Field->next property references.
+        """
+        # TODO: Implement this
+        raise NotImplementedError
+
+    def get_counter_control_identifier(self, prop_ref: PropertyReference) -> str:
+        """
+        Return the Veriog string that represents the field's inferred incr/decr strobe signal.
+        prop_ref will be either an incr or decr property reference, and it is already known that
+        the incr/decr properties are not explicitly set by the user and are therefore inferred.
+        """
+        # TODO: Implement this
+        raise NotImplementedError
 
     #---------------------------------------------------------------------------
     # Struct generation functions

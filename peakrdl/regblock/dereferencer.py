@@ -85,14 +85,14 @@ class Dereferencer:
                 prop_value = obj.node.get_property(obj.name)
                 if prop_value is None:
                     # unset by the user, points to the implied internal signal
-                    raise NotImplementedError # TODO: Implement this
+                    return self.field_logic.get_counter_control_identifier(obj)
                 else:
                     return self.get_value(prop_value)
             elif obj.name == "next":
                 prop_value = obj.node.get_property(obj.name)
                 if prop_value is None:
                     # unset by the user, points to the implied internal signal
-                    raise NotImplementedError # TODO: Implement this
+                    return self.field_logic.get_field_next_identifier(obj.node)
                 else:
                     return self.get_value(prop_value)
 
@@ -127,7 +127,6 @@ class Dereferencer:
                     if prop_value is True:
                         # Points to inferred hwif input
                         return f"!({self.hwif.get_input_identifier(obj)})"
-                        raise NotImplementedError # TODO: Implement this
                     elif prop_value is False:
                         # This should never happen, as this is checked by the compiler's validator
                         raise RuntimeError

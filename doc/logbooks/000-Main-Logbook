@@ -33,13 +33,10 @@ Dev Todo list
 ================================================================================
 
 - Lots to do in HWIF layer
-    - reorg base.py+struct.py.
-        - I have no desire to do flattened I/O. No need to split off a base class
-
-
     - User Signals
         Generate these in the io struct? I forget what I decided
-    - get_input/output_identifier() functions
 
 - Field logic
     Basically need all aspects of the dereferencer to be done first
+
+- dereferencer has some remaining todos that depend on field logic
