@@ -1,12 +1,24 @@
 --------------------------------------------------------------------------------
 Field storage / next value layer
 --------------------------------------------------------------------------------
+
 Where all the magic happens!!
 
 Any field that implements storage is defined here.
 Bigass struct that only contains storage elements
 
 Each field consists of:
+    - Entries in the storage element struct
+        - if implements storage - field value
+        - user extensible values?
+    - Entries in the combo struct
+        - if implements storage:
+            - Field's "next" value
+            - load-enable strobe
+        - If counter
+            various event strobes (overflow/overflow).
+            These are convenient to generate alongside the field next state logic
+        - user extensible values?
     - an always_comb block:
         - generates the "next value" combinational signal
         - May generate other intermediate strobes?
@@ -47,3 +59,105 @@ Implementation
     Makes sense to use a listener class
 
 Be sure to skip alias registers
+
+--------------------------------------------------------------------------------
+
+NextStateConditional Class
+    Decribes a single conditional action that determines the next state of a field
+    Provides information to generate the following content:
+        if(<conditional>) begin
+            <assignments>
+        end
+
+    - is_match(self, field: FieldNode) -> bool:
+        Returns True if this conditional is relevant to the field. If so,
+        it instructs the FieldBuider that code for this conditional shall be emitted
+        TODO: better name than "is_match"? More like "is this relevant"
+
+    - get_conditional(self, field: FieldNode) -> str:
+        Returns the rendered conditional text
+
+    - get_assignments(self, field: FieldNode) -> List[str]:
+        Returns a list of rendered assignment strings
+        This will basically always be two:
+            <field>.next = <next value>
+            <field>.load_next = '1;
+
+    - get_extra_combo_signals(self, field: FieldNode) -> List[TBD]:
+        Some conditionals will need to set some extra signals (eg. counter underflow/overflow strobes)
+        Compiler needs to know to:
+            - declare these inthe combo struct
+            - initialize them in the beginning of always_comb
+
+        Return something that denotes the following information: (namedtuple?)
+            - signal name: str
+            - width: int
+            - default value assignment: str
+
+        Multiple NextStateConditional can declare the same extra combo signal
+        as long as their definitions agree
+        --> Assert this
+
+
+FieldBuilder Class
+    Describes how to build fields
+
+    Contains NextStateConditional definitions
+        Nested inside the class namespace, define all the NextStateConditional classes
+        that apply
+        User can override definitions or add own to extend behavior
+
+        NextStateConditional objects are stored in a dictionary as follows:
+            _conditionals {
+                assignment_precedence: [
+                    conditional_option_3,
+                    conditional_option_2,
+                    conditional_option_1,
+                ]
+            }
+
+    add_conditional(self, conditional, assignment_precedence):
+        Inserts the NextStateConditional into the given assignment precedence bin
+        The last one added to a precedence bin is first in that bin's search order
+
+    init_conditionals(self) -> None:
+        Called from __init__.
+        loads all possible conditionals into self.conditionals list
+        This function is to provide a hook for the user to add their own.
+
+        Do not do fancy class intospection. Load them explicitly by name like so:
+            self.add_conditional(MyNextState(), AssignmentPrecedence.SW_ACCESS)
+
+        If user wants to extend this class, they can pile onto the bins of conditionals freely!
+
+--------------------------------------------------------------------------------
+Misc
+--------------------------------------------------------------------------------
+What about complex behaviors like a read-clear counter?
+    if({{software read}})
+        next = 0
+    elif({{increment}})
+        next = prev + 1
+
+    --> Implement this by stacking multiple NextStateConditional in the same assignment precedence.
+        In this case, there would be a special action on software read that would be specific to read-clear counters
+        this would get inserted ahead of the search order.
+
+
+Precedence & Search order
+    There are two layers of priority I need to keep track of:
+    - Assignment Precedence
+        RTL precedence of the assignment conditional
+    - Search order (sp?)
+        Within an assignment precedence, order in which the NextStateConditional classes are
+        searched for a match
+
+    For assignment precedence, it makes sense to use an integer enumeration for this
+    since there really aren't too many precedence levels that apply here.
+    Space out the integer enumerations so that user can reliably insert their own actions, ie:
+        my_precedence = AssignmentPrecedence.SW_ACCESS + 1
+
+    For search order, provide a user API to load a NextStateConditional into
+    a precedence 'bin'. Pushing into a bin always inserts into the front of the search order
+    This makes sense since user overrides will always want to be highest priority - and
+    rule themselves out before falling back to builtin behavior

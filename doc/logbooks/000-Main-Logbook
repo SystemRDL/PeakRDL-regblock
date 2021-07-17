@@ -32,14 +32,17 @@ Basically, i'd define a ton of helper functions that return the signal identifie
 Dev Todo list
 ================================================================================
 
-- Lots to do in HWIF layer
-    - reorg base.py+struct.py.
-        - I have no desire to do flattened I/O. No need to split off a base class
+- tidy up stuff
+    - merge FieldBuilder and FieldLogic classes. It makes no sense for these to be separate
+    - propagate the exporter class EVERYWHERE
+      shorten it to simply "self.exp"
+- Build out a few more NextStateConditional implementations
+    - hw we
 
+- readback mux
 
+- HWIF layer
     - User Signals
         Generate these in the io struct? I forget what I decided
-    - get_input/output_identifier() functions
 
-- Field logic
-    Basically need all aspects of the dereferencer to be done first
+- dereferencer has some remaining todos that depend on field logic

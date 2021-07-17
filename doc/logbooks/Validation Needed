@@ -47,7 +47,11 @@ X multiple cpuif_reset in the same hierarchy
     there can only be one signal declared with cpuif_reset
     in a given hierarchy
 
-! incrwidth/incrvalue & decrvalue/decrwidth
+X Mutually-exclusive property checking
+    --> Yes. compiler now auto-clears mutex partners on assign, so it is
+        implicitly handled
+
+X incrwidth/incrvalue & decrvalue/decrwidth
     these pairs are mutually exclusive.
     Make sure they are not both set after elaboration
     Compiler checks for mutex within the same scope, but
@@ -55,18 +59,34 @@ X multiple cpuif_reset in the same hierarchy
 
     ... or, make these properties clear each-other on assignment
 
-? If a node ispresent=true, and any of it's properties are a reference,
-    then thse references' its ispresent shall also be true
-    Pretty sure this is an explicit clause in the spec.
-    Make sure it is actually implemented
-
-
-? Illegal property references:
+X Illegal property references:
     - reference any of the counter property references to something that isn't a counter
+        decrsaturate / incrsaturate / saturate
+        overflow / underflow
     - reference hwclr or hwset, but the owner node has them set to False
         means that the actual inferred signal doesnt exist!
     - reference swwe/swwel or we/wel, but the owner node has them, AND their complement set to False
         means that the actual inferred signal doesnt exist!
+    - only valid to reference if owner has this prop set
+        enable/mask
+        haltenable/haltmask
+        hwenable
+        hwmask
+        decr/incr, decr../incrthreshold/..value
+    - others references that may not always make sense:
+        intr/halt - target must contain interrupt/halt fields
+        next
+            is this ever illegal?
+
+X If a node ispresent=true, and any of it's properties are a reference,
+    then those references' ispresent shall also be true
+    This is an explicit clause in the spec: 5.3.1-i
+
+
+
+
+
+
 
 
 ================================================================================

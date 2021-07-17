@@ -1,10 +1,9 @@
 {% extends "cpuif/base_tmpl.sv" %}
-{%- import "utils_tmpl.sv" as utils with context %}
 
 {% block body %}
 // Request
 logic is_active;
-{%- call utils.AlwaysFF(cpuif_reset) %}
+always_ff {{get_always_ff_event(cpuif_reset)}} begin
     if({{cpuif_reset.activehigh_identifier}}) begin
         is_active <= '0;
         cpuif_req <= '0;
@@ -31,7 +30,7 @@ logic is_active;
             end
         end
     end
-{%- endcall %}
+end
 
 // Response
 assign {{cpuif.signal("pready")}} = cpuif_rd_ack | cpuif_wr_ack;

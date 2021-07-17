@@ -1,11 +1,11 @@
 import os
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 
-with open(os.path.join("peakrdl/regblock", "__about__.py")) as f:
+with open(os.path.join("peakrdl/regblock", "__about__.py"), encoding='utf-8') as f:
     v_dict = {}
     exec(f.read(), v_dict)
     version = v_dict['__version__']
@@ -22,7 +22,7 @@ setuptools.setup(
     packages=['peakrdl.regblock'],
     include_package_data=True,
     install_requires=[
-        "systemrdl-compiler>=1.13.2",
+        "systemrdl-compiler>=1.21.0",
         "Jinja2>=2.11",
     ],
     classifiers=(

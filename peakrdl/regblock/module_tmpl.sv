@@ -1,22 +1,19 @@
-{%- import "utils_tmpl.sv" as utils with context -%}
 
 {{hwif.get_package_declaration()}}
 
-module {{module_name}} #(
-        // TODO: pipeline parameters
-    )(
+module {{module_name}} (
         input wire clk,
         {%- for signal in reset_signals %}
         {{signal.port_declaration}},
-        {% endfor %}
+        {%- endfor %}
 
         {%- for signal in user_signals %}
         {{signal.port_declaration}},
-        {% endfor %}
+        {%- endfor %}
 
         {%- for interrupt in interrupts %}
         {{interrupt.port_declaration}},
-        {% endfor %}
+        {%- endfor %}
 
         {{cpuif.port_declaration|indent(8)}},
 
@@ -71,10 +68,12 @@ module {{module_name}} #(
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
+    {{field_logic.get_combo_struct()|indent}}
+
     {{field_logic.get_storage_struct()|indent}}
 
-    // TODO: Field next-state logic, and output port signal assignment (aka output mapping layer)
     {{field_logic.get_implementation()|indent}}
+    // TODO: output port signal assignment (aka output mapping layer)
 
     //--------------------------------------------------------------------------
     // Readback mux
@@ -85,7 +84,7 @@ module {{module_name}} #(
 
     {{readback_mux.get_implementation()|indent}}
 
-    {%- call utils.AlwaysFF(cpuif_reset) %}
+    always_ff {{get_always_ff_event(cpuif_reset)}} begin
         if({{cpuif_reset.activehigh_identifier}}) begin
             cpuif_rd_ack <= '0;
             cpuif_rd_data <= '0;
@@ -95,6 +94,6 @@ module {{module_name}} #(
             cpuif_rd_data <= readback_data;
             cpuif_rd_err <= readback_err;
         end
-    {%- endcall %}
+    end
 
 endmodule

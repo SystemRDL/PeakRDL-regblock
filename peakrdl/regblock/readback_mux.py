@@ -1,19 +1,19 @@
 import re
 from typing import TYPE_CHECKING, List
 
-from systemrdl.node import Node, AddressableNode, RegNode
+from systemrdl.node import AddrmapNode
 
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
 
 class ReadbackMux:
-    def __init__(self, exporter:'RegblockExporter', top_node:AddressableNode):
+    def __init__(self, exporter:'RegblockExporter'):
         self.exporter = exporter
-        self.top_node = top_node
 
-        self._indent_level = 0
-
+    @property
+    def top_node(self) -> AddrmapNode:
+        return self.exporter.top_node
 
     def get_implementation(self) -> str:
         # TODO: Count the number of readable registers
@@ -21,9 +21,3 @@ class ReadbackMux:
         # TODO: Always comb block to assign & mask all elements
         # TODO: Separate always_comb block to OR reduce down
         return "//TODO"
-
-
-    #---------------------------------------------------------------------------
-    @property
-    def _indent(self) -> str:
-        return "    " * self._indent_level

@@ -1,105 +1,77 @@
-import re
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
-from systemrdl.node import Node, AddressableNode, RegNode, FieldNode
+from systemrdl.node import AddrmapNode, FieldNode
+from systemrdl.rdltypes import PropertyReference
+
+from ..utils import get_indexed_path
+from .field_builder import FieldBuilder, FieldStorageStructGenerator
+from .field_builder import CombinationalStructGenerator, FieldLogicGenerator
+
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
 
 class FieldLogic:
-    def __init__(self, exporter:'RegblockExporter', top_node:Node):
+    def __init__(self, exporter:'RegblockExporter'):
         self.exporter = exporter
-        self.top_node = top_node
+        self.field_builder = FieldBuilder(exporter)
 
-        self._indent_level = 0
+    @property
+    def top_node(self) -> AddrmapNode:
+        return self.exporter.top_node
 
     def get_storage_struct(self) -> str:
-        lines = []
-        self._do_struct(lines, self.top_node, is_top=True)
+        struct_gen = FieldStorageStructGenerator()
+        s = struct_gen.get_struct(self.top_node, "field_storage_t")
 
         # Only declare the storage struct if it exists
-        if lines:
-            lines.append(f"{self._indent}field_storage_t field_storage;")
-        return "\n".join(lines)
+        if s is None:
+            return ""
+
+        return s + "\nfield_storage_t field_storage;"
+
+    def get_combo_struct(self) -> str:
+        struct_gen = CombinationalStructGenerator(self.field_builder)
+        s = struct_gen.get_struct(self.top_node, "field_combo_t")
+
+        # Only declare the storage struct if it exists
+        if s is None:
+            return ""
+
+        return s + "\nfield_combo_t field_combo;"
 
     def get_implementation(self) -> str:
-        return "TODO:"
+        gen = FieldLogicGenerator(self.field_builder)
+        s = gen.get_content(self.top_node)
+        if s is None:
+            return ""
+        return s
 
     #---------------------------------------------------------------------------
     # Field utility functions
     #---------------------------------------------------------------------------
-    def get_storage_identifier(self, node: FieldNode):
+    def get_storage_identifier(self, node: FieldNode) -> str:
+        """
+        Returns the Verilog string that represents the storage register element
+        for the referenced field
+        """
         assert node.implements_storage
-
-        path = node.get_rel_path(self.top_node, empty_array_suffix="[!]")
-
-        # replace unknown indexes with incrementing iterators i0, i1, ...
-        class repl:
-            def __init__(self):
-                self.i = 0
-            def __call__(self, match):
-                s = f'i{self.i}'
-                self.i += 1
-                return s
-        path = re.sub(r'!', repl(), path)
-
+        path = get_indexed_path(self.top_node, node)
         return "field_storage." + path
 
+    def get_field_next_identifier(self, node: FieldNode) -> str:
+        """
+        Returns a Verilog string that represents the field's next-state.
+        This is specifically for use in Field->next property references.
+        """
+        # TODO: Implement this
+        raise NotImplementedError
 
-    #---------------------------------------------------------------------------
-    # Struct generation functions
-    #---------------------------------------------------------------------------
-    @property
-    def _indent(self) -> str:
-        return "    " * self._indent_level
-
-    def _get_node_array_suffix(self, node:AddressableNode) -> str:
-        if node.is_array:
-            return "".join([f'[{dim}]' for dim in node.array_dimensions])
-        return ""
-
-    def _do_struct(self, lines:List[str], node:AddressableNode, is_top:bool = False) -> bool:
-        # Collect struct members first
-        contents = []
-        self._indent_level += 1
-        for child in node.children():
-            if isinstance(child, RegNode):
-                self._do_reg_struct(contents, child)
-            elif isinstance(child, AddressableNode):
-                self._do_struct(contents, child)
-        self._indent_level -= 1
-
-        # If struct is not empty, emit a struct!
-        if contents:
-            if is_top:
-                lines.append(f"{self._indent}typedef struct {{")
-            else:
-                lines.append(f"{self._indent}struct {{")
-
-            lines.extend(contents)
-
-            if is_top:
-                lines.append(f"{self._indent}}} field_storage_t;")
-            else:
-                lines.append(f"{self._indent}}} {node.inst_name}{self._get_node_array_suffix(node)};")
-
-
-    def _do_reg_struct(self, lines:List[str], node:RegNode) -> None:
-
-        fields = []
-        for field in node.fields():
-            if field.implements_storage:
-                fields.append(field)
-
-        if not fields:
-            return
-
-        lines.append(f"{self._indent}struct {{")
-        self._indent_level += 1
-        for field in fields:
-            if field.width == 1:
-                lines.append(f"{self._indent}logic {field.inst_name};")
-            else:
-                lines.append(f"{self._indent}logic [{field.width-1}:0] {field.inst_name};")
-        self._indent_level -= 1
-        lines.append(f"{self._indent}}} {node.inst_name}{self._get_node_array_suffix(node)};")
+    def get_counter_control_identifier(self, prop_ref: PropertyReference) -> str:
+        """
+        Return the Veriog string that represents the field's inferred incr/decr strobe signal.
+        prop_ref will be either an incr or decr property reference, and it is already known that
+        the incr/decr properties are not explicitly set by the user and are therefore inferred.
+        """
+        # TODO: Implement this
+        raise NotImplementedError

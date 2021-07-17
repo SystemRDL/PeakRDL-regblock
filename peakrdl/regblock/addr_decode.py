@@ -1,31 +1,34 @@
 import re
 from typing import TYPE_CHECKING, List, Union
 
-from systemrdl.node import Node, AddressableNode, RegNode, FieldNode
+from systemrdl.node import AddrmapNode, AddressableNode, RegNode, FieldNode
 
+from .utils import get_indexed_path
+from .struct_generator import RDLStructGenerator
+from .forloop_generator import RDLForLoopGenerator
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
 
 class AddressDecode:
-    def __init__(self, exporter:'RegblockExporter', top_node:AddressableNode):
+    def __init__(self, exporter:'RegblockExporter'):
         self.exporter = exporter
-        self.top_node = top_node
 
-        self._indent_level = 0
-
-        # List of address strides for each dimension
-        self._array_stride_stack = []
+    @property
+    def top_node(self) -> AddrmapNode:
+        return self.exporter.top_node
 
     def get_strobe_struct(self) -> str:
-        lines = []
-        self._do_struct(lines, self.top_node, is_top=True)
-        return "\n".join(lines)
+        struct_gen = DecodeStructGenerator()
+        s = struct_gen.get_struct(self.top_node, "decoded_reg_strb_t")
+        assert s is not None # guaranteed to have at least one reg
+        return s
 
     def get_implementation(self) -> str:
-        lines = []
-        self._do_address_decode_node(lines, self.top_node)
-        return "\n".join(lines)
+        gen = DecodeLogicGenerator(self)
+        s = gen.get_content(self.top_node)
+        assert s is not None
+        return s
 
     def get_access_strobe(self, node: Union[RegNode, FieldNode]) -> str:
         """
@@ -34,56 +37,35 @@ class AddressDecode:
         if isinstance(node, FieldNode):
             node = node.parent
 
-        path = node.get_rel_path(self.top_node, empty_array_suffix="[!]")
-
-        # replace unknown indexes with incrementing iterators i0, i1, ...
-        class repl:
-            def __init__(self):
-                self.i = 0
-            def __call__(self, match):
-                s = f'i{self.i}'
-                self.i += 1
-                return s
-        path = re.sub(r'!', repl(), path)
-
+        path = get_indexed_path(self.top_node, node)
         return "decoded_reg_strb." + path
 
-    #---------------------------------------------------------------------------
-    # Struct generation functions
-    #---------------------------------------------------------------------------
-    @property
-    def _indent(self) -> str:
-        return "    " * self._indent_level
 
-    def _get_node_array_suffix(self, node:AddressableNode) -> str:
-        if node.is_array:
-            return "".join([f'[{dim}]' for dim in node.array_dimensions])
-        return ""
+class DecodeStructGenerator(RDLStructGenerator):
 
-    def _do_struct(self, lines:List[str], node:AddressableNode, is_top:bool = False) -> None:
-        if is_top:
-            lines.append(f"{self._indent}typedef struct {{")
-        else:
-            lines.append(f"{self._indent}struct {{")
+    def enter_Reg(self, node: 'RegNode') -> None:
+        self.add_member(node.inst_name, array_dimensions=node.array_dimensions)
 
-        self._indent_level += 1
-        for child in node.children():
-            if isinstance(child, RegNode):
-                lines.append(f"{self._indent}logic {child.inst_name}{self._get_node_array_suffix(child)};")
-            elif isinstance(child, AddressableNode):
-                self._do_struct(lines, child)
-        self._indent_level -= 1
+    # Stub out
+    def exit_Reg(self, node: 'RegNode') -> None:
+        pass
+    def enter_Field(self, node: 'FieldNode') -> None:
+        pass
 
-        if is_top:
-            lines.append(f"{self._indent}}} decoded_reg_strb_t;")
-        else:
-            lines.append(f"{self._indent}}} {node.inst_name}{self._get_node_array_suffix(node)};")
 
-    #---------------------------------------------------------------------------
-    # Access strobe generation functions
-    #---------------------------------------------------------------------------
+class DecodeLogicGenerator(RDLForLoopGenerator):
 
-    def _push_array_dims(self, lines:List[str], node:AddressableNode):
+    def __init__(self, addr_decode: AddressDecode) -> None:
+        self.addr_decode = addr_decode
+        super().__init__()
+
+        # List of address strides for each dimension
+        self._array_stride_stack = []
+
+
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> None:
+        super().enter_AddressableComponent(node)
+
         if not node.is_array:
             return
 
@@ -94,35 +76,26 @@ class AddressDecode:
             strides.append(current_stride)
             current_stride *= dim
         strides.reverse()
+        self._array_stride_stack.extend(strides)
 
-        for dim, stride in zip(node.array_dimensions, strides):
-            iterator = "i%d" % len(self._array_stride_stack)
-            self._array_stride_stack.append(stride)
-            lines.append(f"{self._indent}for(int {iterator}=0; {iterator}<{dim}; {iterator}++) begin")
-            self._indent_level += 1
 
-    def _pop_array_dims(self, lines:List[str], node:AddressableNode):
+    def _get_address_str(self, node:AddressableNode) -> str:
+        a = "'h%x" % (node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address)
+        for i, stride in enumerate(self._array_stride_stack):
+            a += f" + i{i}*'h{stride:x}"
+        return a
+
+
+    def enter_Reg(self, node: RegNode) -> None:
+        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req & (cpuif_addr == {self._get_address_str(node)});"
+        self.add_content(s)
+
+
+    def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
+        super().exit_AddressableComponent(node)
+
         if not node.is_array:
             return
 
         for _ in node.array_dimensions:
             self._array_stride_stack.pop()
-            self._indent_level -= 1
-            lines.append(f"{self._indent}end")
-
-    def _get_address_str(self, node:AddressableNode) -> str:
-        a = "'h%x" % (node.raw_absolute_address - self.top_node.raw_absolute_address)
-        for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*'h{stride:x}"
-        return a
-
-    def _do_address_decode_node(self, lines:List[str], node:AddressableNode) -> None:
-        for child in node.children():
-            if isinstance(child, RegNode):
-                self._push_array_dims(lines, child)
-                lines.append(f"{self._indent}{self.get_access_strobe(child)} = cpuif_req & (cpuif_addr == {self._get_address_str(child)});")
-                self._pop_array_dims(lines, child)
-            elif isinstance(child, AddressableNode):
-                self._push_array_dims(lines, child)
-                self._do_address_decode_node(lines, child)
-                self._pop_array_dims(lines, child)

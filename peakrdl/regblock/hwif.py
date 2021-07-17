@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING, Union, List
-from systemrdl.node import Node, SignalNode, FieldNode, AddressableNode
+
+from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
+
+from .utils import get_indexed_path
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
@@ -13,14 +16,17 @@ class Hwif:
     - Signal inputs (except those that are promoted to the top)
     """
 
-    def __init__(self, exporter: 'RegblockExporter', top_node: Node, package_name: str):
+    def __init__(self, exporter: 'RegblockExporter', package_name: str):
         self.exporter = exporter
-        self.top_node = top_node
         self.package_name = package_name
 
         self.has_input_struct = None
         self.has_output_struct = None
         self._indent_level = 0
+
+    @property
+    def top_node(self) -> AddrmapNode:
+        return self.exporter.top_node
 
 
     def get_package_declaration(self) -> str:
@@ -151,19 +157,35 @@ class Hwif:
             else:
                 contents.append(f"logic [{node.width-1}:0] value;")
 
+        # Generate implied inputs
+        for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:
+            # if property is boolean and true, implies a corresponding input signal on the hwif
+            if node.get_property(prop_name) is True:
+                contents.append(f"logic {prop_name};")
+
+        # Generate any implied counter inputs
+        if node.get_property("counter"):
+            if not node.get_property("incr"):
+                # User did not provide their own incr component reference.
+                # Imply an input
+                contents.append("logic incr;")
+            if not node.get_property("decr"):
+                # User did not provide their own decr component reference.
+                # Imply an input
+                contents.append("logic decr;")
+
+            width = node.get_property("incrwidth")
+            if width:
+                # Implies a corresponding incrvalue input
+                contents.append(f"logic [{width-1}:0] incrvalue;")
+
+            width = node.get_property("decrwidth")
+            if width:
+                # Implies a corresponding decrvalue input
+                contents.append(f"logic [{width-1}:0] decrvalue;")
+
         # TODO:
         """
-        we/wel
-            if either is boolean, and true
-            not part of external hwif if reference
-            mutually exclusive
-        hwclr/hwset
-            if either is boolean, and true
-            not part of external hwif if reference
-        incr/decr
-            if counter=true, generate BOTH
-        incrvalue/decrvalue
-            if either incrwidth/decrwidth are set
         signals!
             any signal instances instantiated in the scope
         """
@@ -180,14 +202,11 @@ class Hwif:
             else:
                 contents.append(f"logic [{node.width-1}:0] value;")
 
-        # TODO:
-        """
-        bitwise reductions
-            if anded, ored, xored == True, output a signal
-        swmod/swacc
-            event strobes
-        Are there was_written/was_read strobes too?
-        """
+        # Generate output bit signals enabled via property
+        for prop_name in ["anded", "ored", "xored", "swmod", "swacc"]:
+            if node.get_property(prop_name):
+                contents.append(f"logic {prop_name};")
+        # TODO: Are there was_written/was_read strobes too?
 
         return contents
 
@@ -211,7 +230,6 @@ class Hwif:
         """
         Returns True if the object infers an output wire in the hwif
         """
-        # TODO: Extend this for signals and prop references?
         return obj.is_hw_readable
 
 
@@ -220,28 +238,44 @@ class Hwif:
         Returns the identifier string that best represents the input object.
 
         if obj is:
-            Field: the fields input value port
+            Field: the fields hw input value port
             Signal: signal input value
             Prop reference:
                 could be an implied hwclr/hwset/swwe/swwel/we/wel input
-                Raise a runtime error if an illegal prop ref is requested, or if
-                the prop ref is not actually implied, but explicitly ref a component
 
-        TODO: finish this
         raises an exception if obj is invalid
         """
-        raise NotImplementedError()
+        if isinstance(obj, FieldNode):
+            path = get_indexed_path(self.top_node, obj)
+            return "hwif_in." + path + ".value"
+        elif isinstance(obj, SignalNode):
+            # TODO: Implement this
+            raise NotImplementedError()
+        elif isinstance(obj, PropertyReference):
+            assert obj.name in {'hwclr', 'hwset', 'swwe', 'swwel', 'we', 'wel'}
+            path = get_indexed_path(self.top_node, obj.node)
+            return "hwif_in." + path + "." + obj.name
+
+        raise RuntimeError("Unhandled reference to: %s", obj)
 
 
-    def get_output_identifier(self, obj: FieldNode) -> str:
+    def get_output_identifier(self, obj: Union[FieldNode, PropertyReference]) -> str:
         """
         Returns the identifier string that best represents the output object.
 
         if obj is:
-            Field: the fields output value port
+            Field: the fields hw output value port
             Property ref: this is also part of the struct
-            TODO: finish this
 
         raises an exception if obj is invalid
         """
-        raise NotImplementedError()
+        if isinstance(obj, FieldNode):
+            path = get_indexed_path(self.top_node, obj)
+            return "hwif_out." + path + ".value"
+        elif isinstance(obj, PropertyReference):
+            assert obj.name in {"anded", "ored", "xored", "swmod", "swacc"}
+            assert obj.node.get_property(obj.name)
+            path = get_indexed_path(self.top_node, obj.node)
+            return "hwif_out." + path + "." + obj.name
+
+        raise RuntimeError("Unhandled reference to: %s", obj)

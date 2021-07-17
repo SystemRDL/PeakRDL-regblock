@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-import jinja2
+from ..utils import get_always_ff_event
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -25,6 +25,7 @@ class CpuifBase:
             "cpuif_reset": self.cpuif_reset,
             "data_width": self.data_width,
             "addr_width": self.addr_width,
+            "get_always_ff_event": get_always_ff_event,
         }
 
         template = self.exporter.jj_env.get_template(self.template_path)

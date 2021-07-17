@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Union
-from systemrdl.node import Node, FieldNode, SignalNode, RegNode
+from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode
 from systemrdl.rdltypes import PropertyReference
 
 if TYPE_CHECKING:
@@ -13,12 +13,24 @@ class Dereferencer:
     This class provides an interface to convert conceptual SystemRDL references
     into Verilog identifiers
     """
-    def __init__(self, exporter:'RegblockExporter', top_node:Node, hwif:'Hwif', address_decode: 'AddressDecode', field_logic: 'FieldLogic'):
+    def __init__(self, exporter:'RegblockExporter'):
         self.exporter = exporter
-        self.hwif = hwif
-        self.address_decode = address_decode
-        self.field_logic = field_logic
-        self.top_node = top_node
+
+    @property
+    def hwif(self) -> 'Hwif':
+        return self.exporter.hwif
+
+    @property
+    def address_decode(self) -> 'AddressDecode':
+        return self.exporter.address_decode
+
+    @property
+    def field_logic(self) -> 'FieldLogic':
+        return self.exporter.field_logic
+
+    @property
+    def top_node(self) -> AddrmapNode:
+        return self.exporter.top_node
 
     def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference]) -> str:
         """
@@ -85,14 +97,14 @@ class Dereferencer:
                 prop_value = obj.node.get_property(obj.name)
                 if prop_value is None:
                     # unset by the user, points to the implied internal signal
-                    raise NotImplementedError # TODO: Implement this
+                    return self.field_logic.get_counter_control_identifier(obj)
                 else:
                     return self.get_value(prop_value)
             elif obj.name == "next":
                 prop_value = obj.node.get_property(obj.name)
                 if prop_value is None:
                     # unset by the user, points to the implied internal signal
-                    raise NotImplementedError # TODO: Implement this
+                    return self.field_logic.get_field_next_identifier(obj.node)
                 else:
                     return self.get_value(prop_value)
 
@@ -127,7 +139,6 @@ class Dereferencer:
                     if prop_value is True:
                         # Points to inferred hwif input
                         return f"!({self.hwif.get_input_identifier(obj)})"
-                        raise NotImplementedError # TODO: Implement this
                     elif prop_value is False:
                         # This should never happen, as this is checked by the compiler's validator
                         raise RuntimeError

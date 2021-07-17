@@ -68,10 +68,11 @@ class RDLSignal(SignalBase):
 
 
 class InferredSignal(SignalBase):
-    def __init__(self, identifier:str, width:int=1, is_async:bool=False):
+    def __init__(self, identifier:str, width:int=1, is_async:bool=False, is_activehigh=True):
         self._identifier = identifier
         self._width = width
         self._is_async = is_async
+        self._is_activehigh = is_activehigh
 
     @property
     def is_async(self) -> bool:
@@ -79,7 +80,7 @@ class InferredSignal(SignalBase):
 
     @property
     def is_activehigh(self) -> bool:
-        return True
+        return self._is_activehigh
 
     @property
     def width(self) -> int:

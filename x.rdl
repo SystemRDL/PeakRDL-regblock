@@ -9,8 +9,8 @@ addrmap top {
     regfile {
         reg {
             field {
-                hw=r; sw=rw;
-            } abc[16:2] = 0;
+                hw=w; sw=r;
+            } abc[16:2] = 20;
             field {
                 hw=r; sw=rw;
             } def[4] = 0;
