@@ -55,7 +55,7 @@ class RegblockExporter:
         )
 
 
-    def export(self, node: Union[RootNode, AddrmapNode], output_path:str, **kwargs):
+    def export(self, node: Union[RootNode, AddrmapNode], output_dir:str, **kwargs):
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
             self.top_node = node.top
@@ -67,6 +67,8 @@ class RegblockExporter:
         hwif_cls = kwargs.pop("hwif_cls", Hwif)
         module_name = kwargs.pop("module_name", self.top_node.inst_name)
         package_name = kwargs.pop("package_name", module_name + "_pkg")
+        module_file_path = os.path.join(output_dir, module_name + ".sv")
+        package_file_path = os.path.join(output_dir, package_name + ".sv")
 
         # Check for stray kwargs
         if kwargs:
@@ -110,6 +112,10 @@ class RegblockExporter:
         }
 
         # Write out design
+        template = self.jj_env.get_template("package_tmpl.sv")
+        stream = template.stream(context)
+        stream.dump(package_file_path)
+
         template = self.jj_env.get_template("module_tmpl.sv")
         stream = template.stream(context)
-        stream.dump(output_path)
+        stream.dump(module_file_path)

@@ -26,7 +26,7 @@ class AssignmentPrecedence(enum.IntEnum):
     SW_ONWRITE = 4000
 
     # Hardware access assignment groups
-    HW_WE = 3000
+    HW_WRITE = 3000
     HWSET = 2000
     HWCLR  = 1000
     COUNTER_INCR_DECR = 0
@@ -62,8 +62,10 @@ class NextStateConditional:
             <assignments>
         end
     """
-    def __init__(self, exporter:'RegblockExporter'):
-        self.exporter = exporter
+
+    comment = ""
+    def __init__(self, exp:'RegblockExporter'):
+        self.exp = exp
 
     def is_match(self, field: 'FieldNode') -> bool:
         """
@@ -74,9 +76,9 @@ class NextStateConditional:
         raise NotImplementedError
 
     def get_field_path(self, field:'FieldNode') -> str:
-        return get_indexed_path(self.exporter.top_node, field)
+        return get_indexed_path(self.exp.top_node, field)
 
-    def get_conditional(self, field: 'FieldNode') -> str:
+    def get_predicate(self, field: 'FieldNode') -> str:
         """
         Returns the rendered conditional text
         """
@@ -92,4 +94,8 @@ class NextStateConditional:
         """
 
     def get_extra_combo_signals(self, field: 'FieldNode') -> List[SVLogic]:
+        """
+        Return any additional combinational signals that this conditional
+        will assign if present.
+        """
         return []

@@ -82,7 +82,19 @@ X If a node ispresent=true, and any of it's properties are a reference,
     then those references' ispresent shall also be true
     This is an explicit clause in the spec: 5.3.1-i
 
+! Flag illegal sw actions if not readable/writable
+    The following combinations dont get flagged currently:
+        sw=w; rclr;
+        sw=w; rset;
+        sw=r; woset;
+        sw=r; woclr;
+    their counterparts do get flagged. such as:
+        sw=w; onread=rclr;
 
+! hwclr/hwset/we/wel probably shouldn't be able to reference itself
+    y->hwclr = y;
+    y->we = y;
+    ... it works, but should it be allowed? Seems like user-error
 
 
 

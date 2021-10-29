@@ -1,24 +1,34 @@
 from typing import TYPE_CHECKING
 
-from systemrdl.node import AddrmapNode, FieldNode
-from systemrdl.rdltypes import PropertyReference
+from systemrdl.rdltypes import PropertyReference, PrecedenceType
+
+from .bases import AssignmentPrecedence, NextStateConditional
+from . import sw_onread
+from . import sw_onwrite
+from . import hw_write
+from . import hw_set_clr
 
 from ..utils import get_indexed_path
-from .field_builder import FieldBuilder, FieldStorageStructGenerator
-from .field_builder import CombinationalStructGenerator, FieldLogicGenerator
 
+from .generators import CombinationalStructGenerator, FieldStorageStructGenerator, FieldLogicGenerator
 
 if TYPE_CHECKING:
+    from typing import Dict, List
+    from systemrdl.node import AddrmapNode, FieldNode
     from ..exporter import RegblockExporter
 
 class FieldLogic:
-    def __init__(self, exporter:'RegblockExporter'):
-        self.exporter = exporter
-        self.field_builder = FieldBuilder(exporter)
+    def __init__(self, exp:'RegblockExporter'):
+        self.exp = exp
+
+        self._hw_conditionals = {} # type: Dict[int, List[NextStateConditional]]
+        self._sw_conditionals = {} # type: Dict[int, List[NextStateConditional]]
+
+        self.init_conditionals()
 
     @property
-    def top_node(self) -> AddrmapNode:
-        return self.exporter.top_node
+    def top_node(self) -> 'AddrmapNode':
+        return self.exp.top_node
 
     def get_storage_struct(self) -> str:
         struct_gen = FieldStorageStructGenerator()
@@ -31,7 +41,7 @@ class FieldLogic:
         return s + "\nfield_storage_t field_storage;"
 
     def get_combo_struct(self) -> str:
-        struct_gen = CombinationalStructGenerator(self.field_builder)
+        struct_gen = CombinationalStructGenerator(self)
         s = struct_gen.get_struct(self.top_node, "field_combo_t")
 
         # Only declare the storage struct if it exists
@@ -41,7 +51,7 @@ class FieldLogic:
         return s + "\nfield_combo_t field_combo;"
 
     def get_implementation(self) -> str:
-        gen = FieldLogicGenerator(self.field_builder)
+        gen = FieldLogicGenerator(self)
         s = gen.get_content(self.top_node)
         if s is None:
             return ""
@@ -50,22 +60,23 @@ class FieldLogic:
     #---------------------------------------------------------------------------
     # Field utility functions
     #---------------------------------------------------------------------------
-    def get_storage_identifier(self, node: FieldNode) -> str:
+    def get_storage_identifier(self, node: 'FieldNode') -> str:
         """
         Returns the Verilog string that represents the storage register element
         for the referenced field
         """
         assert node.implements_storage
         path = get_indexed_path(self.top_node, node)
-        return "field_storage." + path
+        return f"field_storage.{path}"
 
-    def get_field_next_identifier(self, node: FieldNode) -> str:
+    def get_field_next_identifier(self, node: 'FieldNode') -> str:
         """
         Returns a Verilog string that represents the field's next-state.
         This is specifically for use in Field->next property references.
         """
-        # TODO: Implement this
-        raise NotImplementedError
+        assert node.implements_storage
+        path = get_indexed_path(self.top_node, node)
+        return f"field_combo.{path}.next"
 
     def get_counter_control_identifier(self, prop_ref: PropertyReference) -> str:
         """
@@ -75,3 +86,103 @@ class FieldLogic:
         """
         # TODO: Implement this
         raise NotImplementedError
+
+    #---------------------------------------------------------------------------
+    # Field Logic Conditionals
+    #---------------------------------------------------------------------------
+    def add_hw_conditional(self, conditional: NextStateConditional, precedence: AssignmentPrecedence) -> None:
+        """
+        Register a NextStateConditional action for hardware-triggered field updates.
+        Categorizing conditionals correctly by hw/sw ensures that the RDL precedence
+        property can be reliably honored.
+
+        The ``precedence`` argument determines the conditional assignment's priority over
+        other assignments of differing precedence.
+
+        If multiple conditionals of the same precedence are registered, they are
+        searched sequentially and only the first to match the given field is used.
+        Conditionals are searched in reverse order that they were registered.
+        """
+        if precedence not in self._hw_conditionals:
+            self._hw_conditionals[precedence] = []
+        self._hw_conditionals[precedence].append(conditional)
+
+
+    def add_sw_conditional(self, conditional: NextStateConditional, precedence: AssignmentPrecedence) -> None:
+        """
+        Register a NextStateConditional action for software-triggered field updates.
+        Categorizing conditionals correctly by hw/sw ensures that the RDL precedence
+        property can be reliably honored.
+
+        The ``precedence`` argument determines the conditional assignment's priority over
+        other assignments of differing precedence.
+
+        If multiple conditionals of the same precedence are registered, they are
+        searched sequentially and only the first to match the given field is used.
+        Conditionals are searched in reverse order that they were registered.
+        """
+        if precedence not in self._sw_conditionals:
+            self._sw_conditionals[precedence] = []
+        self._sw_conditionals[precedence].append(conditional)
+
+
+    def init_conditionals(self) -> None:
+        """
+        Initialize all possible conditionals here.
+
+        Remember: The order in which conditionals are added matters within the
+        same assignment precedence.
+        """
+
+        # TODO: Add all the other things
+        self.add_sw_conditional(sw_onread.ClearOnRead(self.exp), AssignmentPrecedence.SW_ONREAD)
+        self.add_sw_conditional(sw_onread.SetOnRead(self.exp), AssignmentPrecedence.SW_ONREAD)
+
+        self.add_sw_conditional(sw_onwrite.WriteOneSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteOneClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteOneToggle(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteZeroSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteZeroClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteZeroToggle(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.Write(self.exp), AssignmentPrecedence.SW_ONWRITE)
+
+        self.add_hw_conditional(hw_write.AlwaysWrite(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_write.WELWrite(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_write.WEWrite(self.exp), AssignmentPrecedence.HW_WRITE)
+
+        self.add_hw_conditional(hw_set_clr.HWClear(self.exp), AssignmentPrecedence.HWCLR)
+
+        self.add_hw_conditional(hw_set_clr.HWSet(self.exp), AssignmentPrecedence.HWSET)
+
+
+    def _get_X_conditionals(self, conditionals: 'Dict[int, List[NextStateConditional]]', field: 'FieldNode') -> 'List[NextStateConditional]':
+        result = []
+        precedences = sorted(conditionals.keys(), reverse=True)
+        for precedence in precedences:
+            for conditional in conditionals[precedence]:
+                if conditional.is_match(field):
+                    result.append(conditional)
+        return result
+
+
+    def get_conditionals(self, field: 'FieldNode') -> 'List[NextStateConditional]':
+        """
+        Get a list of NextStateConditional objects that apply to the given field.
+
+        The returned list is sorted in priority order - the conditional with highest
+        precedence is first in the list.
+        """
+        sw_precedence = (field.get_property('precedence') == PrecedenceType.sw)
+        result = []
+
+        if sw_precedence:
+            result.extend(self._get_X_conditionals(self._sw_conditionals, field))
+
+        result.extend(self._get_X_conditionals(self._hw_conditionals, field))
+
+        if not sw_precedence:
+            result.extend(self._get_X_conditionals(self._sw_conditionals, field))
+
+        return result

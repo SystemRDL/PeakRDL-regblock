@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 class CpuifBase:
     template_path = "cpuif/base_tmpl.sv"
 
-    def __init__(self, exporter:'RegblockExporter', cpuif_reset:'SignalBase', data_width:int=32, addr_width:int=32):
-        self.exporter = exporter
+    def __init__(self, exp:'RegblockExporter', cpuif_reset:'SignalBase', data_width:int=32, addr_width:int=32):
+        self.exp = exp
         self.cpuif_reset = cpuif_reset
         self.data_width = data_width
         self.addr_width = addr_width
@@ -28,5 +28,5 @@ class CpuifBase:
             "get_always_ff_event": get_always_ff_event,
         }
 
-        template = self.exporter.jj_env.get_template(self.template_path)
+        template = self.exp.jj_env.get_template(self.template_path)
         return template.render(context)

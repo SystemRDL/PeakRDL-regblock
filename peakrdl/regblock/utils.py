@@ -1,10 +1,10 @@
 import re
 from typing import TYPE_CHECKING
-import textwrap
 
 if TYPE_CHECKING:
     from systemrdl.node import Node
     from .signals import SignalBase
+    from typing import Optional
 
 def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
     """
@@ -22,7 +22,9 @@ def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
     return re.sub(r'!', repl(), path)
 
 
-def get_always_ff_event(resetsignal: 'SignalBase') -> str:
+def get_always_ff_event(resetsignal: 'Optional[SignalBase]') -> str:
+    if resetsignal is None:
+        return "@(posedge clk)"
     if resetsignal.is_async and resetsignal.is_activehigh:
         return f"@(posedge clk or posedge {resetsignal.identifier})"
     elif resetsignal.is_async and not resetsignal.is_activehigh:

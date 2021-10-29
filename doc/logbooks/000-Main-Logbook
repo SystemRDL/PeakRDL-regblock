@@ -32,14 +32,13 @@ Basically, i'd define a ton of helper functions that return the signal identifie
 Dev Todo list
 ================================================================================
 
-- tidy up stuff
-    - merge FieldBuilder and FieldLogic classes. It makes no sense for these to be separate
-    - propagate the exporter class EVERYWHERE
-      shorten it to simply "self.exp"
-- Build out a few more NextStateConditional implementations
-    - hw we
+- Link more functions to the dereferencer
+    I shouldn't have to go to the hwif or whatever
+    dereferencer should have all the query functions
 
 - readback mux
+
+- Other field output assignments
 
 - HWIF layer
     - User Signals

@@ -7,16 +7,19 @@ from .bases import NextStateConditional
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
 
+# TODO: implement sw=w1 "write once" fields
+
 class _OnWrite(NextStateConditional):
     onwritetype = None
     def is_match(self, field: 'FieldNode') -> bool:
         return field.get_property("onwrite") == self.onwritetype
 
-    def get_conditional(self, field: 'FieldNode') -> str:
-        strb = self.exporter.dereferencer.get_access_strobe(field)
+    def get_predicate(self, field: 'FieldNode') -> str:
+        strb = self.exp.dereferencer.get_access_strobe(field)
         return f"decoded_req && decoded_req_is_wr && {strb}"
 
 class WriteOneSet(_OnWrite):
+    comment = "SW write 1 set"
     onwritetype = OnWriteType.woset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -27,6 +30,7 @@ class WriteOneSet(_OnWrite):
         ]
 
 class WriteOneClear(_OnWrite):
+    comment = "SW write 1 clear"
     onwritetype = OnWriteType.woclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -37,6 +41,7 @@ class WriteOneClear(_OnWrite):
         ]
 
 class WriteOneToggle(_OnWrite):
+    comment = "SW write 1 toggle"
     onwritetype = OnWriteType.wot
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -47,6 +52,7 @@ class WriteOneToggle(_OnWrite):
         ]
 
 class WriteZeroSet(_OnWrite):
+    comment = "SW write 0 set"
     onwritetype = OnWriteType.wzs
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -57,6 +63,7 @@ class WriteZeroSet(_OnWrite):
         ]
 
 class WriteZeroClear(_OnWrite):
+    comment = "SW write 0 clear"
     onwritetype = OnWriteType.wzc
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -67,6 +74,7 @@ class WriteZeroClear(_OnWrite):
         ]
 
 class WriteZeroToggle(_OnWrite):
+    comment = "SW write 0 toggle"
     onwritetype = OnWriteType.wzt
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -77,6 +85,7 @@ class WriteZeroToggle(_OnWrite):
         ]
 
 class WriteClear(_OnWrite):
+    comment = "SW write clear"
     onwritetype = OnWriteType.wclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -87,6 +96,7 @@ class WriteClear(_OnWrite):
         ]
 
 class WriteSet(_OnWrite):
+    comment = "SW write set"
     onwritetype = OnWriteType.wset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -97,6 +107,7 @@ class WriteSet(_OnWrite):
         ]
 
 class Write(_OnWrite):
+    comment = "SW write"
     onwritetype = None
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:

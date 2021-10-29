@@ -16,8 +16,8 @@ class Hwif:
     - Signal inputs (except those that are promoted to the top)
     """
 
-    def __init__(self, exporter: 'RegblockExporter', package_name: str):
-        self.exporter = exporter
+    def __init__(self, exp: 'RegblockExporter', package_name: str):
+        self.exp = exp
         self.package_name = package_name
 
         self.has_input_struct = None
@@ -26,22 +26,17 @@ class Hwif:
 
     @property
     def top_node(self) -> AddrmapNode:
-        return self.exporter.top_node
+        return self.exp.top_node
 
 
-    def get_package_declaration(self) -> str:
+    def get_package_contents(self) -> str:
         """
         If this hwif requires a package, generate the string
         """
         lines = []
 
-        lines.append(f"package {self.package_name};")
-        self._indent_level += 1
         self.has_input_struct = self._do_struct_addressable(lines, self.top_node, is_input=True)
         self.has_output_struct = self._do_struct_addressable(lines, self.top_node, is_input=False)
-        self._indent_level -= 1
-        lines.append("")
-        lines.append("endpackage")
 
         return "\n".join(lines)
 
@@ -259,6 +254,12 @@ class Hwif:
         raise RuntimeError("Unhandled reference to: %s", obj)
 
 
+    def get_implied_prop_input_identifier(self, field: FieldNode, prop: str) -> str:
+        assert prop in {'hwclr', 'hwset', 'swwe', 'swwel', 'we', 'wel'}
+        path = get_indexed_path(self.top_node, field)
+        return "hwif_in." + path + "." + prop
+
+
     def get_output_identifier(self, obj: Union[FieldNode, PropertyReference]) -> str:
         """
         Returns the identifier string that best represents the output object.
@@ -279,3 +280,9 @@ class Hwif:
             return "hwif_out." + path + "." + obj.name
 
         raise RuntimeError("Unhandled reference to: %s", obj)
+
+
+    def get_implied_prop_output_identifier(self, field: FieldNode, prop: str) -> str:
+        assert prop in {"anded", "ored", "xored", "swmod", "swacc"}
+        path = get_indexed_path(self.top_node, field)
+        return "hwif_out." + path + "." + prop

@@ -18,4 +18,4 @@ except RDLCompileError:
 
 R = RegblockExporter()
 
-R.export(root, "out.sv")
+R.export(root, ".")

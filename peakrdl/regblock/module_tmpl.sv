@@ -1,6 +1,4 @@
-
-{{hwif.get_package_declaration()}}
-
+// TODO: Add a banner
 module {{module_name}} (
         input wire clk,
         {%- for signal in reset_signals %}

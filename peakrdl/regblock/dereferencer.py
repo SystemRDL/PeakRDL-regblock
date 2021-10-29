@@ -13,24 +13,24 @@ class Dereferencer:
     This class provides an interface to convert conceptual SystemRDL references
     into Verilog identifiers
     """
-    def __init__(self, exporter:'RegblockExporter'):
-        self.exporter = exporter
+    def __init__(self, exp:'RegblockExporter'):
+        self.exp = exp
 
     @property
     def hwif(self) -> 'Hwif':
-        return self.exporter.hwif
+        return self.exp.hwif
 
     @property
     def address_decode(self) -> 'AddressDecode':
-        return self.exporter.address_decode
+        return self.exp.address_decode
 
     @property
     def field_logic(self) -> 'FieldLogic':
-        return self.exporter.field_logic
+        return self.exp.field_logic
 
     @property
     def top_node(self) -> AddrmapNode:
-        return self.exporter.top_node
+        return self.exp.top_node
 
     def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference]) -> str:
         """

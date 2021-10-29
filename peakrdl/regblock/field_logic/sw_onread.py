@@ -12,11 +12,12 @@ class _OnRead(NextStateConditional):
     def is_match(self, field: 'FieldNode') -> bool:
         return field.get_property("onread") == self.onreadtype
 
-    def get_conditional(self, field: 'FieldNode') -> str:
-        strb = self.exporter.dereferencer.get_access_strobe(field)
+    def get_predicate(self, field: 'FieldNode') -> str:
+        strb = self.exp.dereferencer.get_access_strobe(field)
         return f"decoded_req && !decoded_req_is_wr && {strb}"
 
 class ClearOnRead(_OnRead):
+    comment = "SW clear on read"
     onreadtype = OnReadType.rclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -28,6 +29,7 @@ class ClearOnRead(_OnRead):
 
 
 class SetOnRead(_OnRead):
+    comment = "SW set on read"
     onreadtype = OnReadType.rset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:

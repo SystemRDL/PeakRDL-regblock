@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from .exporter import RegblockExporter
 
 class ReadbackMux:
-    def __init__(self, exporter:'RegblockExporter'):
-        self.exporter = exporter
+    def __init__(self, exp:'RegblockExporter'):
+        self.exp = exp
 
     @property
     def top_node(self) -> AddrmapNode:
-        return self.exporter.top_node
+        return self.exp.top_node
 
     def get_implementation(self) -> str:
         # TODO: Count the number of readable registers

@@ -11,12 +11,12 @@ if TYPE_CHECKING:
     from .exporter import RegblockExporter
 
 class AddressDecode:
-    def __init__(self, exporter:'RegblockExporter'):
-        self.exporter = exporter
+    def __init__(self, exp:'RegblockExporter'):
+        self.exp = exp
 
     @property
     def top_node(self) -> AddrmapNode:
-        return self.exporter.top_node
+        return self.exp.top_node
 
     def get_strobe_struct(self) -> str:
         struct_gen = DecodeStructGenerator()
