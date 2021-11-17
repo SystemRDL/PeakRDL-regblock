@@ -13,7 +13,8 @@ module {{module_name}} (
         {{interrupt.port_declaration}},
         {%- endfor %}
 
-        {{cpuif.port_declaration|indent(8)}},
+        {{cpuif.port_declaration|indent(8)}}
+        {%- if hwif.has_input_struct or hwif.has_output_struct %},{% endif %}
 
         {{hwif.port_declaration|indent(8)}}
     );
@@ -71,27 +72,10 @@ module {{module_name}} (
     {{field_logic.get_storage_struct()|indent}}
 
     {{field_logic.get_implementation()|indent}}
-    // TODO: output port signal assignment (aka output mapping layer)
 
     //--------------------------------------------------------------------------
-    // Readback mux
+    // Readback
     //--------------------------------------------------------------------------
-    logic readback_err;
-    logic readback_done;
-    logic [DATA_WIDTH-1:0] readback_data;
-
-    {{readback_mux.get_implementation()|indent}}
-
-    always_ff {{get_always_ff_event(cpuif_reset)}} begin
-        if({{cpuif_reset.activehigh_identifier}}) begin
-            cpuif_rd_ack <= '0;
-            cpuif_rd_data <= '0;
-            cpuif_rd_err <= '0;
-        end else begin
-            cpuif_rd_ack <= readback_done;
-            cpuif_rd_data <= readback_data;
-            cpuif_rd_err <= readback_err;
-        end
-    end
+    {{readback.get_implementation()|indent}}
 
 endmodule

@@ -78,7 +78,7 @@ class FieldLogic:
         path = get_indexed_path(self.top_node, node)
         return f"field_combo.{path}.next"
 
-    def get_counter_control_identifier(self, prop_ref: PropertyReference) -> str:
+    def get_counter_incr_identifier(self, field: 'FieldNode') -> str:
         """
         Return the Veriog string that represents the field's inferred incr/decr strobe signal.
         prop_ref will be either an incr or decr property reference, and it is already known that
@@ -86,6 +86,47 @@ class FieldLogic:
         """
         # TODO: Implement this
         raise NotImplementedError
+
+    def get_counter_decr_identifier(self, field: 'FieldNode') -> str:
+        """
+        Return the Veriog string that represents the field's inferred incr/decr strobe signal.
+        prop_ref will be either an incr or decr property reference, and it is already known that
+        the incr/decr properties are not explicitly set by the user and are therefore inferred.
+        """
+        # TODO: Implement this
+        raise NotImplementedError
+
+    def get_swacc_identifier(self, field: 'FieldNode') -> str:
+        """
+        Asserted when field is software accessed (read)
+        """
+        strb = self.exp.dereferencer.get_access_strobe(field)
+        return f"{strb} && !decoded_req_is_wr"
+
+    def get_swmod_identifier(self, field: 'FieldNode') -> str:
+        """
+        Asserted when field is modified by software (written or read with a
+        set or clear side effect).
+        """
+        w_modifiable = field.is_sw_writable
+        r_modifiable = (field.get_property("onread") is not None)
+        strb = self.exp.dereferencer.get_access_strobe(field)
+
+        if w_modifiable and not r_modifiable:
+            # assert swmod only on sw write
+            return f"{strb} && decoded_req_is_wr"
+
+        if w_modifiable and r_modifiable:
+            # assert swmod on all sw actions
+            return strb
+
+        if not w_modifiable and r_modifiable:
+            # assert swmod only on sw read
+            return f"{strb} && !decoded_req_is_wr"
+
+        # Not sw modifiable
+        return "1'b0"
+
 
     #---------------------------------------------------------------------------
     # Field Logic Conditionals

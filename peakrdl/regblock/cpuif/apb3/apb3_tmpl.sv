@@ -10,7 +10,6 @@ always_ff {{get_always_ff_event(cpuif_reset)}} begin
         cpuif_req_is_wr <= '0;
         cpuif_addr <= '0;
         cpuif_wr_data <= '0;
-        cpuif_wr_bitstrb <= '0;
     end else begin
         if(~is_active) begin
             if({{cpuif.signal("psel")}}) begin
@@ -19,9 +18,6 @@ always_ff {{get_always_ff_event(cpuif_reset)}} begin
                 cpuif_req_is_wr <= {{cpuif.signal("pwrite")}};
                 cpuif_addr <= {{cpuif.signal("paddr")}}[ADDR_WIDTH-1:0];
                 cpuif_wr_data <= {{cpuif.signal("pwdata")}};
-                for(int i=0; i<DATA_WIDTH/8; i++) begin
-                    cpuif_wr_bitstrb[i*8 +: 8] <= {{"{8{"}}{{cpuif.signal("pstrb")}}[i]{{"}}"}};
-                end
             end
         end else begin
             cpuif_req <= '0;
@@ -31,6 +27,7 @@ always_ff {{get_always_ff_event(cpuif_reset)}} begin
         end
     end
 end
+assign cpuif_wr_bitstrb = '0;
 
 // Response
 assign {{cpuif.signal("pready")}} = cpuif_rd_ack | cpuif_wr_ack;

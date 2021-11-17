@@ -7,10 +7,11 @@ from systemrdl.node import AddrmapNode, RootNode
 from .addr_decode import AddressDecode
 from .field_logic import FieldLogic
 from .dereferencer import Dereferencer
-from .readback_mux import ReadbackMux
+from .readback import Readback
 from .signals import InferredSignal, SignalBase
 
-from .cpuif.apb4 import APB4_Cpuif
+from .cpuif import CpuifBase
+from .cpuif.apb3 import APB3_Cpuif
 from .hwif import Hwif
 from .utils import get_always_ff_event
 
@@ -25,11 +26,13 @@ class RegblockExporter:
 
         self.top_node = None # type: AddrmapNode
         self.hwif = None # type: Hwif
+        self.cpuif = None # type: CpuifBase
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
-        self.readback_mux = ReadbackMux(self)
+        self.readback = Readback(self)
         self.dereferencer = Dereferencer(self)
         self.default_resetsignal = InferredSignal("rst")
+        self.cpuif_reset = self.default_resetsignal
 
 
         if user_template_dir:
@@ -63,7 +66,7 @@ class RegblockExporter:
             self.top_node = node
 
 
-        cpuif_cls = kwargs.pop("cpuif_cls", APB4_Cpuif)
+        cpuif_cls = kwargs.pop("cpuif_cls", APB3_Cpuif)
         hwif_cls = kwargs.pop("hwif_cls", Hwif)
         module_name = kwargs.pop("module_name", self.top_node.inst_name)
         package_name = kwargs.pop("package_name", module_name + "_pkg")
@@ -79,13 +82,13 @@ class RegblockExporter:
         # TODO: Scan design...
 
         # TODO: derive this from somewhere
-        cpuif_reset = self.default_resetsignal
-        reset_signals = set([cpuif_reset, self.default_resetsignal])
+        self.cpuif_reset = self.default_resetsignal
+        reset_signals = set([self.cpuif_reset, self.default_resetsignal])
 
-        cpuif = cpuif_cls(
+        self.cpuif = cpuif_cls(
             self,
-            cpuif_reset=cpuif_reset, # TODO:
-            data_width=32, # TODO: derive from the accesswidth used by regs
+            cpuif_reset=self.cpuif_reset, # TODO:
+            data_width=32, # TODO: derive from the regwidth used by regs
             addr_width=32 # TODO:
         )
 
@@ -100,15 +103,13 @@ class RegblockExporter:
             "data_width": 32, # TODO:
             "addr_width": 32, # TODO:
             "reset_signals": reset_signals,
-            "cpuif_reset": cpuif_reset,
             "user_signals": [], # TODO:
             "interrupts": [], # TODO:
-            "cpuif": cpuif,
+            "cpuif": self.cpuif,
             "hwif": self.hwif,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
-            "readback_mux": self.readback_mux,
-            "get_always_ff_event": get_always_ff_event,
+            "readback": self.readback,
         }
 
         # Write out design

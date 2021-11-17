@@ -14,7 +14,8 @@ class _OnRead(NextStateConditional):
 
     def get_predicate(self, field: 'FieldNode') -> str:
         strb = self.exp.dereferencer.get_access_strobe(field)
-        return f"decoded_req && !decoded_req_is_wr && {strb}"
+        return f"{strb} && !decoded_req_is_wr"
+
 
 class ClearOnRead(_OnRead):
     comment = "SW clear on read"

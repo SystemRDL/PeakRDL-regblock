@@ -123,8 +123,6 @@ cpuif_resets
     I have zero interest in implementing resynchronizers
 
 ! regwidth/accesswidth is sane
-    ! accesswidth is the same for all registers in the regblock
-        - accesswidth is what implies the cpuif bus width
     ! accesswidth == regwidth
         Enforce this for now. Dont feel like supporting fancy modes yet
         X regwidth < accesswidth
@@ -132,10 +130,18 @@ cpuif_resets
         ! regwidth > accesswidth
             Need to extend address decode strobes to have multiple bits
             this is where looking at endinaness matters to determine field placement
+            Dont feel like supporting this yet
+    ! constant regwidth?
+        For now, probably limit to only allow the same regwidth everywhere?
 
 
 ! Contents of target are all internal. No external regs
 ! Does not contain any mem components
 
 ! Do not allow unaligned addresses
-    All offsets & strides shall be a multiple of the accesswidth used
+    All offsets & strides shall be a multiple of the regwidth used
+
+    - each reg needs to be aligned to its width
+    - each regfile/addrmap/stride shall be aligned to the largest regwidth it encloses
+        --> Should i promote this check to the compiler? At least as a warnable condition
+            Currently i think I only do the more stringent case of block alignment.

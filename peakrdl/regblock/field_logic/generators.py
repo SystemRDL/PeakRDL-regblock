@@ -54,16 +54,20 @@ class FieldLogicGenerator(RDLForLoopGenerator):
     def __init__(self, field_logic: 'FieldLogic'):
         super().__init__()
         self.field_logic = field_logic
-        self.template = self.field_logic.exp.jj_env.get_template(
+        self.exp = field_logic.exp
+        self.field_storage_template = self.field_logic.exp.jj_env.get_template(
             "field_logic/templates/field_storage.sv"
         )
 
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        # If a field doesn't implement storage, it is not relevant here
-        if not node.implements_storage:
-            return
+        if node.implements_storage:
+            self.generate_field_storage(node)
 
+        self.assign_field_outputs(node)
+
+
+    def generate_field_storage(self, node: 'FieldNode') -> None:
         conditionals = self.field_logic.get_conditionals(node)
         extra_combo_signals = OrderedDict()
         for conditional in conditionals:
@@ -74,11 +78,11 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         if sig is not None:
             resetsignal = RDLSignal(sig)
         else:
-            resetsignal = self.field_logic.exp.default_resetsignal
+            resetsignal = self.exp.default_resetsignal
 
         reset_value = node.get_property("reset")
         if reset_value is not None:
-            reset_value_str = self.field_logic.exp.dereferencer.get_value(reset_value)
+            reset_value_str = self.exp.dereferencer.get_value(reset_value)
         else:
             # 5.9.1-g: If no reset value given, the field is not reset, even if it has a resetsignal.
             reset_value_str = None
@@ -87,13 +91,55 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         context = {
             'node': node,
             'reset': reset_value_str,
-            'field_path': get_indexed_path(self.field_logic.top_node, node),
+            'field_path': get_indexed_path(self.exp.top_node, node),
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
             'resetsignal': resetsignal,
             'get_always_ff_event': get_always_ff_event,
-            'has_value_output': self.field_logic.exp.hwif.has_value_output,
-            'get_output_identifier': self.field_logic.exp.hwif.get_output_identifier,
-
         }
-        self.add_content(self.template.render(context))
+        self.add_content(self.field_storage_template.render(context))
+
+
+    def assign_field_outputs(self, node: 'FieldNode') -> None:
+        field_path = get_indexed_path(self.exp.top_node, node)
+
+        # Field value output
+        if self.exp.hwif.has_value_output(node):
+            output_identifier = self.exp.hwif.get_output_identifier(node)
+            self.add_content(
+                f"assign {output_identifier} = field_storage.{field_path};"
+            )
+
+        # Inferred logical reduction outputs
+        if node.get_property("anded"):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "anded")
+            value = self.exp.dereferencer.get_field_propref_value(node, "anded")
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+        if node.get_property("ored"):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "ored")
+            value = self.exp.dereferencer.get_field_propref_value(node, "ored")
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+        if node.get_property("xored"):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "xored")
+            value = self.exp.dereferencer.get_field_propref_value(node, "xored")
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+
+        if node.get_property("swmod"):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swmod")
+            value = self.field_logic.get_swmod_identifier(node)
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+
+        if node.get_property("swacc"):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swacc")
+            value = self.field_logic.get_swacc_identifier(node)
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )

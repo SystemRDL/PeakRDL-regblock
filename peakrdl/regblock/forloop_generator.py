@@ -31,9 +31,9 @@ class LoopBody(Body):
         )
 
 
-
 class ForLoopGenerator:
     i_type = "int"
+    loop_body_cls = LoopBody
 
     def __init__(self) -> None:
         self._loop_level = 0
@@ -45,7 +45,7 @@ class ForLoopGenerator:
 
     def push_loop(self, dim: int) -> None:
         i = f"i{self._loop_level}"
-        b = LoopBody(dim, i, self.i_type)
+        b = self.loop_body_cls(dim, i, self.i_type)
         self._stack.append(b)
         self._loop_level += 1
 

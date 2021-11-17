@@ -201,7 +201,6 @@ class Hwif:
         for prop_name in ["anded", "ored", "xored", "swmod", "swacc"]:
             if node.get_property(prop_name):
                 contents.append(f"logic {prop_name};")
-        # TODO: Are there was_written/was_read strobes too?
 
         return contents
 
@@ -247,9 +246,7 @@ class Hwif:
             # TODO: Implement this
             raise NotImplementedError()
         elif isinstance(obj, PropertyReference):
-            assert obj.name in {'hwclr', 'hwset', 'swwe', 'swwel', 'we', 'wel'}
-            path = get_indexed_path(self.top_node, obj.node)
-            return "hwif_in." + path + "." + obj.name
+            return self.get_implied_prop_input_identifier(obj.node, obj.name)
 
         raise RuntimeError("Unhandled reference to: %s", obj)
 
@@ -274,10 +271,11 @@ class Hwif:
             path = get_indexed_path(self.top_node, obj)
             return "hwif_out." + path + ".value"
         elif isinstance(obj, PropertyReference):
-            assert obj.name in {"anded", "ored", "xored", "swmod", "swacc"}
+            # TODO: this might be dead code.
+            # not sure when anything would call this function with a prop ref
+            # when dereferencer's get_value is more useful here
             assert obj.node.get_property(obj.name)
-            path = get_indexed_path(self.top_node, obj.node)
-            return "hwif_out." + path + "." + obj.name
+            return self.get_implied_prop_output_identifier(obj.node, obj.name)
 
         raise RuntimeError("Unhandled reference to: %s", obj)
 

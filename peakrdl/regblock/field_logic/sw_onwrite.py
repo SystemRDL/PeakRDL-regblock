@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from systemrdl.node import FieldNode
 
 # TODO: implement sw=w1 "write once" fields
+# TODO: Implement swwe/swwel masking properties
 
 class _OnWrite(NextStateConditional):
     onwritetype = None
@@ -16,7 +17,15 @@ class _OnWrite(NextStateConditional):
 
     def get_predicate(self, field: 'FieldNode') -> str:
         strb = self.exp.dereferencer.get_access_strobe(field)
-        return f"decoded_req && decoded_req_is_wr && {strb}"
+        return f"{strb} && decoded_req_is_wr"
+
+    def _wr_data(self, field: 'FieldNode') -> str:
+        if field.msb < field.lsb:
+            # Field gets bitswapped since it is in [low:high] orientation
+            value = f"{{<<{{decoded_wr_data[{field.high}:{field.low}]}}}}"
+        else:
+            value = f"decoded_wr_data[{field.high}:{field.low}]"
+        return value
 
 class WriteOneSet(_OnWrite):
     comment = "SW write 1 set"
@@ -25,7 +34,7 @@ class WriteOneSet(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} | decoded_wr_data;",
+            f"field_combo.{field_path}.next = field_storage.{field_path} | {self._wr_data(field)}];",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 
@@ -36,7 +45,7 @@ class WriteOneClear(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} & ~decoded_wr_data;",
+            f"field_combo.{field_path}.next = field_storage.{field_path} & ~{self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 
@@ -47,7 +56,7 @@ class WriteOneToggle(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} ^ decoded_wr_data;",
+            f"field_combo.{field_path}.next = field_storage.{field_path} ^ {self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 
@@ -58,7 +67,7 @@ class WriteZeroSet(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} | ~decoded_wr_data;",
+            f"field_combo.{field_path}.next = field_storage.{field_path} | ~{self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 
@@ -69,7 +78,7 @@ class WriteZeroClear(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} & decoded_wr_data;",
+            f"field_combo.{field_path}.next = field_storage.{field_path} & {self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 
@@ -80,7 +89,7 @@ class WriteZeroToggle(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} ^ ~decoded_wr_data;",
+            f"field_combo.{field_path}.next = field_storage.{field_path} ^ ~{self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 
@@ -113,6 +122,6 @@ class Write(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = decoded_wr_data;",
+            f"field_combo.{field_path}.next = {self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]

@@ -21,6 +21,3 @@ always_ff {{get_always_ff_event(resetsignal)}} begin
         field_storage.{{field_path}} <= field_combo.{{field_path}}.next;
     end
 end
-{% if has_value_output(node) -%}
-    assign {{get_output_identifier(node)}} = field_storage.{{field_path}};
-{%- endif -%}
