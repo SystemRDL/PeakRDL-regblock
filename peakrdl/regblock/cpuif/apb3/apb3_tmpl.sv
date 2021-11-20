@@ -3,8 +3,8 @@
 {% block body %}
 // Request
 logic is_active;
-always_ff {{get_always_ff_event(cpuif_reset)}} begin
-    if({{cpuif_reset.activehigh_identifier}}) begin
+always_ff {{get_always_ff_event(cpuif.reset)}} begin
+    if({{cpuif.reset.activehigh_identifier}}) begin
         is_active <= '0;
         cpuif_req <= '0;
         cpuif_req_is_wr <= '0;
@@ -16,7 +16,11 @@ always_ff {{get_always_ff_event(cpuif_reset)}} begin
                 is_active <= '1;
                 cpuif_req <= '1;
                 cpuif_req_is_wr <= {{cpuif.signal("pwrite")}};
-                cpuif_addr <= {{cpuif.signal("paddr")}}[ADDR_WIDTH-1:0];
+                {%- if cpuif.data_width == 8 %}
+                cpuif_addr <= {{cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:0];
+                {%- else %}
+                cpuif_addr <= { {{-cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width//8)}}], {{clog2(cpuif.data_width//8)}}'b0};
+                {%- endif %}
                 cpuif_wr_data <= {{cpuif.signal("pwdata")}};
             end
         end else begin
@@ -27,7 +31,7 @@ always_ff {{get_always_ff_event(cpuif_reset)}} begin
         end
     end
 end
-assign cpuif_wr_bitstrb = '0;
+assign cpuif_wr_biten = '1;
 
 // Response
 assign {{cpuif.signal("pready")}} = cpuif_rd_ack | cpuif_wr_ack;

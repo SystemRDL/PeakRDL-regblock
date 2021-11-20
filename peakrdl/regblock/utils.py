@@ -30,3 +30,6 @@ def get_always_ff_event(resetsignal: 'Optional[SignalBase]') -> str:
     elif resetsignal.is_async and not resetsignal.is_activehigh:
         return f"@(posedge clk or negedge {resetsignal.identifier})"
     return "@(posedge clk)"
+
+def clog2(n: int) -> int:
+    return n.bit_length() - 1

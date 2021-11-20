@@ -15,7 +15,7 @@ add wave -noupdate /tb/dut/cpuif_req
 add wave -noupdate /tb/dut/cpuif_req_is_wr
 add wave -noupdate /tb/dut/cpuif_addr
 add wave -noupdate /tb/dut/cpuif_wr_data
-add wave -noupdate /tb/dut/cpuif_wr_bitstrb
+add wave -noupdate /tb/dut/cpuif_wr_biten
 add wave -noupdate /tb/dut/cpuif_rd_ack
 add wave -noupdate /tb/dut/cpuif_rd_data
 add wave -noupdate /tb/dut/cpuif_rd_err

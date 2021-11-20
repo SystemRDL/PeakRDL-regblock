@@ -2,11 +2,11 @@
 addrmap test_regblock {
     reg my_reg {
         field { sw=rw; hw=r; anded;} a[8] = 0x10;
-        field { sw=rw; hw=r; ored;} b[8] = 0x20;
-        field { sw=rw; hw=r; swmod;} c[8] = 0x30;
+        //field { sw=rw; hw=r; ored;} b[8] = 0x20;
+        //field { sw=rw; hw=r; swmod;} c[8] = 0x30;
     };
 
-    my_reg r0 @0x000;
-    my_reg r1 @0x100;
-    my_reg r2 @0x200;
+    //my_reg r0 @0x000;
+    //my_reg r1 @0x100;
+    my_reg r2[112] @0x200 += 8;
 };

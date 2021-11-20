@@ -21,7 +21,7 @@ Downstream Signals:
             - cpuif_addr
                 Byte address
             - cpuif_wr_data
-            - cpuif_wr_bitstrb
+            - cpuif_wr_biten
                 per-bit strobes
                 some protocols may opt to tie this to all 1's
     - cpuif_rd_ack

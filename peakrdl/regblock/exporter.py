@@ -3,17 +3,19 @@ from typing import Union
 
 import jinja2 as jj
 from systemrdl.node import AddrmapNode, RootNode
+from systemrdl.walker import RDLWalker
 
 from .addr_decode import AddressDecode
 from .field_logic import FieldLogic
 from .dereferencer import Dereferencer
 from .readback import Readback
-from .signals import InferredSignal, SignalBase
+from .signals import InferredSignal, RDLSignal
 
 from .cpuif import CpuifBase
 from .cpuif.apb3 import APB3_Cpuif
 from .hwif import Hwif
 from .utils import get_always_ff_event
+from .scan_design import DesignScanner
 
 class RegblockExporter:
     def __init__(self, **kwargs):
@@ -29,10 +31,9 @@ class RegblockExporter:
         self.cpuif = None # type: CpuifBase
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
-        self.readback = Readback(self)
+        self.readback = None # type: Readback
         self.dereferencer = Dereferencer(self)
         self.default_resetsignal = InferredSignal("rst")
-        self.cpuif_reset = self.default_resetsignal
 
 
         if user_template_dir:
@@ -67,41 +68,55 @@ class RegblockExporter:
 
 
         cpuif_cls = kwargs.pop("cpuif_cls", APB3_Cpuif)
-        hwif_cls = kwargs.pop("hwif_cls", Hwif)
         module_name = kwargs.pop("module_name", self.top_node.inst_name)
         package_name = kwargs.pop("package_name", module_name + "_pkg")
-        module_file_path = os.path.join(output_dir, module_name + ".sv")
-        package_file_path = os.path.join(output_dir, package_name + ".sv")
+
+        # Pipelining options
+        retime_read_response = kwargs.pop("retime_read_response", True)
+        retime_read_fanin = kwargs.pop("retime_read_fanin", False)
 
         # Check for stray kwargs
         if kwargs:
             raise TypeError("got an unexpected keyword argument '%s'" % list(kwargs.keys())[0])
 
 
+        # Scan the design for any unsupported features
+        # Also collect pre-export information
+        scanner = DesignScanner(self)
+        RDLWalker().walk(self.top_node, scanner)
+        if scanner.msg.had_error:
+            scanner.msg.fatal(
+                "Unable to export due to previous errors"
+            )
+            raise ValueError
 
-        # TODO: Scan design...
-
-        # TODO: derive this from somewhere
-        self.cpuif_reset = self.default_resetsignal
-        reset_signals = set([self.cpuif_reset, self.default_resetsignal])
+        cpuif_reset_tmp = self.top_node.cpuif_reset
+        if cpuif_reset_tmp:
+            cpuif_reset = RDLSignal(cpuif_reset_tmp)
+        else:
+            cpuif_reset = self.default_resetsignal
+        reset_signals = set([cpuif_reset, self.default_resetsignal])
 
         self.cpuif = cpuif_cls(
             self,
-            cpuif_reset=self.cpuif_reset, # TODO:
-            data_width=32, # TODO: derive from the regwidth used by regs
-            addr_width=32 # TODO:
+            cpuif_reset=cpuif_reset,
+            data_width=scanner.cpuif_data_width,
+            addr_width=self.top_node.size.bit_length()
         )
 
-        self.hwif = hwif_cls(
+        self.hwif = Hwif(
             self,
             package_name=package_name,
+        )
+
+        self.readback = Readback(
+            self,
+            retime_read_fanin
         )
 
         # Build Jinja template context
         context = {
             "module_name": module_name,
-            "data_width": 32, # TODO:
-            "addr_width": 32, # TODO:
             "reset_signals": reset_signals,
             "user_signals": [], # TODO:
             "interrupts": [], # TODO:
@@ -110,13 +125,17 @@ class RegblockExporter:
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
             "readback": self.readback,
+            "get_always_ff_event": get_always_ff_event,
+            "retime_read_response": retime_read_response,
         }
 
         # Write out design
+        package_file_path = os.path.join(output_dir, package_name + ".sv")
         template = self.jj_env.get_template("package_tmpl.sv")
         stream = template.stream(context)
         stream.dump(package_file_path)
 
+        module_file_path = os.path.join(output_dir, module_name + ".sv")
         template = self.jj_env.get_template("module_tmpl.sv")
         stream = template.stream(context)
         stream.dump(module_file_path)

@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
+
 ../export.py test_regblock.rdl
 
-vlog -sv -suppress 2720 -quiet -f src.f
+vlog -sv -f vlog_args.f -f src.f
 vsim -c -quiet tb -do "log -r /*; run -all; exit;"

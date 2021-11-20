@@ -96,7 +96,9 @@ X If a node ispresent=true, and any of it's properties are a reference,
     y->we = y;
     ... it works, but should it be allowed? Seems like user-error
 
-
+! Signals marked as field_reset or cpuif_reset need to have activehigh/activelow
+  specified. (8.2.1-d states that activehigh/low does not have an implied default state if unset!)
+  Also aplies to signals referenced by fieldreset
 
 
 
@@ -109,18 +111,26 @@ List of stuff in case I forget.
     ! = No! exporter does not enforce this yet
 
 --------------------------------------------------------------------------------
+
+X Contents of target are all internal. No external regs
+
+X Does not contain any mem components
+
+X Warn/error on any signal with cpuif_reset set, that is not in the top-level
+    addrmap. At the very least, warn that it will be ignored
+
+
 ! "bridge" addrmap not supported
     export shall refuse to process an addrmap marked as a "bridge"
     Only need to check top-level. Compiler will enforce that child nodes arent bridges
-
-cpuif_resets
-    ! Warn/error on any signal with cpuif_reset set, that is not in the top-level
-        addrmap. At the very least, warn that it will be ignored
 
 ! async data signals
     Only supporting async signals if they are exclusively used in resets.
     Anyhting else declared as "async" shall be an error
     I have zero interest in implementing resynchronizers
+
+! Error if a property references a non-signal component, or property reference from
+    outside the export hierarchy
 
 ! regwidth/accesswidth is sane
     ! accesswidth == regwidth
@@ -134,9 +144,6 @@ cpuif_resets
     ! constant regwidth?
         For now, probably limit to only allow the same regwidth everywhere?
 
-
-! Contents of target are all internal. No external regs
-! Does not contain any mem components
 
 ! Do not allow unaligned addresses
     All offsets & strides shall be a multiple of the regwidth used

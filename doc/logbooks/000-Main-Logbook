@@ -84,22 +84,13 @@ Dev Todo list
     I shouldn't have to go to the hwif or whatever
     dereferencer should have all the query functions
 
-- readback mux
-
 - Start a sphinx docs thing
     I need to keep better track of everything!
     Diagrams of each layer in an architecture overview
     transcribe logbook into dev notes
 
-- Am i doing msb/lsb correctly?
-    bit ordering:
-        fields are always [msb:lsb]
-        but could be [low:high] or [high:low]
-    But how does this affect bus <-> field mapping though??
-        - [low:high] means that bit order gets swapped from the bus
-        - [high:low] means bit order is sliced naturally
-    DONE
-
+    Define strict interface expectations for each layer!
+    Including latency/etc
 
 endianness controls byte order of the CPU bus
     controls byteswap at the CPUIF layer
@@ -119,3 +110,7 @@ Do something about cpuif byte strobes?
         Generate these in the io struct? I forget what I decided
 
 - dereferencer has some remaining todos that depend on field logic
+
+- FIXME: cpuif reset inside top-level addrmap results in two input signals:
+    - one popped out to top
+    - another inside the input struct
