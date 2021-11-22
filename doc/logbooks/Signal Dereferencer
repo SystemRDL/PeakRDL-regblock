@@ -4,7 +4,7 @@ to stuff via a normalized interface.
 For example, if RDL defines:
     my_field->next = my_other_field
 Then in Python (or a template) I could do:
-    x = my_field.get_property("next")
+    x = my_field.get_property('next')
     y = dereferencer.get(x)
 and trust that I'll get a value/identifier/whatever that accurately represents
 the value being referenced

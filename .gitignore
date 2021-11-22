@@ -3,6 +3,10 @@
 **/.venv
 **/.coverage
 **/*.rpt
+**/.pytest_cache
+**/_build
+**/*.out
+**/transcript
 
 build/
 dist/

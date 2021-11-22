@@ -22,7 +22,7 @@ class DesignScanner(RDLListener):
 
     def enter_Reg(self, node: 'RegNode') -> None:
         # The CPUIF's bus width is sized according to the largest register in the design
-        self.cpuif_data_width = max(self.cpuif_data_width, node.get_property("regwidth"))
+        self.cpuif_data_width = max(self.cpuif_data_width, node.get_property('regwidth'))
 
     # TODO: Collect any references to signals that lie outside of the hierarchy
     # These will be added as top-level signals

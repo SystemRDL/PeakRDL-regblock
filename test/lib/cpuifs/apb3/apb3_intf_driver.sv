@@ -3,6 +3,7 @@ interface apb3_intf_driver #(
         parameter ADDR_WIDTH = 32
     )(
         input wire clk,
+        input wire rst,
         apb3_intf.master m_apb
     );
 
@@ -84,12 +85,25 @@ interface apb3_intf_driver #(
 
         // Wait for response
         while(cb.PREADY !== 1'b1) @(cb);
+        assert(!$isunknown(cb.PRDATA)) else $error("Read from 0x%0x returned X's on PRDATA", addr);
+        assert(!$isunknown(cb.PSLVERR)) else $error("Read from 0x%0x returned X's on PSLVERR", addr);
         data = cb.PRDATA;
         reset();
     endtask
 
+    task assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data);
+        logic [DATA_WIDTH-1:0] data;
+        read(addr, data);
+        assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
+    endtask
+
     initial begin
         reset();
+    end
+
+    initial forever begin
+        @cb;
+        if(!rst) assert(!$isunknown(cb.PREADY)) else $error("Saw X on PREADY!");
     end
 
 endinterface

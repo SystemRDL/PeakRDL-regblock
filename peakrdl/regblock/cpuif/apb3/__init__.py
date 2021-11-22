@@ -14,7 +14,6 @@ class APB3_Cpuif(CpuifBase):
 class APB3_Cpuif_flattened(APB3_Cpuif):
     @property
     def port_declaration(self) -> str:
-        # TODO: Reference data/addr width from verilog parameter perhaps?
         lines = [
             "input wire " + self.signal("psel"),
             "input wire " + self.signal("penable"),

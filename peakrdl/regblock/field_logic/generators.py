@@ -74,13 +74,13 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             for signal in conditional.get_extra_combo_signals(node):
                 extra_combo_signals[signal.name] = signal
 
-        sig = node.get_property("resetsignal")
+        sig = node.get_property('resetsignal')
         if sig is not None:
             resetsignal = RDLSignal(sig)
         else:
             resetsignal = self.exp.default_resetsignal
 
-        reset_value = node.get_property("reset")
+        reset_value = node.get_property('reset')
         if reset_value is not None:
             reset_value_str = self.exp.dereferencer.get_value(reset_value)
         else:
@@ -106,38 +106,39 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         # Field value output
         if self.exp.hwif.has_value_output(node):
             output_identifier = self.exp.hwif.get_output_identifier(node)
+            value = self.exp.dereferencer.get_value(node)
             self.add_content(
-                f"assign {output_identifier} = field_storage.{field_path};"
+                f"assign {output_identifier} = {value};"
             )
 
         # Inferred logical reduction outputs
-        if node.get_property("anded"):
+        if node.get_property('anded'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "anded")
             value = self.exp.dereferencer.get_field_propref_value(node, "anded")
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
-        if node.get_property("ored"):
+        if node.get_property('ored'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "ored")
             value = self.exp.dereferencer.get_field_propref_value(node, "ored")
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
-        if node.get_property("xored"):
+        if node.get_property('xored'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "xored")
             value = self.exp.dereferencer.get_field_propref_value(node, "xored")
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
 
-        if node.get_property("swmod"):
+        if node.get_property('swmod'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swmod")
             value = self.field_logic.get_swmod_identifier(node)
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
 
-        if node.get_property("swacc"):
+        if node.get_property('swacc'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swacc")
             value = self.field_logic.get_swacc_identifier(node)
             self.add_content(

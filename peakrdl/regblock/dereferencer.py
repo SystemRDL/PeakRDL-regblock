@@ -57,11 +57,11 @@ class Dereferencer:
             # must be a constant value as defined by its reset value
             reset_value = obj.get_property('reset')
             if reset_value is not None:
-                return f"'h{reset_value:x}"
+                return self.get_value(reset_value)
             else:
                 # No reset value defined!
-                # Fall back to a value of 0
-                return "'h0"
+                # Callers shall ensure this is impossible
+                raise RuntimeError
 
         if isinstance(obj, SignalNode):
             # Signals are always inputs from the hwif

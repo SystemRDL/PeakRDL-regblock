@@ -109,7 +109,7 @@ class FieldLogic:
         set or clear side effect).
         """
         w_modifiable = field.is_sw_writable
-        r_modifiable = (field.get_property("onread") is not None)
+        r_modifiable = (field.get_property('onread') is not None)
         strb = self.exp.dereferencer.get_access_strobe(field)
 
         if w_modifiable and not r_modifiable:

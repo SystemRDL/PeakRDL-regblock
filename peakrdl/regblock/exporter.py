@@ -72,8 +72,8 @@ class RegblockExporter:
         package_name = kwargs.pop("package_name", module_name + "_pkg")
 
         # Pipelining options
-        retime_read_response = kwargs.pop("retime_read_response", True)
         retime_read_fanin = kwargs.pop("retime_read_fanin", False)
+        retime_read_response = kwargs.pop("retime_read_response", True)
 
         # Check for stray kwargs
         if kwargs:

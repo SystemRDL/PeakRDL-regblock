@@ -1,0 +1,64 @@
+addrmap top {
+    default regwidth = 8;
+
+    // All the valid combinations from Table 12
+    reg {
+        field {
+            sw=rw; hw=rw; we; // Storage element
+        } f[8] = 10;
+    } r1;
+
+    reg {
+        field {
+            sw=rw; hw=r; // Storage element
+        } f[8] = 20;
+    } r2;
+
+    reg {
+        field {
+            sw=rw; hw=w; wel; // Storage element
+        } f[8] = 30;
+    } r3;
+
+    reg {
+        field {
+            sw=rw; hw=na; // Storage element
+        } f[8] = 40;
+    } r4;
+
+    reg {
+        field {
+            sw=r; hw=rw; we; // Storage element
+        } f[8] = 50;
+    } r5;
+
+    reg {
+        field {
+            sw=r; hw=r; // Wire/Bus - constant value
+        } f[8] = 60;
+    } r6;
+
+    reg {
+        field {
+            sw=r; hw=w; // Wire/Bus - hardware assigns value
+        } f[8];
+    } r7;
+
+    reg {
+        field {
+            sw=r; hw=na; // Wire/Bus - constant value
+        } f[8] = 80;
+    } r8;
+
+    reg {
+        field {
+            sw=w; hw=rw; we; // Storage element
+        } f[8] = 90;
+    } r9;
+
+    reg {
+        field {
+            sw=w; hw=r; // Storage element
+        } f[8] = 100;
+    } r10;
+};

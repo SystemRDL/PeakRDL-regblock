@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class _OnRead(NextStateConditional):
     onreadtype = None
     def is_match(self, field: 'FieldNode') -> bool:
-        return field.get_property("onread") == self.onreadtype
+        return field.get_property('onread') == self.onreadtype
 
     def get_predicate(self, field: 'FieldNode') -> str:
         strb = self.exp.dereferencer.get_access_strobe(field)

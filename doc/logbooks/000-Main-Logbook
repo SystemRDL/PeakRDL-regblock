@@ -77,6 +77,60 @@ Write about this in the SystemRDL errata?
 
 
 ================================================================================
+Unit Testing
+================================================================================
+I NEED to start building a suite of unit-tests!
+Goal:
+- Small easy-to-understand testcases
+- Parameterized testcases to rerun testcases with different cpuifs, etc.
+- coverage
+
+Split it into the following components:
+    Common testbench SV infrastructure
+        Make a generic SV framework that can be re-used everywhere
+        Use SV interfaces/classes and even `include preprocessor tricks to make it possible
+        to swap out for specific testcases:
+        - cpuif abstraction layer
+            Need to be able to swap out to different CPU interfaces easily
+        - Clocks/resets
+        - DUT instantiation
+            Will need to account for minor variations in port list somehow
+            Maybe a good time to use the .* method?
+        - Helper functions, assertion library, etc.
+
+    Testcase-specific
+        SV sequence file that issues transactions and asserts things
+
+Dispatch tests completely through pytest
+    - Each testcase has its own folder with:
+        testcase-specific SV file(s)
+        RDL file
+        pytest entry point .py file
+    - build up py utility functions that will:
+        Export the testcase-specific RDL --> SV
+        Compile and run the simulation
+            need to deal with timeouts if the RTL deadlocks somehow. Limit of how many uS to run?
+        Query sim result for pass/fail
+    - Each testcase folder will likely have multiple subtests
+        - Variations to RDL export:
+            - different cpuif
+            - pipe stages
+            - etc.
+        - Different test sequences
+            may be necessary to test the same compilation in different ways
+            I can imagine it may not be possible to do everything from a single test sequence.
+            May require the sim to reset to T-0 for fresh-slate.
+        - Handle these variations using pytest testcases & parameterizations as appropriate.
+            Possibly something like:
+                - Each pytest class --> unique compilation/elaboration
+                    pytest parameters to expand this for export variations
+                - Each pytest class method --> simulation sequence
+    - Collect coverage!
+        install the tool in a venv, collect exporter coverage, etc.
+        TBD if i want to deal with SV coverage (is that even allowed in modelsim free?)
+
+
+================================================================================
 Dev Todo list
 ================================================================================
 

@@ -104,4 +104,4 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         super().pop_loop()
 
         # Advance current scope's offset to account for loop's contents
-        self.current_offset += n_regs * dim - 1
+        self.current_offset = start_offset + n_regs * dim

@@ -50,11 +50,11 @@ class RDLSignal(SignalBase):
 
     @property
     def is_async(self) -> bool:
-        return self.rdl_signal.get_property("async")
+        return self.rdl_signal.get_property('async')
 
     @property
     def is_activehigh(self) -> bool:
-        return self.rdl_signal.get_property("activehigh")
+        return self.rdl_signal.get_property('activehigh')
 
     @property
     def width(self) -> int:

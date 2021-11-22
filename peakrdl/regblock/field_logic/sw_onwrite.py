@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class _OnWrite(NextStateConditional):
     onwritetype = None
     def is_match(self, field: 'FieldNode') -> bool:
-        return field.get_property("onwrite") == self.onwritetype
+        return field.is_sw_writable and field.get_property('onwrite') == self.onwritetype
 
     def get_predicate(self, field: 'FieldNode') -> str:
         strb = self.exp.dereferencer.get_access_strobe(field)

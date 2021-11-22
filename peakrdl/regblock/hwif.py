@@ -80,7 +80,7 @@ class Hwif:
             empty_array_suffix="x"
         )
         if is_input:
-            return f'{base}_in_t'
+            return f'{base}__in_t'
         return f'{base}__out_t'
 
     def _do_struct_addressable(self, lines:list, node:AddressableNode, is_input:bool = True) -> bool:
@@ -159,22 +159,22 @@ class Hwif:
                 contents.append(f"logic {prop_name};")
 
         # Generate any implied counter inputs
-        if node.get_property("counter"):
-            if not node.get_property("incr"):
+        if node.get_property('counter'):
+            if not node.get_property('incr'):
                 # User did not provide their own incr component reference.
                 # Imply an input
                 contents.append("logic incr;")
-            if not node.get_property("decr"):
+            if not node.get_property('decr'):
                 # User did not provide their own decr component reference.
                 # Imply an input
                 contents.append("logic decr;")
 
-            width = node.get_property("incrwidth")
+            width = node.get_property('incrwidth')
             if width:
                 # Implies a corresponding incrvalue input
                 contents.append(f"logic [{width-1}:0] incrvalue;")
 
-            width = node.get_property("decrwidth")
+            width = node.get_property('decrwidth')
             if width:
                 # Implies a corresponding decrvalue input
                 contents.append(f"logic [{width-1}:0] decrvalue;")

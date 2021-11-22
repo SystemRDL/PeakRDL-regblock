@@ -82,7 +82,7 @@ X If a node ispresent=true, and any of it's properties are a reference,
     then those references' ispresent shall also be true
     This is an explicit clause in the spec: 5.3.1-i
 
-! Flag illegal sw actions if not readable/writable
+X Flag illegal sw actions if not readable/writable
     The following combinations dont get flagged currently:
         sw=w; rclr;
         sw=w; rset;
@@ -91,14 +91,14 @@ X If a node ispresent=true, and any of it's properties are a reference,
     their counterparts do get flagged. such as:
         sw=w; onread=rclr;
 
+X Signals marked as field_reset or cpuif_reset need to have activehigh/activelow
+  specified. (8.2.1-d states that activehigh/low does not have an implied default state if unset!)
+  Also aplies to signals referenced by resetsignal
+
 ! hwclr/hwset/we/wel probably shouldn't be able to reference itself
     y->hwclr = y;
     y->we = y;
     ... it works, but should it be allowed? Seems like user-error
-
-! Signals marked as field_reset or cpuif_reset need to have activehigh/activelow
-  specified. (8.2.1-d states that activehigh/low does not have an implied default state if unset!)
-  Also aplies to signals referenced by fieldreset
 
 
 
@@ -126,7 +126,7 @@ X Warn/error on any signal with cpuif_reset set, that is not in the top-level
 
 ! async data signals
     Only supporting async signals if they are exclusively used in resets.
-    Anyhting else declared as "async" shall be an error
+    Anyhting else declared as "async" shall emit a warning that it is ignored
     I have zero interest in implementing resynchronizers
 
 ! Error if a property references a non-signal component, or property reference from
