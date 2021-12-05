@@ -14,4 +14,12 @@ addrmap top {
             swmod;
         } f[8] = 20;
     } r2;
+
+    reg {
+        field {
+            sw=rw; hw=r;
+            swmod;
+            rclr;
+        } f[8] = 30;
+    } r3;
 };

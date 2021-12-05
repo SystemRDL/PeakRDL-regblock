@@ -1,0 +1,63 @@
+addrmap top {
+    reg {
+        field {
+            sw=rw; hw=na;
+        } hw_enable[7:0] = 0xFF;
+
+        field {
+            sw=rw; hw=na;
+        } hw_mask[15:8] = 0x00;
+
+        field {
+            sw=rw; hw=na;
+        } hw_clr[16:16] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } hw_set[17:17] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } hw_we[18:18] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } hw_wel[20:20] = 1;
+    } hw_ctrl;
+
+
+    reg {
+        field {
+            sw=r; hw=w;
+            we; hwclr; hwset;
+        } f[7:0] = 0x11;
+    } r1;
+    r1.f->hwenable = hw_ctrl.hw_enable;
+
+
+    reg {
+        field {
+            sw=r; hw=w;
+            we; hwclr; hwset;
+        } f[7:0] = 0x22;
+    } r2;
+    r2.f->hwmask = hw_ctrl.hw_mask;
+
+
+    reg {
+        field {
+            sw=rw; hw=w;
+        } f[7:0] = 0x33;
+    } r3;
+    r3.f->hwenable = hw_ctrl.hw_enable;
+    r3.f->hwclr = hw_ctrl.hw_clr;
+    r3.f->hwset = hw_ctrl.hw_set;
+    r3.f->we = hw_ctrl.hw_we;
+
+    reg {
+        field {
+            sw=rw; hw=w;
+        } f[7:0] = 0x44;
+    } r4;
+    r4.f->wel = hw_ctrl.hw_wel;
+};

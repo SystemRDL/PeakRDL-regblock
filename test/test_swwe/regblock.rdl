@@ -1,0 +1,66 @@
+addrmap top {
+    default regwidth = 8;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } r3_swwe[0:0] = 1;
+
+        field {
+            sw=rw; hw=na;
+        } r4_swwel[1:1] = 0;
+    } lock;
+
+    //---------------------------------
+    // via inferred signal
+    //---------------------------------
+
+    reg {
+        field {
+            sw=rw; hw=na;
+            swwe;
+        } f[8] = 0x11;
+    } r1;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+            swwel;
+        } f[8] = 0x22;
+    } r2;
+
+    //---------------------------------
+    // via lock register
+    //---------------------------------
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f[8] = 0x33;
+    } r3;
+    r3.f->swwe = lock.r3_swwe;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f[8] = 0x44;
+    } r4;
+    r4.f->swwel = lock.r4_swwel;
+
+    //---------------------------------
+    // via prop ref chaining
+    //---------------------------------
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f[8] = 0x55;
+    } r5;
+    r5.f->swwe = r3.f->swwe;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f[8] = 0x66;
+    } r6;
+    r6.f->swwe = r4.f->swwel; // intentionally opposite!
+};

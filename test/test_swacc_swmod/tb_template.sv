@@ -1,6 +1,7 @@
 {% extends "lib/templates/tb_base.sv" %}
 
 {% block seq %}
+    {% sv_line_anchor %}
     logic [7:0] rd_data;
     logic [7:0] latched_data;
     int event_count;
@@ -61,6 +62,28 @@
     join_any
     disable fork;
 
-    // TODO: verify some other atypical swmod (onread actions)
+    // Verify that hwif changes 1 cycle after swmod
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(hwif_out.r3.f.value == 30);
+                if(hwif_out.r3.f.swmod) break;
+                @cb;
+            end
+            @cb;
+            forever begin
+                assert(hwif_out.r3.f.value == 0);
+                assert(hwif_out.r3.f.swmod == 0);
+                @cb;
+            end
+        end
+
+        begin
+            cpuif.assert_read('h2, 30);
+            @cb;
+        end
+    join_any
+    disable fork;
 
 {% endblock %}

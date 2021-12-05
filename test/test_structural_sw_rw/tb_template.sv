@@ -1,6 +1,7 @@
 {% extends "lib/templates/tb_base.sv" %}
 
 {% block seq %}
+    {% sv_line_anchor %}
     ##1;
     cb.rst <= '0;
     ##1;

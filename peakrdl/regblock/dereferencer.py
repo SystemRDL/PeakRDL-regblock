@@ -81,12 +81,14 @@ class Dereferencer:
     def get_field_propref_value(self, field: FieldNode, prop_name: str) -> str:
         # Value reduction properties.
         # Wrap with the appropriate Verilog reduction operator
-        val = self.get_value(field)
         if prop_name == "anded":
+            val = self.get_value(field)
             return f"&({val})"
         elif prop_name == "ored":
+            val = self.get_value(field)
             return f"|({val})"
         elif prop_name == "xored":
+            val = self.get_value(field)
             return f"^({val})"
 
         # references that directly access a property value
@@ -159,7 +161,7 @@ class Dereferencer:
                 prop_value = field.get_property(complementary_pairs[prop_name])
                 if prop_value is True:
                     # Points to inferred hwif input
-                    return f"!({self.hwif.get_implied_prop_input_identifier(field, prop_name)})"
+                    return f"!({self.hwif.get_implied_prop_input_identifier(field, complementary_pairs[prop_name])})"
                 elif prop_value is False:
                     # This should never happen, as this is checked by the compiler's validator
                     raise RuntimeError

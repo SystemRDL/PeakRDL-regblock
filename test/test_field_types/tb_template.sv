@@ -1,6 +1,7 @@
 {% extends "lib/templates/tb_base.sv" %}
 
 {% block seq %}
+    {% sv_line_anchor %}
     cb.hwif_in.r3.f.wel <= 1;
     ##1;
     cb.rst <= '0;

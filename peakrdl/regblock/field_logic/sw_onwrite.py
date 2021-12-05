@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from systemrdl.node import FieldNode
 
 # TODO: implement sw=w1 "write once" fields
-# TODO: Implement swwe/swwel masking properties
 
 class _OnWrite(NextStateConditional):
     onwritetype = None
@@ -17,7 +16,14 @@ class _OnWrite(NextStateConditional):
 
     def get_predicate(self, field: 'FieldNode') -> str:
         strb = self.exp.dereferencer.get_access_strobe(field)
+
+        if field.get_property('swwe') or field.get_property('swwel'):
+            # dereferencer will wrap swwel complement if necessary
+            qualifier = self.exp.dereferencer.get_field_propref_value(field, 'swwe')
+            return f"{strb} && decoded_req_is_wr && {qualifier}"
+
         return f"{strb} && decoded_req_is_wr"
+
 
     def _wr_data(self, field: 'FieldNode') -> str:
         if field.msb < field.lsb:
@@ -34,7 +40,7 @@ class WriteOneSet(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} | {self._wr_data(field)}];",
+            f"field_combo.{field_path}.next = field_storage.{field_path} | {self._wr_data(field)};",
             f"field_combo.{field_path}.load_next = '1;",
         ]
 

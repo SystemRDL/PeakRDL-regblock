@@ -1,3 +1,4 @@
 pytest
 parameterized
 pytest-xdist
+jinja2-simple-tags

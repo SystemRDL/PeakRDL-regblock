@@ -5,10 +5,13 @@ import glob
 import shutil
 import subprocess
 import inspect
+import pathlib
 
 import pytest
 import jinja2 as jj
 from systemrdl import RDLCompiler
+
+from .sv_line_anchor import SVLineAnchor
 
 from peakrdl.regblock import RegblockExporter
 from .cpuifs.base import CpuifTestMode
@@ -53,7 +56,7 @@ class RegblockTestCase(unittest.TestCase):
     @classmethod
     def get_build_dir(cls) -> str:
         this_dir = cls.get_testcase_dir()
-        build_dir = os.path.join(this_dir, cls.__name__ + ".out")
+        build_dir = os.path.join(this_dir, "run.out", cls.__name__)
         return build_dir
 
     @classmethod
@@ -113,6 +116,7 @@ class RegblockTestCase(unittest.TestCase):
         jj_env = jj.Environment(
             loader=loader,
             undefined=jj.StrictUndefined,
+            extensions=[SVLineAnchor],
         )
 
         context = {
@@ -121,7 +125,7 @@ class RegblockTestCase(unittest.TestCase):
         }
 
         # template path needs to be relative to the Jinja loader root
-        template_path = os.path.join(cls.get_testcase_dir(), "tb.sv")
+        template_path = os.path.join(cls.get_testcase_dir(), "tb_template.sv")
         template_path = os.path.relpath(template_path, template_root_path)
         template = jj_env.get_template(template_path)
 
@@ -173,7 +177,7 @@ class RegblockTestCase(unittest.TestCase):
         build_dir = cls.get_build_dir()
         if os.path.exists(build_dir):
             shutil.rmtree(build_dir)
-        os.mkdir(build_dir)
+        pathlib.Path(build_dir).mkdir(parents=True, exist_ok=True)
 
         cls._write_params()
 

@@ -1,3 +1,4 @@
+{% sv_line_anchor %}
 module tb;
     timeunit 1ns;
     timeprecision 1ps;
@@ -51,9 +52,11 @@ module tb;
     //--------------------------------------------------------------------------
     // DUT
     //--------------------------------------------------------------------------
+    {% sv_line_anchor %}
     regblock dut (.*);
 
 {%- if exporter.hwif.has_output_struct %}
+    {% sv_line_anchor %}
     initial forever begin
         ##1; if(!rst) assert(!$isunknown({>>{hwif_out}})) else $error("hwif_out has X's!");
     end
@@ -82,6 +85,7 @@ module tb;
     //--------------------------------------------------------------------------
     // Monitor for timeout
     //--------------------------------------------------------------------------
+    {% sv_line_anchor %}
     initial begin
         ##{{cls.timeout_clk_cycles}};
         $fatal(1, "Test timed out after {{cls.timeout_clk_cycles}} clock cycles");

@@ -1,15 +1,15 @@
 Field Properties
 ================
 
-.. note:: Any properties not explicitly listed here are either implicitly supported,
-    or are not relevant to the regblock exporter and are ignored.
+.. note:: Any properties not explicitly listed here are either implicitly
+    supported, or are not relevant to the regblock exporter and are ignored.
 
 Software Access Properties
 --------------------------
 
 onread/onwrite
 ^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 rclr/rset
 ^^^^^^^^^
@@ -25,9 +25,11 @@ sw
 
 swacc
 ^^^^^
-|EX|
+|OK|
 
-If true, infers an output signal ``swacc`` that is asserted as the field is sampled for a software read operation.
+If true, infers an output signal ``hwif_out..swacc`` that is asserted on the
+same clock cycle that the field is being sampled during a software read
+operation.
 
 .. wavedrom::
 
@@ -40,9 +42,10 @@ If true, infers an output signal ``swacc`` that is asserted as the field is samp
 
 swmod
 ^^^^^
-|EX|
+|OK|
 
-If true, infers an output signal ``swmod`` that is asserted as the field is being modified by software.
+If true, infers an output signal ``hwif_out..swmod`` that is asserted as the
+field is being modified by software.
 
 .. wavedrom::
 
@@ -56,28 +59,34 @@ If true, infers an output signal ``swmod`` that is asserted as the field is bein
 swwe/swwel
 ^^^^^^^^^^
 
-TODO: Describe result
+Provides a mechanism that allows hardware to override whether the field is
+writable by software.
 
 boolean
-    |NO|
+    |OK|
 
-bit
-    |NO|
+    If True, infers an input signal ``hwif_in..swwe`` or ``hwif_in..swwel``.
 
 reference
-    |NO|
+    |OK|
+
 
 woclr/woset
 ^^^^^^^^^^^
 See ``onwrite``
 
 
+--------------------------------------------------------------------------------
+
 Hardware Access Properties
 --------------------------
 
 anded/ored/xored
 ^^^^^^^^^^^^^^^^
-|EX|
+|OK|
+
+If true, infers the existence of output signal: ``hwif_out..anded``,
+``hwif_out..ored``, ``hwif_out..xored``
 
 
 hw
@@ -86,19 +95,27 @@ hw
 
 hwclr/hwset
 ^^^^^^^^^^^
+
+If both ``hwclr`` and ``hwset`` properties are used, and both are asserted at
+the same clock cycle, then ``hwset`` will take precedence.
+
 boolean
-    |EX|
+    |OK|
+
+    If true, infers the existence of input signal: ``hwif_in..hwclr``, ``hwif_in..hwset``
 
 reference
-    |EX|
+    |OK|
 
 hwenable/hwmask
 ^^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 we/wel
 ^^^^^^
-Write-enable control from hardware interface
+Write-enable control from hardware interface.
+
+If true, infers the existence of input signal: ``hwif_in..we``, ``hwif_in..wel``
 
 .. wavedrom::
 
@@ -113,11 +130,13 @@ Write-enable control from hardware interface
 boolean
     |OK|
 
-    if set, infers the existence of input signal ``hwif_in..we`` or ``hwif_in..wel``
+    If true, infers the existence of input signal ``hwif_in..we`` or ``hwif_in..wel``
 
 reference
-    |EX|
+    |OK|
 
+
+--------------------------------------------------------------------------------
 
 Counter Properties
 ------------------
@@ -212,6 +231,8 @@ underflow
 |NO|
 
 
+--------------------------------------------------------------------------------
+
 Interrupt Properties
 --------------------
 
@@ -243,6 +264,8 @@ stickybit
 ^^^^^^^^^
 |NO|
 
+
+--------------------------------------------------------------------------------
 
 Misc
 ----

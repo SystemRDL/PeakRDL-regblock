@@ -1,3 +1,4 @@
+{% sv_line_anchor %}
 apb3_intf #(
     .DATA_WIDTH({{exporter.cpuif.data_width}}),
     .ADDR_WIDTH({{exporter.cpuif.addr_width}})
@@ -11,6 +12,7 @@ apb3_intf_driver #(
     .m_apb(s_apb)
 );
 {% if type(cpuif).__name__.startswith("Flat") %}
+{% sv_line_anchor %}
 wire s_apb_psel;
 wire s_apb_penable;
 wire s_apb_pwrite;

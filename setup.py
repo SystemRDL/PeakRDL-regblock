@@ -21,6 +21,7 @@ setuptools.setup(
     url="https://github.com/SystemRDL/PeakRDL-regblock",
     packages=['peakrdl.regblock'],
     include_package_data=True,
+    python_requires='>=3.6',
     install_requires=[
         "systemrdl-compiler>=1.21.0",
         "Jinja2>=2.11",
@@ -30,11 +31,11 @@ setuptools.setup(
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3 :: Only",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -42,6 +43,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     ),
     project_urls={
+        "Documentation": "http://peakrdl-regblock.readthedocs.io",
         "Source": "https://github.com/SystemRDL/PeakRDL-regblock",
         "Tracker": "https://github.com/SystemRDL/PeakRDL-regblock/issues",
     },

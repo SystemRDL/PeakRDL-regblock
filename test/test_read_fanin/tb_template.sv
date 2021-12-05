@@ -1,12 +1,15 @@
 {% extends "lib/templates/tb_base.sv" %}
 
 {%- block declarations %}
+    {% sv_line_anchor %}
     localparam REGWIDTH = {{cls.regwidth}};
     localparam STRIDE = REGWIDTH/8;
     localparam N_REGS = {{cls.n_regs}};
 {%- endblock %}
 
+
 {% block seq %}
+    {% sv_line_anchor %}
     bit [REGWIDTH-1:0] data[N_REGS];
 
     ##1;
