@@ -2,6 +2,7 @@
 
 {% block seq %}
     {% sv_line_anchor %}
+    logic [7:0] counter;
     logic [7:0] rd_data;
     logic [7:0] latched_data;
     int event_count;
@@ -12,17 +13,19 @@
     ##1;
 
     // Verify that hwif gets sampled at the same cycle as swacc strobe
-    cb.hwif_in.r1.f.value <= 'h10;
+    counter = 'h10;
+    cb.hwif_in.r1.f.value <= counter;
     @cb;
     event_count = 0;
     fork
         begin
             ##0;
             forever begin
-                cb.hwif_in.r1.f.value <= cb.hwif_in.r1.f.value + 1;
+                counter++;
+                cb.hwif_in.r1.f.value <= counter;
                 @cb;
                 if(cb.hwif_out.r1.f.swacc) begin
-                    latched_data = cb.hwif_in.r1.f.value;
+                    latched_data = counter;
                     event_count++;
                 end
             end
@@ -43,14 +46,14 @@
         begin
             ##0;
             forever begin
-                assert(hwif_out.r2.f.value == 20);
-                if(hwif_out.r2.f.swmod) break;
+                assert(cb.hwif_out.r2.f.value == 20);
+                if(cb.hwif_out.r2.f.swmod) break;
                 @cb;
             end
             @cb;
             forever begin
-                assert(hwif_out.r2.f.value == 21);
-                assert(hwif_out.r2.f.swmod == 0);
+                assert(cb.hwif_out.r2.f.value == 21);
+                assert(cb.hwif_out.r2.f.swmod == 0);
                 @cb;
             end
         end
@@ -67,14 +70,14 @@
         begin
             ##0;
             forever begin
-                assert(hwif_out.r3.f.value == 30);
-                if(hwif_out.r3.f.swmod) break;
+                assert(cb.hwif_out.r3.f.value == 30);
+                if(cb.hwif_out.r3.f.swmod) break;
                 @cb;
             end
             @cb;
             forever begin
-                assert(hwif_out.r3.f.value == 0);
-                assert(hwif_out.r3.f.swmod == 0);
+                assert(cb.hwif_out.r3.f.value == 0);
+                assert(cb.hwif_out.r3.f.swmod == 0);
                 @cb;
             end
         end

@@ -3,7 +3,6 @@ import unittest
 import os
 import glob
 import shutil
-import subprocess
 import inspect
 import pathlib
 
@@ -16,6 +15,8 @@ from .sv_line_anchor import SVLineAnchor
 from peakrdl.regblock import RegblockExporter
 from .cpuifs.base import CpuifTestMode
 from .cpuifs.apb3 import APB3
+
+from .simulators.modelsim import ModelSim
 
 
 class RegblockTestCase(unittest.TestCase):
@@ -40,6 +41,8 @@ class RegblockTestCase(unittest.TestCase):
 
     #: Abort test if it exceeds this number of clock cycles
     timeout_clk_cycles = 1000
+
+    simulator_cls = ModelSim
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -135,43 +138,6 @@ class RegblockTestCase(unittest.TestCase):
 
 
     @classmethod
-    def _compile_tb(cls):
-        # CD into the build directory
-        cwd = os.getcwd()
-        os.chdir(cls.get_build_dir())
-
-        cmd = [
-            "vlog", "-sv", "-quiet", "-l", "build.log",
-
-            # Free version of ModelSim throws errors if generate/endgenerate
-            # blocks are not used.
-            # These have been made optional long ago. Modern versions of SystemVerilog do
-            # not require them and I prefer not to add them.
-            "-suppress", "2720",
-
-            # Ignore noisy warning about vopt-time checking of always_comb/always_latch
-            "-suppress", "2583",
-        ]
-
-        # Add CPUIF sources
-        cmd.extend(cls.cpuif.get_tb_files())
-
-        # Add DUT sources
-        cmd.append("regblock_pkg.sv")
-        cmd.append("regblock.sv")
-
-        # Add TB
-        cmd.append("tb.sv")
-
-        # Run command!
-        try:
-            subprocess.run(cmd, check=True)
-        finally:
-            # cd back
-            os.chdir(cwd)
-
-
-    @classmethod
     def setUpClass(cls):
         # Create fresh build dir
         build_dir = cls.get_build_dir()
@@ -187,7 +153,16 @@ class RegblockTestCase(unittest.TestCase):
         # Create testbench from template
         cls._generate_tb(exporter)
 
-        cls._compile_tb()
+        simulator = cls.simulator_cls(testcase_cls=cls)
+
+        # cd into the build directory
+        cwd = os.getcwd()
+        os.chdir(cls.get_build_dir())
+        try:
+            simulator.compile()
+        finally:
+            # cd back
+            os.chdir(cwd)
 
 
     def setUp(self) -> None:
@@ -197,27 +172,8 @@ class RegblockTestCase(unittest.TestCase):
 
 
     def run_test(self, plusargs:List[str] = None) -> None:
-        plusargs = plusargs or []
-
-        test_name = self.request.node.name
-
-        # call vsim
-        cmd = [
-            "vsim", "-quiet",
-            "-msgmode", "both",
-            "-do", "set WildcardFilter [lsearch -not -all -inline $WildcardFilter Memory]",
-            "-do", "log -r /*;",
-            "-do", "run -all; exit;",
-            "-c",
-            "-l", "%s.log" % test_name,
-            "-wlf", "%s.wlf" % test_name,
-            "tb",
-        ]
-        for plusarg in plusargs:
-            cmd.append("+" + plusarg)
-        subprocess.run(cmd, check=True)
-
-        self.assertSimLogPass("%s.log" % test_name)
+        simulator = self.simulator_cls(testcase_cls_inst=self)
+        simulator.run(plusargs)
 
 
     def tearDown(self) -> None:

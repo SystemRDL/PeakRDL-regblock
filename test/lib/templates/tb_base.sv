@@ -57,8 +57,13 @@ module tb;
 
 {%- if exporter.hwif.has_output_struct %}
     {% sv_line_anchor %}
-    initial forever begin
-        ##1; if(!rst) assert(!$isunknown({>>{hwif_out}})) else $error("hwif_out has X's!");
+    initial begin
+        logic [$bits(hwif_out)-1:0] tmp;
+        forever begin
+            ##1;
+            tmp = {>>{hwif_out}}; // Workaround for Xilinx's xsim - assign to tmp variable
+            if(!rst) assert(!$isunknown(tmp)) else $error("hwif_out has X's!");
+        end
     end
 {%- endif %}
 

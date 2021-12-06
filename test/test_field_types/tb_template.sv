@@ -88,7 +88,7 @@
 
     // r7 - sw=r; hw=w; // Wire/Bus - hardware assigns value
     cpuif.assert_read('h6, 0);
-    cb.hwif_in.r7.f.value = 70;
+    cb.hwif_in.r7.f.value <= 70;
     cpuif.assert_read('h6, 70);
     cpuif.write('h6, 71);
     cpuif.assert_read('h6, 70);

@@ -17,17 +17,17 @@
     end
 
     // Assert via hwif
-    assert(hwif_out.r0.a.value == 'h42);
-    assert(hwif_out.r0.b.value == 'h0);
-    assert(hwif_out.r0.c.value == 'h1);
-    foreach(hwif_out.r1[x, y, z]) begin
-        assert(hwif_out.r1[x][y][z].a.value == 'h23);
-        assert(hwif_out.r1[x][y][z].b.value == 'h0);
-        assert(hwif_out.r1[x][y][z].c.value == 'h1);
+    assert(cb.hwif_out.r0.a.value == 'h42);
+    assert(cb.hwif_out.r0.b.value == 'h0);
+    assert(cb.hwif_out.r0.c.value == 'h1);
+    foreach(cb.hwif_out.r1[x, y, z]) begin
+        assert(cb.hwif_out.r1[x][y][z].a.value == 'h23);
+        assert(cb.hwif_out.r1[x][y][z].b.value == 'h0);
+        assert(cb.hwif_out.r1[x][y][z].c.value == 'h1);
     end
-    assert(hwif_out.r2.a.value == 'h11);
-    assert(hwif_out.r2.b.value == 'h0);
-    assert(hwif_out.r2.c.value == 'h1);
+    assert(cb.hwif_out.r2.a.value == 'h11);
+    assert(cb.hwif_out.r2.b.value == 'h0);
+    assert(cb.hwif_out.r2.c.value == 'h1);
 
     // Write values
     cpuif.write(0, 32'h8000_0002);
@@ -50,15 +50,15 @@
     end
 
     // Assert via hwif
-    assert(hwif_out.r0.a.value == 'h02);
-    assert(hwif_out.r0.b.value == 'h0);
-    assert(hwif_out.r0.c.value == 'h1);
-    foreach(hwif_out.r1[x, y, z]) begin
-        assert(hwif_out.r1[x][y][z].a.value == x*12+y*4+z+10);
-        assert(hwif_out.r1[x][y][z].b.value == 'h1);
-        assert(hwif_out.r1[x][y][z].c.value == 'h0);
+    assert(cb.hwif_out.r0.a.value == 'h02);
+    assert(cb.hwif_out.r0.b.value == 'h0);
+    assert(cb.hwif_out.r0.c.value == 'h1);
+    foreach(cb.hwif_out.r1[x, y, z]) begin
+        assert(cb.hwif_out.r1[x][y][z].a.value == x*12+y*4+z+10);
+        assert(cb.hwif_out.r1[x][y][z].b.value == 'h1);
+        assert(cb.hwif_out.r1[x][y][z].c.value == 'h0);
     end
-    assert(hwif_out.r2.a.value == 'h0);
-    assert(hwif_out.r2.b.value == 'h0);
-    assert(hwif_out.r2.c.value == 'h0);
+    assert(cb.hwif_out.r2.a.value == 'h0);
+    assert(cb.hwif_out.r2.b.value == 'h0);
+    assert(cb.hwif_out.r2.c.value == 'h0);
 {% endblock %}
