@@ -24,6 +24,7 @@ class AssignmentPrecedence(enum.IntEnum):
     # Software access assignment groups
     SW_ONREAD = 5000
     SW_ONWRITE = 4000
+    SW_SINGLEPULSE = 3000
 
     # Hardware access assignment groups
     HW_WRITE = 3000

@@ -17,7 +17,7 @@ See ``onread``
 
 singlepulse
 ^^^^^^^^^^^
-|NO|
+|OK|
 
 sw
 ^^^

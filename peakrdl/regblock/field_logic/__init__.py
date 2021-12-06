@@ -5,6 +5,7 @@ from systemrdl.rdltypes import PropertyReference, PrecedenceType
 from .bases import AssignmentPrecedence, NextStateConditional
 from . import sw_onread
 from . import sw_onwrite
+from . import sw_singlepulse
 from . import hw_write
 from . import hw_set_clr
 
@@ -188,6 +189,8 @@ class FieldLogic:
         self.add_sw_conditional(sw_onwrite.WriteClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
         self.add_sw_conditional(sw_onwrite.WriteSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
         self.add_sw_conditional(sw_onwrite.Write(self.exp), AssignmentPrecedence.SW_ONWRITE)
+
+        self.add_sw_conditional(sw_singlepulse.Singlepulse(self.exp), AssignmentPrecedence.SW_SINGLEPULSE)
 
         self.add_hw_conditional(hw_write.AlwaysWrite(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_write.WELWrite(self.exp), AssignmentPrecedence.HW_WRITE)
