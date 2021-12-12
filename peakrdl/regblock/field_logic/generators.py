@@ -39,7 +39,25 @@ class CombinationalStructGenerator(RDLStructGenerator):
         self.add_member("load_next")
         for signal in extra_combo_signals.values():
             self.add_member(signal.name, signal.width)
+        if node.is_up_counter:
+            self.add_up_counter_members(node)
+        if node.is_down_counter:
+            self.add_down_counter_members(node)
         self.pop_struct()
+
+    def add_up_counter_members(self, node: 'FieldNode') -> None:
+        self.add_member('incrthreshold')
+        if self.field_logic.counter_incrsaturates(node):
+            self.add_member('incrsaturate')
+        else:
+            self.add_member('overflow')
+
+    def add_down_counter_members(self, node: 'FieldNode') -> None:
+        self.add_member('decrthreshold')
+        if self.field_logic.counter_decrsaturates(node):
+            self.add_member('decrsaturate')
+        else:
+            self.add_member('underflow')
 
 
 class FieldStorageStructGenerator(RDLStructGenerator):
@@ -92,10 +110,12 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'node': node,
             'reset': reset_value_str,
             'field_path': get_indexed_path(self.exp.top_node, node),
+            'field_logic': self.field_logic,
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
             'resetsignal': resetsignal,
             'get_always_ff_event': get_always_ff_event,
+            'get_value': self.exp.dereferencer.get_value,
         }
         self.add_content(self.field_storage_template.render(context))
 
@@ -141,6 +161,19 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         if node.get_property('swacc'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swacc")
             value = self.field_logic.get_swacc_identifier(node)
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+
+        if node.get_property('incrthreshold') is not False: # (explicitly not False. Not 0)
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "incrthreshold")
+            value = self.field_logic.get_field_combo_identifier(node, 'incrthreshold')
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+        if node.get_property('decrthreshold') is not False: # (explicitly not False. Not 0)
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "decrthreshold")
+            value = self.field_logic.get_field_combo_identifier(node, 'decrthreshold')
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )

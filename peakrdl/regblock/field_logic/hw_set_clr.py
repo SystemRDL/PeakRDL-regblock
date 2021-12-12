@@ -36,8 +36,8 @@ class HWSet(NextStateConditional):
             next_val = "'1"
 
         return [
-            f"field_combo.{field_path}.next = {next_val};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = {next_val};",
+            f"load_next_c = '1;",
         ]
 
 
@@ -71,6 +71,6 @@ class HWClear(NextStateConditional):
             next_val = "'0"
 
         return [
-            f"field_combo.{field_path}.next = {next_val};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = {next_val};",
+            f"load_next_c = '1;",
         ]

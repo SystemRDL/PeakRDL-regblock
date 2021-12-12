@@ -159,20 +159,22 @@ class Hwif:
                 contents.append(f"logic {prop_name};")
 
         # Generate any implied counter inputs
-        if node.get_property('counter'):
+        if node.is_up_counter:
             if not node.get_property('incr'):
                 # User did not provide their own incr component reference.
                 # Imply an input
                 contents.append("logic incr;")
-            if not node.get_property('decr'):
-                # User did not provide their own decr component reference.
-                # Imply an input
-                contents.append("logic decr;")
 
             width = node.get_property('incrwidth')
             if width:
                 # Implies a corresponding incrvalue input
                 contents.append(f"logic [{width-1}:0] incrvalue;")
+
+        if node.is_down_counter:
+            if not node.get_property('decr'):
+                # User did not provide their own decr component reference.
+                # Imply an input
+                contents.append("logic decr;")
 
             width = node.get_property('decrwidth')
             if width:
@@ -198,9 +200,14 @@ class Hwif:
                 contents.append(f"logic [{node.width-1}:0] value;")
 
         # Generate output bit signals enabled via property
-        for prop_name in ["anded", "ored", "xored", "swmod", "swacc"]:
+        for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow"]:
             if node.get_property(prop_name):
                 contents.append(f"logic {prop_name};")
+
+        if node.get_property('incrthreshold') is not False: # (explicitly not False. Not 0)
+            contents.append("logic incrthreshold;")
+        if node.get_property('decrthreshold') is not False: # (explicitly not False. Not 0)
+            contents.append("logic decrthreshold;")
 
         return contents
 
@@ -252,7 +259,10 @@ class Hwif:
 
 
     def get_implied_prop_input_identifier(self, field: FieldNode, prop: str) -> str:
-        assert prop in {'hwclr', 'hwset', 'swwe', 'swwel', 'we', 'wel'}
+        assert prop in {
+            'hwclr', 'hwset', 'swwe', 'swwel', 'we', 'wel',
+            'incr', 'decr', 'incrvalue', 'decrvalue'
+        }
         path = get_indexed_path(self.top_node, field)
         return "hwif_in." + path + "." + prop
 

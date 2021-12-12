@@ -6,7 +6,7 @@ property assignment expressions:
 
     .. code-block:: systemrdl
 
-            some_property = my_reg.my_field->some_property;
+            some_property = my_reg.my_field -> some_property;
 
 The official SystemRDL spec refers to these as "Ref targets" in Table G1, but
 unfortunately does not describe their semantics in much detail.
@@ -18,63 +18,65 @@ The text below describes the interpretations used for this exporter.
 Field
 -----
 
-swacc
-^^^^^
+field -> swacc
+^^^^^^^^^^^^^^
 |EX|
 
 Single-cycle strobe that indicates the field is being sampled during a software
 read operation.
 
 
-swmod
-^^^^^
+field -> swmod
+^^^^^^^^^^^^^^^
 |EX|
 
 Single-cycle strobe that indicates the field is being modified during a software
 access operation.
 
 
-swwe/swwel
-^^^^^^^^^^
+field -> swwe/swwel
+^^^^^^^^^^^^^^^^^^^
 |OK|
 
-Represents the signal that controls the owning field's swwe/swwel behavior.
+Represents the signal that controls the field's swwe/swwel behavior.
 
 
-anded/ored/xored
-^^^^^^^^^^^^^^^^
+field -> anded/ored/xored
+^^^^^^^^^^^^^^^^^^^^^^^^^
 |EX|
 
-Represents the current and/or/xor reduction of the owning field's value.
+Represents the current and/or/xor reduction of the field's value.
 
 
-hwclr/hwset
-^^^^^^^^^^^
+field -> hwclr/hwset
+^^^^^^^^^^^^^^^^^^^^
 |EX|
 
-Represents the signal that controls the owning field's hwclr/hwset behavior.
+Represents the signal that controls the field's hwclr/hwset behavior.
 
 
-hwenable/hwmask
+field -> hwenable/hwmask
+^^^^^^^^^^^^^^^^^^^^^^^^
+|EX|
+
+Represents the signal that controls the field's hwenable/hwmask behavior.
+
+field -> we/wel
 ^^^^^^^^^^^^^^^
 |EX|
 
-Represents the signal that controls the owning field's hwenable/hwmask behavior.
+Represents the signal that controls the field's we/wel behavior.
 
-we/wel
-^^^^^^
+field -> next
+^^^^^^^^^^^^^
 |EX|
 
-next
-^^^^
+field -> reset
+^^^^^^^^^^^^^^
 |EX|
 
-reset
-^^^^^
-|EX|
-
-resetsignal
-^^^^^^^^^^^
+field -> resetsignal
+^^^^^^^^^^^^^^^^^^^^
 |EX|
 
 --------------------------------------------------------------------------------
@@ -82,67 +84,118 @@ resetsignal
 Field Counter Properties
 ------------------------
 
-Represents the signal that controls the owning field's we/wel behavior.
-
-decr
-^^^^
-|NO|
-
-decrthreshold
+field -> incr
 ^^^^^^^^^^^^^
-|NO|
-
-decrsaturate
-^^^^^^^^^^^^
-|NO|
-
-decrvalue
-^^^^^^^^^
 |EX|
 
-incr
-^^^^
-|NO|
+Represents the signal that controls the field's counter increment control.
 
-incrsaturate/saturate
+field -> incrsaturate/saturate
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+|EX|
+
+Represents the internal 1-bit event signal that indicates whether the counter is saturated
+at its saturation value.
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',            wave: 'p......'},
+            {name: 'hwif_in..decr',  wave: '0101010'},
+            {name: '<counter>',      wave: '=.=....', data: [1,0]},
+            {name: '<decrsaturate>', wave: '0.1....'}
+        ],
+        foot: {
+            text: "A 4-bit counter saturating"
+        }
+    }
+
+
+field -> incrthreshold/threshold
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+|EX|
+
+Represents the 1-bit event signal that indicates whether the counter has met or
+exceeded its incrthreshold.
+
+field -> incrvalue
+^^^^^^^^^^^^^^^^^^
+|EX|
+
+Represents the value that was assigned to this property.
+
+field -> overflow
+^^^^^^^^^^^^^^^^^
+|OK|
+
+Represents the event signal that is asserted when the counter is about to wrap.
+
+field -> decr
+^^^^^^^^^^^^^
+|EX|
+
+Represents the signal that controls the field's counter decrement control.
+
+field -> decrsaturate
 ^^^^^^^^^^^^^^^^^^^^^
-|NO|
-
-incrthreshold/threshold
-^^^^^^^^^^^^^^^^^^^^^^^
-|NO|
-
-incrvalue
-^^^^^^^^^
 |EX|
 
-overflow
-^^^^^^^^
-|NO|
+Represents the internal 1-bit event signal that indicates whether the counter is saturated
+at its saturation value.
 
-underflow
-^^^^^^^^^
-|NO|
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',            wave: 'p......'},
+            {name: 'hwif_in..incr',  wave: '0101010'},
+            {name: '<counter>',      wave: '=.=....', data: [14,15]},
+            {name: '<incrsaturate>', wave: '0.1....'}
+        ],
+        foot: {
+            text: "A 4-bit counter saturating"
+        }
+    }
+
+field -> decrthreshold
+^^^^^^^^^^^^^^^^^^^^^^
+|EX|
+
+Represents the 1-bit event signal that indicates whether the counter has met or
+exceeded its incrthreshold.
+
+field -> decrvalue
+^^^^^^^^^^^^^^^^^^
+|EX|
+
+Represents the value that was assigned to this property.
+
+field -> underflow
+^^^^^^^^^^^^^^^^^^
+|OK|
+
+Represents the event signal that is asserted when the counter is about to wrap.
 
 --------------------------------------------------------------------------------
 
 Field Interrupt Properties
 --------------------------
 
-enable
-^^^^^^
+field -> enable
+^^^^^^^^^^^^^^^
 |EX|
 
-haltenable
-^^^^^^^^^^
+field -> haltenable
+^^^^^^^^^^^^^^^^^^^
 |EX|
 
-haltmask
-^^^^^^^^
+field -> haltmask
+^^^^^^^^^^^^^^^^^
 |EX|
 
-mask
-^^^^
+field -> mask
+^^^^^^^^^^^^^
 |EX|
 
 
@@ -151,10 +204,10 @@ mask
 Register
 --------
 
-intr
-^^^^
+reg -> intr
+^^^^^^^^^^^
 |NO|
 
-halt
-^^^^
+reg -> halt
+^^^^^^^^^^^
 |NO|

@@ -23,10 +23,6 @@ bigendian/littleendian
 ----------------------
 |NO|
 
-bridge
-------
-|NO|
-
 rsvdset
 -------
 |NO|

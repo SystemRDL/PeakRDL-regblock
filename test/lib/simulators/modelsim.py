@@ -9,6 +9,8 @@ class ModelSim(Simulator):
         cmd = [
             "vlog", "-sv", "-quiet", "-l", "build.log",
 
+            "+incdir+%s" % os.path.join(os.path.dirname(__file__), ".."),
+
             # Free version of ModelSim throws errors if generate/endgenerate
             # blocks are not used.
             # These have been made optional long ago. Modern versions of SystemVerilog do

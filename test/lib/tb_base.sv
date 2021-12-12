@@ -66,6 +66,7 @@ module tb;
         end
     end
 {%- endif %}
+    {% sv_line_anchor %}
 
     //--------------------------------------------------------------------------
     // Test Sequence
@@ -82,7 +83,7 @@ module tb;
             {%- endblock %}
             {%- endfilter %}
         end
-
+        {% sv_line_anchor %}
         ##5;
         $finish();
     end
@@ -90,7 +91,6 @@ module tb;
     //--------------------------------------------------------------------------
     // Monitor for timeout
     //--------------------------------------------------------------------------
-    {% sv_line_anchor %}
     initial begin
         ##{{cls.timeout_clk_cycles}};
         $fatal(1, "Test timed out after {{cls.timeout_clk_cycles}} clock cycles");

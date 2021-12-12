@@ -1,2 +1,2 @@
-#recursive-include peakrdl/regblock/XXX *
-recursive-exclude test *
+recursive-include peakrdl/regblock *.sv
+prune test

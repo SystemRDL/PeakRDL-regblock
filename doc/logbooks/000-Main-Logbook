@@ -1,34 +1,5 @@
 
 ================================================================================
-Overarching philosophy
-================================================================================
-Encourage users to be able to tweak the design
-Templating:
-    Design templates to be small bite-size snippets, each with clear intent
-    Templates shall be extendable
-    Templates shall be easy/intuitive
-Output:
-    Output shall be beautiful. Consistent and clean formatting/whitespace builds trust
-    Output has comments. Users will be looking at it.
-
-================================================================================
-On templating...
-================================================================================
-Everything should be written out to a single file
-The only exception is if a struct port interface is used, then the appropriate
-struct package is also written out (or lumped into the same file?)
-
-Each layer should actually be its own separate template.
-
-Use helper functions to abstract away details about identifier implementation.
-Similarly, some fields will end up with additional port-level signals inferred.
-For example, if the user set the field's "anded=true" property
-the template would do something like:
-    {{output_signal(field, "anded")}} = &{{field_value(field)}};
-
-Basically, i'd define a ton of helper functions that return the signal identifier.
-
-================================================================================
 Accesswidth vs Regwidth
 ================================================================================
 Reading some old versions of the SystemRDL spec (the old "v1 RDL" spec from Cisco)
@@ -46,7 +17,7 @@ Changes to this tool this new understanding imposes:
     - derive the CPU bus width based on the largest regwidth
         this seems like a reasonable & easy thing to implement
     - CPUIF should make sure to always present an aligned address!
-        if bus width is 32-bits, decoder logic shall recieve an address with bits [1:0] ALWAYS zeroed
+        if bus width is 32-bits, decoder logic shall receive an address with bits [1:0] ALWAYS zeroed
         Codify this in the internal specification!
     - address decode may produce multiple strobes if registers are packed.
         Eg: if bus width is 32, and there is a region of 8-bit registers that are tightly packed,
@@ -75,76 +46,48 @@ Write about this in the SystemRDL errata?
     Maybe not so much in other protocols...
     Maybe add some words to the "clarifications" section
 
-
-================================================================================
-Unit Testing
-================================================================================
-I NEED to start building a suite of unit-tests!
-Goal:
-- Small easy-to-understand testcases
-- Parameterized testcases to rerun testcases with different cpuifs, etc.
-- coverage
-
-Split it into the following components:
-    Common testbench SV infrastructure
-        Make a generic SV framework that can be re-used everywhere
-        Use SV interfaces/classes and even `include preprocessor tricks to make it possible
-        to swap out for specific testcases:
-        - cpuif abstraction layer
-            Need to be able to swap out to different CPU interfaces easily
-        - Clocks/resets
-        - DUT instantiation
-            Will need to account for minor variations in port list somehow
-            Maybe a good time to use the .* method?
-        - Helper functions, assertion library, etc.
-
-    Testcase-specific
-        SV sequence file that issues transactions and asserts things
-
-Dispatch tests completely through pytest
-    - Each testcase has its own folder with:
-        testcase-specific SV file(s)
-        RDL file
-        pytest entry point .py file
-    - build up py utility functions that will:
-        Export the testcase-specific RDL --> SV
-        Compile and run the simulation
-            need to deal with timeouts if the RTL deadlocks somehow. Limit of how many uS to run?
-        Query sim result for pass/fail
-    - Each testcase folder will likely have multiple subtests
-        - Variations to RDL export:
-            - different cpuif
-            - pipe stages
-            - etc.
-        - Different test sequences
-            may be necessary to test the same compilation in different ways
-            I can imagine it may not be possible to do everything from a single test sequence.
-            May require the sim to reset to T-0 for fresh-slate.
-        - Handle these variations using pytest testcases & parameterizations as appropriate.
-            Possibly something like:
-                - Each pytest class --> unique compilation/elaboration
-                    pytest parameters to expand this for export variations
-                - Each pytest class method --> simulation sequence
-    - Collect coverage!
-        install the tool in a venv, collect exporter coverage, etc.
-        TBD if i want to deal with SV coverage (is that even allowed in modelsim free?)
-
-
 ================================================================================
 Dev Todo list
 ================================================================================
 
+- Signals - clean them up and add proper support
+    Generate these in the hwif_in struct? I forget what I decided
+    - FIXME: cpuif reset inside top-level addrmap results in two input signals:
+        - one popped out to top
+        - another inside the input struct
+
+- Interrupt properties
+    i think my docs are missing a property or something...
+
+- Rework TB CPUIF driver a bit
+    Split test API into a class
+    class receives a vif to the driver
+    make this more proper w.r.t extending stuff.
+
+- Add more CPUIF protocols
+    - AXI-Lite
+    - cpuif interface passthrough?
+
+- Add synthesis tests
+    Create a new testcase base class
+    Similar concept as before with testcases & parameterization.
+    Launch Vivado and do out-of-context synthesis
+    Override message severities to highlight:
+        - undriven nets
+        - multi-driven nets
+        - combo loops
+    Figure out a way to test these separately from other testcases
+    maybe rearrange folders so:
+        test/test_behav/...
+        test/test_synth/...
+
+- break out 'next' and singlepulse into a separate section of their own.
+    these should always be lowest priority regardless of precedence
+    and always end up as the "else" clause in the conditional list.
+
 - Link more functions to the dereferencer
     I shouldn't have to go to the hwif or whatever
     dereferencer should have all the query functions
-
-- Start a sphinx docs thing
-    I need to keep better track of everything!
-    Diagrams of each layer in an architecture overview
-    transcribe logbook into dev notes
-
-    Define strict interface expectations for each layer!
-    Including latency/etc
 
 endianness controls byte order of the CPU bus
     controls byteswap at the CPUIF layer
@@ -155,16 +98,3 @@ endianness controls byte order of the CPU bus
 Do something about cpuif byte strobes?
     Remove for now?
     Demote to APB3?
-
-
-- Other field output assignments
-
-- HWIF layer
-    - User Signals
-        Generate these in the io struct? I forget what I decided
-
-- dereferencer has some remaining todos that depend on field logic
-
-- FIXME: cpuif reset inside top-level addrmap results in two input signals:
-    - one popped out to top
-    - another inside the input struct

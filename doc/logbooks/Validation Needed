@@ -93,15 +93,29 @@ X Flag illegal sw actions if not readable/writable
 
 X Signals marked as field_reset or cpuif_reset need to have activehigh/activelow
   specified. (8.2.1-d states that activehigh/low does not have an implied default state if unset!)
-  Also aplies to signals referenced by resetsignal
+  Also applies to signals referenced by resetsignal
 
 ! hwclr/hwset/we/wel probably shouldn't be able to reference itself
     y->hwclr = y;
     y->we = y;
     ... it works, but should it be allowed? Seems like user-error
 
+X incrvalue/decrvalue needs to be the same or narrower than counter itself
 
+! singlepulse and next properties cannot both be used.
+    Both are hard overrides of the field's next value.
+    singlepulse is basically an alias for next=0 that takes lowest priority
 
+! counter field that saturates should not set overflow
+    counter; incrsaturate; overflow;
+    counter; decrsaturate; underflow;
+
+    Flag this as an error on the overflow/underflow property.
+    overflow/underflow property is meaningless since it can never happen.
+
+    Same goes to prop references to overflow/underflow
+
+! incrwidth/decrwidth must be between 1 and the width of the counter
 
 ================================================================================
 Things that need validation by this exporter

@@ -39,8 +39,8 @@ class AlwaysWrite(NextStateConditional):
             next_val = self.exp.hwif.get_input_identifier(field)
 
         return [
-            f"field_combo.{field_path}.next = {next_val};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = {next_val};",
+            f"load_next_c = '1;",
         ]
 
 class WEWrite(AlwaysWrite):

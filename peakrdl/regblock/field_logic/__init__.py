@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from systemrdl.rdltypes import PropertyReference, PrecedenceType
+from systemrdl.node import Node
 
 from .bases import AssignmentPrecedence, NextStateConditional
 from . import sw_onread
@@ -61,41 +62,105 @@ class FieldLogic:
     #---------------------------------------------------------------------------
     # Field utility functions
     #---------------------------------------------------------------------------
-    def get_storage_identifier(self, node: 'FieldNode') -> str:
+    def get_storage_identifier(self, field: 'FieldNode') -> str:
         """
         Returns the Verilog string that represents the storage register element
         for the referenced field
         """
-        assert node.implements_storage
-        path = get_indexed_path(self.top_node, node)
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
         return f"field_storage.{path}"
 
-    def get_field_next_identifier(self, node: 'FieldNode') -> str:
+    def get_field_combo_identifier(self, field: 'FieldNode', name: str) -> str:
         """
-        Returns a Verilog string that represents the field's next-state.
-        This is specifically for use in Field->next property references.
+        Returns a Verilog string that represents a field's internal combinational
+        signal.
         """
-        assert node.implements_storage
-        path = get_indexed_path(self.top_node, node)
-        return f"field_combo.{path}.next"
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
+        return f"field_combo.{path}.{name}"
 
-    def get_counter_incr_identifier(self, field: 'FieldNode') -> str:
+    def get_counter_incr_strobe(self, field: 'FieldNode') -> str:
         """
-        Return the Veriog string that represents the field's inferred incr/decr strobe signal.
-        prop_ref will be either an incr or decr property reference, and it is already known that
-        the incr/decr properties are not explicitly set by the user and are therefore inferred.
+        Return the Verilog string that represents the field's incr strobe signal.
         """
-        # TODO: Implement this
-        raise NotImplementedError
+        prop_value = field.get_property('incr')
+        if prop_value:
+            return self.exp.dereferencer.get_value(prop_value)
 
-    def get_counter_decr_identifier(self, field: 'FieldNode') -> str:
+        # unset by the user, points to the implied input signal
+        return self.exp.hwif.get_implied_prop_input_identifier(field, "incr")
+
+    def get_counter_incrvalue(self, field: 'FieldNode') -> str:
         """
-        Return the Veriog string that represents the field's inferred incr/decr strobe signal.
-        prop_ref will be either an incr or decr property reference, and it is already known that
-        the incr/decr properties are not explicitly set by the user and are therefore inferred.
+        Return the string that represents the field's increment value
         """
-        # TODO: Implement this
-        raise NotImplementedError
+        incrvalue = field.get_property('incrvalue')
+        if incrvalue is not None:
+            return self.exp.dereferencer.get_value(incrvalue)
+        if field.get_property('incrwidth'):
+            return self.exp.hwif.get_implied_prop_input_identifier(field, "incrvalue")
+        return "1'b1"
+
+    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> str:
+        prop_value = field.get_property('incrsaturate')
+        if prop_value is True:
+            return self.exp.dereferencer.get_value(2**field.width - 1)
+        return self.exp.dereferencer.get_value(prop_value)
+
+    def counter_incrsaturates(self, field: 'FieldNode') -> bool:
+        """
+        Returns True if the counter saturates
+        """
+        return field.get_property('incrsaturate') is not False
+
+    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> str:
+        prop_value = field.get_property('incrthreshold')
+        if isinstance(prop_value, bool):
+            # No explicit value set. use max
+            return self.exp.dereferencer.get_value(2**field.width - 1)
+        return self.exp.dereferencer.get_value(prop_value)
+
+    def get_counter_decr_strobe(self, field: 'FieldNode') -> str:
+        """
+        Return the Verilog string that represents the field's incr strobe signal.
+        """
+        prop_value = field.get_property('decr')
+        if prop_value:
+            return self.exp.dereferencer.get_value(prop_value)
+
+        # unset by the user, points to the implied input signal
+        return self.exp.hwif.get_implied_prop_input_identifier(field, "decr")
+
+    def get_counter_decrvalue(self, field: 'FieldNode') -> str:
+        """
+        Return the string that represents the field's decrement value
+        """
+        decrvalue = field.get_property('decrvalue')
+        if decrvalue is not None:
+            return self.exp.dereferencer.get_value(decrvalue)
+        if field.get_property('decrwidth'):
+            return self.exp.hwif.get_implied_prop_input_identifier(field, "decrvalue")
+        return "1'b1"
+
+    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> str:
+        prop_value = field.get_property('decrsaturate')
+        if prop_value is True:
+            return "'d0"
+        return self.exp.dereferencer.get_value(prop_value)
+
+    def counter_decrsaturates(self, field: 'FieldNode') -> bool:
+        """
+        Returns True if the counter saturates
+        """
+        return field.get_property('decrsaturate') is not False
+
+    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> str:
+        prop_value = field.get_property('decrthreshold')
+        if isinstance(prop_value, bool):
+            # No explicit value set. use min
+            return "'d0"
+        return self.exp.dereferencer.get_value(prop_value)
 
     def get_swacc_identifier(self, field: 'FieldNode') -> str:
         """

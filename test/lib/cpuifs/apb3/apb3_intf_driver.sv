@@ -91,9 +91,10 @@ interface apb3_intf_driver #(
         reset();
     endtask
 
-    task assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data);
+    task assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
         logic [DATA_WIDTH-1:0] data;
         read(addr, data);
+        data &= mask;
         assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
     endtask
 

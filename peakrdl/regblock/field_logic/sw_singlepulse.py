@@ -18,6 +18,6 @@ class Singlepulse(NextStateConditional):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = '0;",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = '0;",
+            f"load_next_c = '1;",
         ]

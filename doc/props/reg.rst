@@ -13,7 +13,3 @@ Only ``accesswidth`` that is equal to the ``regwidth`` is supported (default if 
 regwidth
 --------
 |OK|
-
-shared
-------
-|NO|

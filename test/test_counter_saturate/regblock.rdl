@@ -1,0 +1,88 @@
+addrmap top {
+    field strobe_t {
+        sw=w; hw=r; singlepulse;
+    };
+
+    reg {
+        field {
+            sw=r; hw=r; counter;
+            incrsaturate;
+            decrsaturate;
+        } count[8] = 0;
+
+        strobe_t increment[9:9] = 0;
+        strobe_t decrement[10:10] = 0;
+        strobe_t clear[11:11] = 0;
+        strobe_t set[12:12] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } step[23:16] = 1;
+
+        count->incr = increment;
+        count->decr = decrement;
+        count->hwclr = clear;
+        count->hwset = set;
+        count->incrvalue = step;
+        count->decrvalue = step;
+    } saturate_via_bool @ 0x0;
+
+
+    reg {
+        field {
+            sw=r; hw=r; counter;
+            incrsaturate = 250;
+            decrsaturate = 5;
+        } count[8] = 0;
+
+        strobe_t increment[9:9] = 0;
+        strobe_t decrement[10:10] = 0;
+        strobe_t clear[11:11] = 0;
+        strobe_t set[12:12] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } step[23:16] = 1;
+
+        count->incr = increment;
+        count->decr = decrement;
+        count->hwclr = clear;
+        count->hwset = set;
+        count->incrvalue = step;
+        count->decrvalue = step;
+    } saturate_via_const @ 0x4;
+
+
+    reg {
+        field {
+            sw=r; hw=r; counter;
+        } count[8] = 0;
+
+        strobe_t increment[9:9] = 0;
+        strobe_t decrement[10:10] = 0;
+        strobe_t clear[11:11] = 0;
+        strobe_t set[12:12] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } step[23:16] = 1;
+
+        count->incr = increment;
+        count->decr = decrement;
+        count->hwclr = clear;
+        count->hwset = set;
+        count->incrvalue = step;
+        count->decrvalue = step;
+    } saturate_via_ref @ 0x8;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } min[8] = 0x00;
+        field {
+            sw=rw; hw=na;
+        } max[8] = 0xFF;
+    } saturate_control @ 0xC;
+    saturate_via_ref.count -> decrsaturate = saturate_control.min;
+    saturate_via_ref.count -> incrsaturate = saturate_control.max;
+};

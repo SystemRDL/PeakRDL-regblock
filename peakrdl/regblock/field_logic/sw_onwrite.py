@@ -40,8 +40,8 @@ class WriteOneSet(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} | {self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = field_storage.{field_path} | {self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]
 
 class WriteOneClear(_OnWrite):
@@ -51,8 +51,8 @@ class WriteOneClear(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} & ~{self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = field_storage.{field_path} & ~{self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]
 
 class WriteOneToggle(_OnWrite):
@@ -62,8 +62,8 @@ class WriteOneToggle(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} ^ {self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = field_storage.{field_path} ^ {self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]
 
 class WriteZeroSet(_OnWrite):
@@ -73,8 +73,8 @@ class WriteZeroSet(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} | ~{self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = field_storage.{field_path} | ~{self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]
 
 class WriteZeroClear(_OnWrite):
@@ -84,8 +84,8 @@ class WriteZeroClear(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} & {self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = field_storage.{field_path} & {self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]
 
 class WriteZeroToggle(_OnWrite):
@@ -95,8 +95,8 @@ class WriteZeroToggle(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = field_storage.{field_path} ^ ~{self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = field_storage.{field_path} ^ ~{self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]
 
 class WriteClear(_OnWrite):
@@ -106,8 +106,8 @@ class WriteClear(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = '0;",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = '0;",
+            f"load_next_c = '1;",
         ]
 
 class WriteSet(_OnWrite):
@@ -117,8 +117,8 @@ class WriteSet(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = '1;",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = '1;",
+            f"load_next_c = '1;",
         ]
 
 class Write(_OnWrite):
@@ -128,6 +128,6 @@ class Write(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         field_path = self.get_field_path(field)
         return [
-            f"field_combo.{field_path}.next = {self._wr_data(field)};",
-            f"field_combo.{field_path}.load_next = '1;",
+            f"next_c = {self._wr_data(field)};",
+            f"load_next_c = '1;",
         ]

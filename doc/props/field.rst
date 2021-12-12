@@ -19,6 +19,16 @@ singlepulse
 ^^^^^^^^^^^
 |OK|
 
+If set, field will get cleared back to zero after being written.
+
+.. wavedrom::
+
+    {signal: [
+        {name: 'clk',             wave: 'p.....'},
+      	{name: '<swmod>',         wave: '0.10..'},
+        {name: 'hwif_out..value', wave: '0..10.'}
+    ]}
+
 sw
 ^^^
 |OK|
@@ -143,93 +153,228 @@ Counter Properties
 
 counter
 ^^^^^^^
-|NO|
+|OK|
 
-decr
-^^^^
-reference
-    |NO|
+If true, marks this field as a counter. The counter direction is inferred based
+based on which properties are assigned. By default, an up-counter is implemented.
+If any of the properties associated with an up-counter are used, then up-counting
+capabilities will be implemented. The same is true for down-counters and up/down
+counters.
 
-decrthreshold
-^^^^^^^^^^^^^
-boolean
-    |NO|
+Unless alternate control signals are specified, the existence of input signals
+``hwif_in..incr`` and ``hwif_in..decr`` will be inferred depending on the type
+of counter described.
 
-bit
-    |NO|
-
-reference
-    |NO|
-
-decrsaturate
-^^^^^^^^^^^^
-boolean
-    |NO|
-
-bit
-    |NO|
-
-reference
-    |NO|
-
-decrvalue
-^^^^^^^^^
-bit
-    |NO|
-
-reference
-    |NO|
-
-decrwidth
-^^^^^^^^^
-|NO|
 
 incr
 ^^^^
-|NO|
+|OK|
+
+Assign a reference to an alternate control signal to increment the counter.
+If assigned, the inferred ``hwif_in..incr`` input will not be generated.
 
 incrsaturate/saturate
 ^^^^^^^^^^^^^^^^^^^^^
-boolean
-    |NO|
+If assigned, indicates that the counter will saturate instead of wrapping.
+If an alternate saturation point is specified, the counter value will be
+adjusted so that it does not exceed that limit, even after non-increment actions.
 
-bit
-    |NO|
+boolean
+    |OK|
+
+    If true, saturation point is at the counter's maximum count value. (2^width - 1)
+
+integer
+    |OK|
+
+    Specify a static saturation value.
 
 reference
-    |NO|
+    |OK|
+
+    Specify a dynamic saturation value.
+
 
 incrthreshold/threshold
 ^^^^^^^^^^^^^^^^^^^^^^^
-boolean
-    |NO|
 
-bit
-    |NO|
+If assigned, infers a ``hwif_out..incrthreshold`` output signal. This signal is
+asserted if the counter value is greater or equal to the threshold.
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',                     wave: 'p......'},
+            {name: 'hwif_in..incr',           wave: '01...0.'},
+            {name: '<counter>',               wave: '=.=3==..', data: [4,5,6,7,8,9]},
+            {name: 'hwif_out..incrthreshold', wave: '0..1....'}
+        ],
+        foot: {
+            text: "Example where incrthreshold = 6"
+        }
+    }
+
+
+boolean
+    |EX|
+
+    If true, threshold is the counter's maximum count value. (2^width - 1)
+
+integer
+    |EX|
+
+    Specify a static threshold value.
 
 reference
-    |NO|
+    |EX|
+
+    Specify a dynamic threshold value.
+
 
 incrvalue
 ^^^^^^^^^
-bit
-    |NO|
+Override the counter's increment step size.
+
+integer
+    |OK|
 
 reference
-    |NO|
+    |OK|
 
 incrwidth
 ^^^^^^^^^
-|NO|
+|OK|
+
+If assigned, infers an input signal ``hwif_in..incrvalue``. The value of this
+property defines the signal's width.
+
 
 overflow
 ^^^^^^^^
-|NO|
+|EX|
+
+If true, infers an output signal ``hwif_out..overflow`` that is asserted when
+the counter is about to wrap.
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',                wave: 'p.......'},
+            {name: 'hwif_in..incr',      wave: '0101010.'},
+            {name: '<counter>',          wave: '=.=.=.=.', data: [14,15,0,1]},
+            {name: 'hwif_out..overflow', wave: '0..10...'}
+        ],
+        foot: {
+            text: "A 4-bit counter overflowing"
+        }
+    }
+
+
+decr
+^^^^
+|OK|
+
+Assign a reference to an alternate control signal to decrement the counter.
+If assigned, the inferred ``hwif_in..decr`` input will not be generated.
+
+decrsaturate
+^^^^^^^^^^^^
+If assigned, indicates that the counter will saturate instead of wrapping.
+If an alternate saturation point is specified, the counter value will be
+adjusted so that it does not exceed that limit, even after non-decrement actions.
+
+boolean
+    |OK|
+
+    If true, saturation point is when the counter reaches 0.
+
+integer
+    |OK|
+
+    Specify a static saturation value.
+
+reference
+    |OK|
+
+    Specify a dynamic saturation value.
+
+
+decrthreshold
+^^^^^^^^^^^^^
+
+If assigned, infers a ``hwif_out..decrthreshold`` output signal. This signal is
+asserted if the counter value is less than or equal to the threshold.
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',                     wave: 'p......'},
+            {name: 'hwif_in..decr',           wave: '01...0.'},
+            {name: '<counter>',               wave: '=.=3==..', data: [9,8,7,6,5,4]},
+            {name: 'hwif_out..decrthreshold', wave: '0..1....'}
+        ],
+        foot: {
+            text: "Example where incrthreshold = 7"
+        }
+    }
+
+
+boolean
+    |EX|
+
+    If true, threshold is 0.
+
+integer
+    |EX|
+
+    Specify a static threshold value.
+
+reference
+    |EX|
+
+    Specify a dynamic threshold value.
+
+
+decrvalue
+^^^^^^^^^
+Override the counter's decrement step size.
+
+integer
+    |OK|
+
+reference
+    |OK|
+
+decrwidth
+^^^^^^^^^
+|OK|
+
+If assigned, infers an input signal ``hwif_in..decrvalue``. The value of this
+property defines the signal's width.
 
 underflow
 ^^^^^^^^^
-|NO|
+|EX|
 
+If true, infers an output signal ``hwif_out..underflow`` that is asserted when
+the counter is about to wrap.
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',                 wave: 'p.......'},
+            {name: 'hwif_in..decr',       wave: '0101010.'},
+            {name: '<counter>',           wave: '=.=.=.=.', data: [1,0,15,14]},
+            {name: 'hwif_out..underflow', wave: '0..10...'}
+        ],
+        foot: {
+            text: "A 4-bit counter underflowing"
+        }
+    }
 
 --------------------------------------------------------------------------------
 
@@ -288,7 +433,7 @@ precedence
 
 reset
 ^^^^^
-bit
+integer
     |OK|
 
 reference

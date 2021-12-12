@@ -1,0 +1,68 @@
+addrmap top {
+    reg {
+        field {
+            sw=r; hw=na; counter;
+        } implied_up[3:0] = 0xD;
+        field {
+            sw=r; hw=na; counter;
+            incrvalue=1;
+        } up[7:4] = 0xD;
+        field {
+            sw=r; hw=na; counter;
+            decrvalue=1;
+        } down[11:8] = 0x4;
+        field {
+            sw=r; hw=na; counter;
+            incrvalue=1;
+            decrvalue=1;
+        } updown[15:12] = 0;
+
+        field {
+            sw=r; hw=na; counter;
+            incrvalue=3;
+            decrvalue=3;
+        } updown2[19:16] = 0;
+
+        field {
+            sw=r; hw=na; counter;
+            incrwidth=2;
+            decrwidth=2;
+        } updown3[23:20] = 0;
+
+        field {
+            sw=r; hw=na; counter;
+        } updown4[27:24] = 0;
+
+        field {
+            sw=rw; hw=na;
+        } step[29:28] = 0;
+        updown4->incrvalue = step;
+        updown4->decrvalue = step;
+
+        field {
+            sw=w; hw=r; singlepulse;
+        } do_count_up[30:30] = 0;
+        field {
+            sw=w; hw=r; singlepulse;
+        } do_count_down[31:31] = 0;
+        updown2->incr = do_count_up;
+        updown2->decr = do_count_down;
+        updown3->incr = do_count_up;
+        updown3->decr = do_count_down;
+        updown4->incr = do_count_up;
+        updown4->decr = do_count_down;
+    } simple @ 0x0;
+
+
+    reg {
+        field {
+            sw=r; hw=na; rclr; counter;
+        } overflow_count[8] = 0;
+
+        field {
+            sw=r; hw=na; rclr; counter;
+        } underflow_count[8] = 0;
+    } wrap_counter @ 0x4;
+    wrap_counter.overflow_count->incr = simple.updown3->overflow;
+    wrap_counter.underflow_count->incr = simple.updown3->underflow;
+};

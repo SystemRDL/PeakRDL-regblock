@@ -60,8 +60,12 @@ class Dereferencer:
                 return self.get_value(reset_value)
             else:
                 # No reset value defined!
-                # Callers shall ensure this is impossible
-                raise RuntimeError
+                obj.env.msg.warning(
+                    "Field '%s' is a constant but does not have a known value (missing reset). Assigning it a value of X."
+                    % obj.inst_name,
+                    obj.inst.inst_src_ref
+                )
+                return "'X"
 
         if isinstance(obj, SignalNode):
             # Signals are always inputs from the hwif
@@ -106,28 +110,12 @@ class Dereferencer:
         }:
             return self.get_value(field.get_property(prop_name))
 
-        # Counter properties
-        if prop_name == 'incr':
-            prop_value = field.get_property(prop_name)
-            if prop_value is None:
-                # unset by the user, points to the implied internal signal
-                return self.field_logic.get_counter_incr_identifier(field)
-            else:
-                return self.get_value(prop_value)
-        elif prop_name == 'decr':
-            prop_value = field.get_property(prop_name)
-            if prop_value is None:
-                # unset by the user, points to the implied internal signal
-                return self.field_logic.get_counter_decr_identifier(field)
-            else:
-                return self.get_value(prop_value)
-
         # Field Next
         if prop_name == "next":
             prop_value = field.get_property(prop_name)
             if prop_value is None:
                 # unset by the user, points to the implied internal signal
-                return self.field_logic.get_field_next_identifier(field)
+                return self.field_logic.get_field_combo_identifier(field, "next")
             else:
                 return self.get_value(prop_value)
 
@@ -175,19 +163,31 @@ class Dereferencer:
         if prop_name == "swmod":
             return self.field_logic.get_swmod_identifier(field)
 
-        raise RuntimeError("Unhandled reference to: %s->%s" % (field, prop_name))
 
-        """
-        TODO:
-        Resolves to an internal signal used in the field's logic
-            decrsaturate
-            decrthreshold
-            incrsaturate
-            incrthreshold
-            overflow
-            saturate
-            threshold
-        """
+        # translate aliases
+        aliases = {
+            "saturate": "incrsaturate",
+            "threshold": "incrthreshold",
+        }
+        prop_name = aliases.get(prop_name, prop_name)
+
+        # Counter properties
+        if prop_name == 'incr':
+            return self.field_logic.get_counter_incr_strobe(field)
+        if prop_name == 'decr':
+            return self.field_logic.get_counter_decr_strobe(field)
+
+        if prop_name in {
+            'decrsaturate',
+            'decrthreshold',
+            'incrsaturate',
+            'incrthreshold',
+            'overflow',
+            'underflow',
+        }:
+            return self.field_logic.get_field_combo_identifier(field, prop_name)
+
+        raise RuntimeError("Unhandled reference to: %s->%s" % (field, prop_name))
 
 
     def get_reg_propref_value(self, reg: RegNode, prop_name: str) -> str:
