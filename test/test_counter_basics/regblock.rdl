@@ -12,9 +12,10 @@ addrmap top {
             decrvalue=1;
         } down[11:8] = 0x4;
         field {
-            sw=r; hw=na; counter;
+            sw=r; hw=r; counter;
             incrvalue=1;
             decrvalue=1;
+            overflow; underflow;
         } updown[15:12] = 0;
 
         field {

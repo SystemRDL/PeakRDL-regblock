@@ -49,6 +49,61 @@
     cb.hwif_in.simple.updown.incr <= '0;
     cpuif.assert_read('h0, 'h0000, 'hF000);
 
+    // up/down external underflow
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(cb.hwif_out.simple.updown.value == 0);
+                if(cb.hwif_out.simple.updown.underflow) break;
+                @cb;
+            end
+            @cb;
+            forever begin
+                assert(cb.hwif_out.simple.updown.value == 15);
+                assert(cb.hwif_out.simple.updown.underflow == 0);
+                @cb;
+            end
+        end
+
+        begin
+            repeat(2) @cb;
+            cb.hwif_in.simple.updown.decr <= '1;
+            @cb;
+            cb.hwif_in.simple.updown.decr <= '0;
+            repeat(2) @cb;
+        end
+    join_any
+    disable fork;
+
+    // up/down external overflow
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(cb.hwif_out.simple.updown.value == 15);
+                if(cb.hwif_out.simple.updown.overflow) break;
+                @cb;
+            end
+            @cb;
+            forever begin
+                assert(cb.hwif_out.simple.updown.value == 0);
+                assert(cb.hwif_out.simple.updown.overflow == 0);
+                @cb;
+            end
+        end
+
+        begin
+            repeat(2) @cb;
+            cb.hwif_in.simple.updown.incr <= '1;
+            @cb;
+            cb.hwif_in.simple.updown.incr <= '0;
+            repeat(2) @cb;
+        end
+    join_any
+    disable fork;
+
+
     // up/down via sw
     cpuif.assert_read('h0, 'h00000, 'hF0000);
     repeat(3) cpuif.write('h0, 'h4000_0000); // incr
@@ -89,5 +144,4 @@
     cpuif.assert_read('h0, 'h8000000, 'hF000000);
     repeat(2) cpuif.write('h0, 'h8000_0000 + (2'h3 << 28)); // - 3
     cpuif.assert_read('h0, 'h2000000, 'hF000000);
-
 {% endblock %}

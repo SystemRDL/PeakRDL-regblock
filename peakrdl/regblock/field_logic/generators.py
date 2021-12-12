@@ -177,3 +177,16 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
+
+        if node.get_property('overflow'):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "overflow")
+            value = self.field_logic.get_field_combo_identifier(node, 'overflow')
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+        if node.get_property('underflow'):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "underflow")
+            value = self.field_logic.get_field_combo_identifier(node, 'underflow')
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )

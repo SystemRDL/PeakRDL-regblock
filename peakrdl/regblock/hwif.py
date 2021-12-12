@@ -291,6 +291,9 @@ class Hwif:
 
 
     def get_implied_prop_output_identifier(self, field: FieldNode, prop: str) -> str:
-        assert prop in {"anded", "ored", "xored", "swmod", "swacc"}
+        assert prop in {
+            "anded", "ored", "xored", "swmod", "swacc",
+            "incrthreshold", "decrthreshold", "overflow", "underflow"
+        }
         path = get_indexed_path(self.top_node, field)
         return "hwif_out." + path + "." + prop

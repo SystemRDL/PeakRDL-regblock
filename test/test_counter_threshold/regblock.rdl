@@ -1,0 +1,36 @@
+addrmap top {
+    reg {
+        field {
+            sw=r; hw=r; counter;
+            incrthreshold;
+            decrthreshold;
+        } count[4] = 0;
+    } threshold_via_bool @ 0x0;
+
+
+    reg {
+        field {
+            sw=r; hw=r; counter;
+            incrthreshold = 10;
+            decrthreshold = 5;
+        } count[4] = 0;
+    } threshold_via_const @ 0x4;
+
+
+    reg {
+        field {
+            sw=r; hw=r; counter;
+        } count[4] = 0;
+    } threshold_via_ref @ 0x8;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } min[4] = 0x4;
+        field {
+            sw=rw; hw=na;
+        } max[4] = 0xB;
+    } threshold_control @ 0xC;
+    threshold_via_ref.count -> decrthreshold = threshold_control.min;
+    threshold_via_ref.count -> incrthreshold = threshold_control.max;
+};

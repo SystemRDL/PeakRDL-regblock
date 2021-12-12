@@ -217,17 +217,17 @@ asserted if the counter value is greater or equal to the threshold.
 
 
 boolean
-    |EX|
+    |OK|
 
     If true, threshold is the counter's maximum count value. (2^width - 1)
 
 integer
-    |EX|
+    |OK|
 
     Specify a static threshold value.
 
 reference
-    |EX|
+    |OK|
 
     Specify a dynamic threshold value.
 
@@ -252,7 +252,7 @@ property defines the signal's width.
 
 overflow
 ^^^^^^^^
-|EX|
+|OK|
 
 If true, infers an output signal ``hwif_out..overflow`` that is asserted when
 the counter is about to wrap.
@@ -323,17 +323,17 @@ asserted if the counter value is less than or equal to the threshold.
 
 
 boolean
-    |EX|
+    |OK|
 
     If true, threshold is 0.
 
 integer
-    |EX|
+    |OK|
 
     Specify a static threshold value.
 
 reference
-    |EX|
+    |OK|
 
     Specify a dynamic threshold value.
 
@@ -357,7 +357,7 @@ property defines the signal's width.
 
 underflow
 ^^^^^^^^^
-|EX|
+|OK|
 
 If true, infers an output signal ``hwif_out..underflow`` that is asserted when
 the counter is about to wrap.
