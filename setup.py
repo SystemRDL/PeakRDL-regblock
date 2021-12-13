@@ -15,7 +15,7 @@ setuptools.setup(
     version=version,
     author="Alex Mykyta",
     author_email="amykyta3@github.com",
-    description="Generate SystemVerilog RTL that implements a register block from compiled SystemRDL input",
+    description="Convert SystemRDL into SystemVerilog RTL that implements a register block",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/SystemRDL/PeakRDL-regblock",

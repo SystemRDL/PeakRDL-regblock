@@ -31,7 +31,6 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
         end
     end
 end
-assign cpuif_wr_biten = '1;
 
 // Response
 assign {{cpuif.signal("pready")}} = cpuif_rd_ack | cpuif_wr_ack;

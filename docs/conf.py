@@ -56,11 +56,11 @@ html_static_path = []
 
 
 rst_epilog = """
-.. |iNO| image:: /img/err.svg
+.. |iERR| image:: /img/err.svg
         :width: 18px
         :class: no-scaled-link
 
-.. |iEX| image:: /img/warn.svg
+.. |iWARN| image:: /img/warn.svg
         :width: 18px
         :class: no-scaled-link
 
@@ -68,9 +68,9 @@ rst_epilog = """
         :width: 18px
         :class: no-scaled-link
 
-.. |NO| replace:: |iNO| Not Supported
+.. |NO| replace:: |iERR| Not Supported
 
-.. |EX| replace:: |iEX| Experimental
+.. |EX| replace:: |iWARN| Experimental
 
 .. |OK| replace:: |iOK| Supported
 

@@ -19,4 +19,4 @@ Values:
     if X is a static value, return the literal
 
 
-See `Hierarchy and Indexing` on details onhow to build path references to stuff
+See `Hierarchy and Indexing` on details on how to build path references to stuff

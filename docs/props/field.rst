@@ -103,6 +103,12 @@ hw
 ^^^
 |OK|
 
+Controls hardware access to the field.
+
+If readable, enables output signal ``hwif_out..value``. If writable, enables
+input ``hwif_in..value``.
+
+
 hwclr/hwset
 ^^^^^^^^^^^
 
@@ -120,6 +126,9 @@ reference
 hwenable/hwmask
 ^^^^^^^^^^^^^^^
 |OK|
+
+Reference to a component that provides bit-level control of hardware writeability.
+
 
 we/wel
 ^^^^^^
@@ -279,6 +288,7 @@ decr
 Assign a reference to an alternate control signal to decrement the counter.
 If assigned, the inferred ``hwif_in..decr`` input will not be generated.
 
+
 decrsaturate
 ^^^^^^^^^^^^
 If assigned, indicates that the counter will saturate instead of wrapping.
@@ -303,7 +313,6 @@ reference
 
 decrthreshold
 ^^^^^^^^^^^^^
-
 If assigned, infers a ``hwif_out..decrthreshold`` output signal. This signal is
 asserted if the counter value is less than or equal to the threshold.
 

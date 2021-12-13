@@ -26,7 +26,6 @@ module {{module_name}} (
     logic cpuif_req_is_wr;
     logic [{{cpuif.addr_width-1}}:0] cpuif_addr;
     logic [{{cpuif.data_width-1}}:0] cpuif_wr_data;
-    logic [{{cpuif.data_width-1}}:0] cpuif_wr_biten;
 
     logic cpuif_rd_ack;
     logic [{{cpuif.data_width-1}}:0] cpuif_rd_data;
@@ -45,7 +44,6 @@ module {{module_name}} (
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [{{cpuif.data_width-1}}:0] decoded_wr_data;
-    logic [{{cpuif.data_width-1}}:0] decoded_wr_biten;
 
     always_comb begin
         {{address_decode.get_implementation()|indent(8)}}
@@ -59,7 +57,6 @@ module {{module_name}} (
     assign decoded_req = cpuif_req;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
-    assign decoded_wr_biten = cpuif_wr_biten;
 
     //--------------------------------------------------------------------------
     // Field logic
