@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Optional, List
 import textwrap
+from collections import OrderedDict
 
 from systemrdl.walker import RDLListener, RDLWalker
 
@@ -38,9 +39,11 @@ class _AnonymousStruct(_StructBase):
 
 
 class _TypedefStruct(_StructBase):
-    def __init__(self, type_name: str):
+    def __init__(self, type_name: str, inst_name: Optional[str] = None, array_dimensions: Optional[List[int]] = None):
         super().__init__()
         self.type_name = type_name
+        self.inst_name = inst_name
+        self.array_dimensions = array_dimensions
 
     def __str__(self) -> str:
         return (
@@ -49,6 +52,16 @@ class _TypedefStruct(_StructBase):
             + f"\n}} {self.type_name};"
         )
 
+    @property
+    def instantiation(self) -> str:
+        if self.array_dimensions:
+            suffix = "[" + "][".join((str(n) for n in self.array_dimensions)) + "]"
+        else:
+            suffix = ""
+
+        return f"{self.type_name} {self.inst_name}{suffix};"
+
+#-------------------------------------------------------------------------------
 
 class StructGenerator:
 
@@ -131,6 +144,89 @@ class RDLStructGenerator(StructGenerator, RDLListener):
 
     def enter_Reg(self, node: 'RegNode') -> None:
         self.push_struct(node.inst_name, node.array_dimensions)
+
+    def exit_Reg(self, node: 'RegNode') -> None:
+        self.pop_struct()
+
+    def enter_Field(self, node: 'FieldNode') -> None:
+        self.add_member(node.inst_name, node.width)
+
+#-------------------------------------------------------------------------------
+
+class FlatStructGenerator(StructGenerator):
+
+    def __init__(self):
+        super().__init__()
+        self.typedefs = OrderedDict()
+
+    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None:
+        s = _TypedefStruct(type_name, inst_name, array_dimensions)
+        self._struct_stack.append(s)
+
+    def pop_struct(self) -> None:
+        s = self._struct_stack.pop()
+
+        if s.children:
+            # struct is not empty. Attach it to the parent
+            self.current_struct.children.append(s.instantiation)
+
+            # Add to collection of struct definitions
+            if s.type_name not in self.typedefs:
+                self.typedefs[s.type_name] = s
+
+    def finish(self) -> Optional[str]:
+        s = self._struct_stack.pop()
+        assert not self._struct_stack
+
+        # no children, no struct.
+        if not s.children:
+            return None
+
+        # Add to collection of struct definitions
+        if s.type_name not in self.typedefs:
+            self.typedefs[s.type_name] = s
+
+        all_structs = [str(s) for s in self.typedefs.values()]
+
+        return "\n\n".join(all_structs)
+
+
+class RDLFlatStructGenerator(FlatStructGenerator, RDLListener):
+    """
+    Struct generator that naively translates an RDL node tree into a flat list
+    of typedefs
+
+    This can be extended to add more intelligent behavior
+    """
+
+    def get_typdef_name(self, node:'Node') -> str:
+        raise NotImplementedError
+
+    def get_struct(self, node: 'Node', type_name: str) -> Optional[str]:
+        self.start(type_name)
+
+        walker = RDLWalker()
+        walker.walk(node, self, skip_top=True)
+
+        return self.finish()
+
+    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+
+    def exit_Addrmap(self, node: 'AddrmapNode') -> None:
+        self.pop_struct()
+
+    def enter_Regfile(self, node: 'RegfileNode') -> None:
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+
+    def exit_Regfile(self, node: 'RegfileNode') -> None:
+        self.pop_struct()
+
+    def enter_Reg(self, node: 'RegNode') -> None:
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, node.inst_name, node.array_dimensions)
 
     def exit_Reg(self, node: 'RegNode') -> None:
         self.pop_struct()

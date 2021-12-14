@@ -15,9 +15,10 @@ def get_permutations(spec):
     return param_list
 
 #-------------------------------------------------------------------------------
-# TODO: this wont scale well. Create groups of permutatuions. not necessary to permute everything all the time.
+# TODO: this wont scale well. Create groups of permutations. not necessary to permute everything all the time.
 TEST_PARAMS = get_permutations({
     "cpuif": all_cpuif,
     "retime_read_fanin": [True, False],
     "retime_read_response": [True, False],
+    "reuse_hwif_typedefs": [True, False],
 })

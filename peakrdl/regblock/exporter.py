@@ -70,6 +70,7 @@ class RegblockExporter:
         cpuif_cls = kwargs.pop("cpuif_cls", APB3_Cpuif)
         module_name = kwargs.pop("module_name", self.top_node.inst_name)
         package_name = kwargs.pop("package_name", module_name + "_pkg")
+        reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True)
 
         # Pipelining options
         retime_read_fanin = kwargs.pop("retime_read_fanin", False)
@@ -107,6 +108,7 @@ class RegblockExporter:
         self.hwif = Hwif(
             self,
             package_name=package_name,
+            reuse_typedefs=reuse_hwif_typedefs
         )
 
         self.readback = Readback(
