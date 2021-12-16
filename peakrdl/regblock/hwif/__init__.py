@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union, List
+from typing import TYPE_CHECKING, Union, List, Set, Dict
 
 from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
@@ -19,13 +19,19 @@ class Hwif:
     - Signal inputs (except those that are promoted to the top)
     """
 
-    def __init__(self, exp: 'RegblockExporter', package_name: str, reuse_typedefs: bool):
+    def __init__(
+        self, exp: 'RegblockExporter', package_name: str,
+        in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
+        reuse_typedefs: bool
+    ):
         self.exp = exp
         self.package_name = package_name
 
         self.has_input_struct = None
         self.has_output_struct = None
-        self._indent_level = 0
+
+        self.in_hier_signal_paths = in_hier_signal_paths
+        self.out_of_hier_signals = out_of_hier_signals
 
         if reuse_typedefs:
             self._gen_in_cls = InputStructGenerator_TypeScope
@@ -45,7 +51,7 @@ class Hwif:
         """
         lines = []
 
-        gen_in = self._gen_in_cls(self.top_node)
+        gen_in = self._gen_in_cls(self)
         structs_in = gen_in.get_struct(
             self.top_node,
             f"{self.top_node.inst_name}__in_t"
@@ -56,7 +62,7 @@ class Hwif:
         else:
             self.has_input_struct = False
 
-        gen_out = self._gen_out_cls(self.top_node)
+        gen_out = self._gen_out_cls(self)
         structs_out = gen_out.get_struct(
             self.top_node,
             f"{self.top_node.inst_name}__out_t"
@@ -129,8 +135,10 @@ class Hwif:
             path = get_indexed_path(self.top_node, obj)
             return "hwif_in." + path + ".value"
         elif isinstance(obj, SignalNode):
-            # TODO: Implement this
-            raise NotImplementedError()
+            if obj.get_path() in self.out_of_hier_signals:
+                return obj.inst_name
+            path = get_indexed_path(self.top_node, obj)
+            return "hwif_in." + path
         elif isinstance(obj, PropertyReference):
             return self.get_implied_prop_input_identifier(obj.node, obj.name)
 

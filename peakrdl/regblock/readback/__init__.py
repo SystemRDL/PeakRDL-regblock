@@ -30,7 +30,7 @@ class Readback:
         context = {
             "array_assignments" : array_assignments,
             "array_size" : array_size,
-            "get_always_ff_event": get_always_ff_event,
+            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
             "cpuif": self.exp.cpuif,
             "do_fanin_stage": self.do_fanin_stage,
         }

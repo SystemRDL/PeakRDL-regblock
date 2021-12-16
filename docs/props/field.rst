@@ -446,8 +446,8 @@ integer
     |OK|
 
 reference
-    |EX|
+    |OK|
 
 resetsignal
 ^^^^^^^^^^^
-|EX|
+|OK|

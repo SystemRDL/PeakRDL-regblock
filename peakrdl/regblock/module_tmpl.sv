@@ -1,16 +1,18 @@
 // TODO: Add a banner
 module {{module_name}} (
         input wire clk,
-        {%- for signal in reset_signals %}
-        {{signal.port_declaration}},
-        {%- endfor %}
+        input wire rst,
 
-        {%- for signal in user_signals %}
-        {{signal.port_declaration}},
+        {%- for signal in user_out_of_hier_signals %}
+        {%- if signal.width == 1 %}
+        input wire {{signal.inst_name}},
+        {%- else %}
+        input wire [{{signal.width-1}}:0] {{signal.inst_name}},
+        {%- endif %}
         {%- endfor %}
 
         {%- for interrupt in interrupts %}
-        {{interrupt.port_declaration}},
+        // TODO:
         {%- endfor %}
 
         {{cpuif.port_declaration|indent(8)}}
@@ -77,7 +79,7 @@ module {{module_name}} (
 
 {% if retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
-        if({{cpuif.reset.activehigh_identifier}}) begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
             cpuif_rd_ack <= '0;
             cpuif_rd_data <= '0;
             cpuif_rd_err <= '0;

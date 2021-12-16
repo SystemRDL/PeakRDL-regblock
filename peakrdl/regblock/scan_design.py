@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING
+from collections import OrderedDict
 
-from systemrdl.walker import RDLListener
-from systemrdl.node import AddrmapNode
+from systemrdl.walker import RDLListener, RDLWalker
+from systemrdl.node import AddrmapNode, SignalNode
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, RegNode, SignalNode, MemNode
+    from systemrdl.node import Node, RegNode, MemNode, FieldNode
     from .exporter import RegblockExporter
 
 
@@ -20,12 +21,44 @@ class DesignScanner(RDLListener):
         self.cpuif_data_width = 0
         self.msg = exp.top_node.env.msg
 
+        # Collections of signals that were actually referenced by the design
+        self.in_hier_signal_paths = set()
+        self.out_of_hier_signals = OrderedDict()
+
+    def _get_out_of_hier_field_reset(self):
+        current_node = self.exp.top_node.parent
+        while current_node is not None:
+            for signal in current_node.signals():
+                if signal.get_property('field_reset'):
+                    path = signal.get_path()
+                    self.out_of_hier_signals[path] = signal
+                    return
+            current_node = current_node.parent
+
+    def do_scan(self):
+        # Collect cpuif reset, if any.
+        cpuif_reset = self.exp.top_node.cpuif_reset
+        if cpuif_reset is not None:
+            path = cpuif_reset.get_path()
+            rel_path = cpuif_reset.get_rel_path(self.exp.top_node)
+            if rel_path.startswith("^"):
+                self.out_of_hier_signals[path] = cpuif_reset
+            else:
+                self.in_hier_signal_paths.add(path)
+
+        # collect out-of-hier field_reset, if any
+        self._get_out_of_hier_field_reset()
+
+        RDLWalker().walk(self.exp.top_node, self)
+        if self.msg.had_error:
+            self.msg.fatal(
+                "Unable to export due to previous errors"
+            )
+            raise ValueError
+
     def enter_Reg(self, node: 'RegNode') -> None:
         # The CPUIF's bus width is sized according to the largest register in the design
         self.cpuif_data_width = max(self.cpuif_data_width, node.get_property('regwidth'))
-
-    # TODO: Collect any references to signals that lie outside of the hierarchy
-    # These will be added as top-level signals
 
     def enter_Component(self, node: 'Node') -> None:
         if not isinstance(node, AddrmapNode) and node.external:
@@ -45,6 +78,21 @@ class DesignScanner(RDLListener):
                 + "within children of the addrmap being exported will be ignored.",
                 node.inst.inst_src_ref
             )
+
+        if node.get_property('field_reset'):
+            path = node.get_path()
+            self.in_hier_signal_paths.add(path)
+
+    def enter_Field(self, node: 'FieldNode') -> None:
+        for prop_name in node.list_properties():
+            value = node.get_property(prop_name)
+            if isinstance(value, SignalNode):
+                path = value.get_path()
+                rel_path = value.get_rel_path(self.exp.top_node)
+                if rel_path.startswith("^"):
+                    self.out_of_hier_signals[path] = value
+                else:
+                    self.in_hier_signal_paths.add(path)
 
     def enter_Mem(self, node: 'MemNode') -> None:
         self.msg.error(

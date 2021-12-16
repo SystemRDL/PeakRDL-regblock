@@ -23,8 +23,8 @@ always_comb begin
     field_combo.{{field_path}}.load_next = load_next_c;
 end
 always_ff {{get_always_ff_event(resetsignal)}} begin
-    {% if resetsignal is not none -%}
-    if({{resetsignal.activehigh_identifier}}) begin
+    {% if reset is not none -%}
+    if({{get_resetsignal(resetsignal)}}) begin
         field_storage.{{field_path}} <= {{reset}};
     end else {% endif %}if(field_combo.{{field_path}}.load_next) begin
         field_storage.{{field_path}} <= field_combo.{{field_path}}.next;

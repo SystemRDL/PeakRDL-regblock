@@ -1,15 +1,15 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from ..utils import get_always_ff_event, clog2
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
-    from ..signals import SignalBase
+    from systemrdl import SignalNode
 
 class CpuifBase:
     template_path = "cpuif/base_tmpl.sv"
 
-    def __init__(self, exp:'RegblockExporter', cpuif_reset:'SignalBase', data_width:int=32, addr_width:int=32):
+    def __init__(self, exp:'RegblockExporter', cpuif_reset:Optional['SignalNode'], data_width:int=32, addr_width:int=32):
         self.exp = exp
         self.reset = cpuif_reset
         self.data_width = data_width
@@ -22,7 +22,8 @@ class CpuifBase:
     def get_implementation(self) -> str:
         context = {
             "cpuif": self,
-            "get_always_ff_event": get_always_ff_event,
+            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "clog2": clog2,
         }
 

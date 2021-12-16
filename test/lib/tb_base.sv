@@ -6,7 +6,7 @@ module tb;
     logic rst = '1;
     logic clk = '0;
     initial forever begin
-        #10ns;
+        #5ns;
         clk = ~clk;
     end
 

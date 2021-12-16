@@ -3,13 +3,11 @@ from typing import Union
 
 import jinja2 as jj
 from systemrdl.node import AddrmapNode, RootNode
-from systemrdl.walker import RDLWalker
 
 from .addr_decode import AddressDecode
 from .field_logic import FieldLogic
 from .dereferencer import Dereferencer
 from .readback import Readback
-from .signals import InferredSignal, RDLSignal
 
 from .cpuif import CpuifBase
 from .cpuif.apb3 import APB3_Cpuif
@@ -33,8 +31,6 @@ class RegblockExporter:
         self.field_logic = FieldLogic(self)
         self.readback = None # type: Readback
         self.dereferencer = Dereferencer(self)
-        self.default_resetsignal = InferredSignal("rst")
-
 
         if user_template_dir:
             loader = jj.ChoiceLoader([
@@ -84,23 +80,11 @@ class RegblockExporter:
         # Scan the design for any unsupported features
         # Also collect pre-export information
         scanner = DesignScanner(self)
-        RDLWalker().walk(self.top_node, scanner)
-        if scanner.msg.had_error:
-            scanner.msg.fatal(
-                "Unable to export due to previous errors"
-            )
-            raise ValueError
-
-        cpuif_reset_tmp = self.top_node.cpuif_reset
-        if cpuif_reset_tmp:
-            cpuif_reset = RDLSignal(cpuif_reset_tmp)
-        else:
-            cpuif_reset = self.default_resetsignal
-        reset_signals = set([cpuif_reset, self.default_resetsignal])
+        scanner.do_scan()
 
         self.cpuif = cpuif_cls(
             self,
-            cpuif_reset=cpuif_reset,
+            cpuif_reset=self.top_node.cpuif_reset,
             data_width=scanner.cpuif_data_width,
             addr_width=self.top_node.size.bit_length()
         )
@@ -108,7 +92,9 @@ class RegblockExporter:
         self.hwif = Hwif(
             self,
             package_name=package_name,
-            reuse_typedefs=reuse_hwif_typedefs
+            in_hier_signal_paths=scanner.in_hier_signal_paths,
+            out_of_hier_signals=scanner.out_of_hier_signals,
+            reuse_typedefs=reuse_hwif_typedefs,
         )
 
         self.readback = Readback(
@@ -119,15 +105,15 @@ class RegblockExporter:
         # Build Jinja template context
         context = {
             "module_name": module_name,
-            "reset_signals": reset_signals,
-            "user_signals": [], # TODO:
+            "user_out_of_hier_signals": scanner.out_of_hier_signals.values(),
             "interrupts": [], # TODO:
             "cpuif": self.cpuif,
             "hwif": self.hwif,
+            "get_resetsignal": self.dereferencer.get_resetsignal,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
             "readback": self.readback,
-            "get_always_ff_event": get_always_ff_event,
+            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.dereferencer, resetsignal),
             "retime_read_response": retime_read_response,
         }
 

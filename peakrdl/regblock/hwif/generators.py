@@ -3,11 +3,13 @@ from ..struct_generator import RDLFlatStructGenerator
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, FieldNode
+    from . import Hwif
 
 class InputStructGenerator_Hier(RDLFlatStructGenerator):
-    def __init__(self, top_node: 'Node'):
+    def __init__(self, hwif: 'Hwif'):
         super().__init__()
-        self.top_node = top_node
+        self.hwif = hwif
+        self.top_node = hwif.top_node
 
     def get_typdef_name(self, node:'Node') -> str:
         base = node.get_rel_path(
@@ -19,7 +21,10 @@ class InputStructGenerator_Hier(RDLFlatStructGenerator):
         return f'{base}__in_t'
 
     def enter_Signal(self, node: 'SignalNode') -> None:
-        self.add_member(node.inst_name, node.width)
+        # only emit the signal if design scanner detected it is actually being used
+        path = node.get_path()
+        if path in self.hwif.in_hier_signal_paths:
+            self.add_member(node.inst_name, node.width)
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)

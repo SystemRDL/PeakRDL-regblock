@@ -4,7 +4,7 @@
 // Request
 logic is_active;
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
-    if({{cpuif.reset.activehigh_identifier}}) begin
+    if({{get_resetsignal(cpuif.reset)}}) begin
         is_active <= '0;
         cpuif_req <= '0;
         cpuif_req_is_wr <= '0;

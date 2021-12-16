@@ -117,6 +117,7 @@ X incrvalue/decrvalue needs to be the same or narrower than counter itself
 
 ! incrwidth/decrwidth must be between 1 and the width of the counter
 
+
 ================================================================================
 Things that need validation by this exporter
 ================================================================================

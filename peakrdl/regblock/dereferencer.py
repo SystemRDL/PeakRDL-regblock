@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Optional
 from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode
 from systemrdl.rdltypes import PropertyReference
 
@@ -200,3 +200,17 @@ class Dereferencer:
         Returns the Verilog string that represents the register's access strobe
         """
         return self.address_decode.get_access_strobe(obj)
+
+    def get_resetsignal(self, obj: Optional[SignalNode]) -> str:
+        """
+        Returns a normalized active-high reset signal
+        """
+        if isinstance(obj, SignalNode):
+            s = self.get_value(obj)
+            if obj.get_property('activehigh'):
+                return s
+            else:
+                return f"~{s}"
+
+        # default reset signal
+        return "rst"

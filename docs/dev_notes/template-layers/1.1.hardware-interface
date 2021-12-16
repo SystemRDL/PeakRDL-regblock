@@ -5,11 +5,37 @@ Summary
 RTL interface that provides access to per-field context signals
 
 Regarding signals:
-    I think RDL-declared signals should actually be part of the hwif input
-    structure.
-    Exceptions:
-        - if the signal instance is at the top-level, it will get promoted to the
-          top level port list for convenience, and therefore omitted from the struct
+    RDL-declared signals are part of the hwif input structure.
+    Only include them if they are referenced by the design (need to scan the
+    full design anyways, so may as well filter out unreferenced ones)
+
+    It is possible to use signals declared in a parent scope.
+    This means that not all signals will be discovered by a hierarchical listener alone
+    Need to scan ALL assigned properties for signal references too.
+        - get signal associated with top node's cpuif_reset helper property, if any
+        - collect all field_resets
+            X check all signal instances in the hier tree
+            - search parents of top node for the first field_reset signal, if any
+                This is WAY less expensive than querying EACH field's resetsignal property
+        X Check all explicitly assigned properties
+            only need to do this for fields
+    Collect all of these into the following:
+        - If inside the hier, add to a list of paths
+        - if outside the hier, add to a dict of path:SignalNode
+    These are all the signals in-use by the design
+
+    Pass list into the hwif generator
+        If the hwif generator encounters a signal during traversal:
+            check if it exists in the signal path list
+
+    out-of-hier signals are inserted outside of the hwif_in as standalone signals.
+    For now, just use their plain inst names. If I need to uniquify them i can add that later.
+    I should at least check against a list of known "dirty words". Seems very likely someone will choose
+    a signal called "rst".
+    Prefix with usersig_ if needed
+
+
+
 
 ================================================================================
 Naming Scheme

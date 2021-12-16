@@ -1,0 +1,80 @@
+
+signal {
+    cpuif_reset; activehigh;
+} root_cpuif_reset;
+
+signal {} r5f2_resetvalue[16];
+
+addrmap top {
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f1[16] = 0x1234;
+        field {
+            sw=rw; hw=na;
+        } f2[16] = 0x5678;
+    } r1;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f1[16] = 0x1234;
+        field {
+            sw=rw; hw=na;
+        } f2[16] = 0x5678;
+
+        signal {
+            field_reset; activehigh; sync;
+        } my_reset;
+    } r2;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f1[16] = 0x1234;
+        field {
+            sw=rw; hw=na;
+        } f2[16] = 0x5678;
+
+        signal {
+            field_reset; activehigh; async;
+        } my_areset;
+    } r3;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f1[16] = 0x1234;
+        field {
+            sw=rw; hw=na;
+        } f2[16] = 0x5678;
+
+        signal {
+            field_reset; activelow; sync;
+        } my_reset_n;
+    } r4;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f1[16] = 0x1234;
+        field {
+            sw=rw; hw=na;
+            reset = r5f2_resetvalue;
+        } f2[16];
+
+        signal {
+            field_reset; activelow; async;
+        } my_areset_n;
+    } r5;
+
+    signal {
+        activehigh; sync;
+    } f2_reset;
+
+    r1.f2->resetsignal = f2_reset;
+    r2.f2->resetsignal = f2_reset;
+    r3.f2->resetsignal = f2_reset;
+    r4.f2->resetsignal = f2_reset;
+    r5.f2->resetsignal = f2_reset;
+};

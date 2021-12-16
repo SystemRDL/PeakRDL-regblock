@@ -2,9 +2,9 @@ import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node
-    from .signals import SignalBase
+    from systemrdl.node import Node, SignalNode
     from typing import Optional
+    from .dereferencer import Dereferencer
 
 def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
     """
@@ -22,13 +22,13 @@ def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
     return re.sub(r'!', repl(), path)
 
 
-def get_always_ff_event(resetsignal: 'Optional[SignalBase]') -> str:
+def get_always_ff_event(dereferencer: 'Dereferencer', resetsignal: 'Optional[SignalNode]') -> str:
     if resetsignal is None:
         return "@(posedge clk)"
-    if resetsignal.is_async and resetsignal.is_activehigh:
-        return f"@(posedge clk or posedge {resetsignal.identifier})"
-    elif resetsignal.is_async and not resetsignal.is_activehigh:
-        return f"@(posedge clk or negedge {resetsignal.identifier})"
+    if resetsignal.get_property('async') and resetsignal.get_property('activehigh'):
+        return f"@(posedge clk or posedge {dereferencer.get_value(resetsignal)})"
+    elif resetsignal.get_property('async') and not resetsignal.get_property('activehigh'):
+        return f"@(posedge clk or negedge {dereferencer.get_value(resetsignal)})"
     return "@(posedge clk)"
 
 def clog2(n: int) -> int:

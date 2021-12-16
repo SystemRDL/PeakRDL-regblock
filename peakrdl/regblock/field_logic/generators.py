@@ -5,7 +5,6 @@ from collections import OrderedDict
 from ..struct_generator import RDLStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
 from ..utils import get_indexed_path, get_always_ff_event
-from ..signals import RDLSignal
 
 if TYPE_CHECKING:
     from . import FieldLogic
@@ -92,11 +91,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             for signal in conditional.get_extra_combo_signals(node):
                 extra_combo_signals[signal.name] = signal
 
-        sig = node.get_property('resetsignal')
-        if sig is not None:
-            resetsignal = RDLSignal(sig)
-        else:
-            resetsignal = self.exp.default_resetsignal
+        resetsignal = node.get_property('resetsignal')
 
         reset_value = node.get_property('reset')
         if reset_value is not None:
@@ -114,8 +109,9 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
             'resetsignal': resetsignal,
-            'get_always_ff_event': get_always_ff_event,
+            'get_always_ff_event': lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
             'get_value': self.exp.dereferencer.get_value,
+            'get_resetsignal': self.exp.dereferencer.get_resetsignal,
         }
         self.add_content(self.field_storage_template.render(context))
 
