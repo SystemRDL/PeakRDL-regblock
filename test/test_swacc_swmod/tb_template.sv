@@ -14,7 +14,7 @@
 
     // Verify that hwif gets sampled at the same cycle as swacc strobe
     counter = 'h10;
-    cb.hwif_in.r1.f.value <= counter;
+    cb.hwif_in.r1.f.next <= counter;
     @cb;
     event_count = 0;
     fork
@@ -22,7 +22,7 @@
             ##0;
             forever begin
                 counter++;
-                cb.hwif_in.r1.f.value <= counter;
+                cb.hwif_in.r1.f.next <= counter;
                 @cb;
                 if(cb.hwif_out.r1.f.swacc) begin
                     latched_data = counter;

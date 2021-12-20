@@ -60,4 +60,14 @@ addrmap top {
         } f[7:0] = 0x44;
     } r4;
     r4.f->wel = hw_ctrl.hw_wel;
+
+    reg {
+        signal {} f_next_value[8];
+        signal {} f_we;
+        field {
+            sw=rw; hw=w;
+            next = f_next_value;
+            we = f_we;
+        } f[7:0] = 0x55;
+    } r5;
 };

@@ -15,13 +15,13 @@
     cpuif.assert_read('h0, 11);
     assert(cb.hwif_out.r1.f.value == 11);
 
-    cb.hwif_in.r1.f.value <= 9;
+    cb.hwif_in.r1.f.next <= 9;
     cpuif.assert_read('h0, 11);
     assert(cb.hwif_out.r1.f.value == 11);
-    cb.hwif_in.r1.f.value <= 12;
+    cb.hwif_in.r1.f.next <= 12;
     cb.hwif_in.r1.f.we <= 1;
     @cb;
-    cb.hwif_in.r1.f.value <= 0;
+    cb.hwif_in.r1.f.next <= 0;
     cb.hwif_in.r1.f.we <= 0;
     cpuif.assert_read('h0, 12);
     assert(cb.hwif_out.r1.f.value == 12);
@@ -42,12 +42,12 @@
     cpuif.write('h2, 31);
     cpuif.assert_read('h2, 31);
 
-    cb.hwif_in.r3.f.value <= 29;
+    cb.hwif_in.r3.f.next <= 29;
     cpuif.assert_read('h2, 31);
-    cb.hwif_in.r3.f.value <= 32;
+    cb.hwif_in.r3.f.next <= 32;
     cb.hwif_in.r3.f.wel <= 0;
     @cb;
-    cb.hwif_in.r3.f.value <= 0;
+    cb.hwif_in.r3.f.next <= 0;
     cb.hwif_in.r3.f.wel <= 1;
     cpuif.assert_read('h2, 32);
 
@@ -66,13 +66,13 @@
     cpuif.assert_read('h4, 50);
     assert(cb.hwif_out.r5.f.value == 50);
 
-    cb.hwif_in.r5.f.value <= 9;
+    cb.hwif_in.r5.f.next <= 9;
     cpuif.assert_read('h4, 50);
     assert(cb.hwif_out.r5.f.value == 50);
-    cb.hwif_in.r5.f.value <= 52;
+    cb.hwif_in.r5.f.next <= 52;
     cb.hwif_in.r5.f.we <= 1;
     @cb;
-    cb.hwif_in.r5.f.value <= 0;
+    cb.hwif_in.r5.f.next <= 0;
     cb.hwif_in.r5.f.we <= 0;
     cpuif.assert_read('h4, 52);
     assert(cb.hwif_out.r5.f.value == 52);
@@ -88,7 +88,7 @@
 
     // r7 - sw=r; hw=w; // Wire/Bus - hardware assigns value
     cpuif.assert_read('h6, 0);
-    cb.hwif_in.r7.f.value <= 70;
+    cb.hwif_in.r7.f.next <= 70;
     cpuif.assert_read('h6, 70);
     cpuif.write('h6, 71);
     cpuif.assert_read('h6, 70);
@@ -108,13 +108,13 @@
     cpuif.assert_read('h8, 0);
     assert(cb.hwif_out.r9.f.value == 91);
 
-    cb.hwif_in.r9.f.value <= 89;
+    cb.hwif_in.r9.f.next <= 89;
     cpuif.assert_read('h8, 0);
     assert(cb.hwif_out.r9.f.value == 91);
-    cb.hwif_in.r9.f.value <= 92;
+    cb.hwif_in.r9.f.next <= 92;
     cb.hwif_in.r9.f.we <= 1;
     @cb;
-    cb.hwif_in.r9.f.value <= 0;
+    cb.hwif_in.r9.f.next <= 0;
     cb.hwif_in.r9.f.we <= 0;
     cpuif.assert_read('h8, 0);
     assert(cb.hwif_out.r9.f.value == 92);

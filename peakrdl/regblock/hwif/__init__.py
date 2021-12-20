@@ -132,8 +132,13 @@ class Hwif:
         raises an exception if obj is invalid
         """
         if isinstance(obj, FieldNode):
+            next_value = obj.get_property('next')
+            if next_value is not None:
+                # 'next' property replaces the inferred input signal
+                return self.exp.dereferencer.get_value(next_value)
+            # Otherwise, use inferred
             path = get_indexed_path(self.top_node, obj)
-            return "hwif_in." + path + ".value"
+            return "hwif_in." + path + ".next"
         elif isinstance(obj, SignalNode):
             if obj.get_path() in self.out_of_hier_signals:
                 return obj.inst_name

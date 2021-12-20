@@ -30,9 +30,10 @@ class InputStructGenerator_Hier(RDLFlatStructGenerator):
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, node.inst_name)
 
-        # Provide input to field's value if it is writable by hw
-        if node.is_hw_writable:
-            self.add_member("value", node.width)
+        # Provide input to field's next value if it is writable by hw, and it
+        # was not overridden by the 'next' property
+        if node.is_hw_writable and node.get_property('next') is None:
+            self.add_member("next", node.width)
 
         # Generate implied inputs
         for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:

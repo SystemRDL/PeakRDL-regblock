@@ -102,10 +102,6 @@ X Signals marked as field_reset or cpuif_reset need to have activehigh/activelow
 
 X incrvalue/decrvalue needs to be the same or narrower than counter itself
 
-! singlepulse and next properties cannot both be used.
-    Both are hard overrides of the field's next value.
-    singlepulse is basically an alias for next=0 that takes lowest priority
-
 ! counter field that saturates should not set overflow
     counter; incrsaturate; overflow;
     counter; decrsaturate; underflow;
@@ -117,6 +113,7 @@ X incrvalue/decrvalue needs to be the same or narrower than counter itself
 
 ! incrwidth/decrwidth must be between 1 and the width of the counter
 
+X field shall be hw writable if "next" is assigned.
 
 ================================================================================
 Things that need validation by this exporter

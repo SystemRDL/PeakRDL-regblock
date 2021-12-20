@@ -16,7 +16,7 @@
     cpuif.write('h0, 'h00_F0);
 
     // test hwenable + we
-    cb.hwif_in.r1.f.value <= 'hAB;
+    cb.hwif_in.r1.f.next <= 'hAB;
     cb.hwif_in.r1.f.we <= '1;
     @cb;
     cb.hwif_in.r1.f.we <= '0;
@@ -40,7 +40,7 @@
     cpuif.write('h0, 'hF0_00);
 
     // test hwmask + we
-    cb.hwif_in.r2.f.value <= 'hAB;
+    cb.hwif_in.r2.f.next <= 'hAB;
     cb.hwif_in.r2.f.we <= '1;
     @cb;
     cb.hwif_in.r2.f.we <= '0;
@@ -72,7 +72,7 @@
     cpuif.assert_read('hC, 'h0F);
 
     // test hwenable + we via reference
-    cb.hwif_in.r3.f.value <= 'hAA;
+    cb.hwif_in.r3.f.next <= 'hAA;
     // toggle hwenable = 0F, we=1
     cpuif.write('h0, 'h4_00_0F);
     cpuif.write('h0, 'h0_00_00);
@@ -80,15 +80,26 @@
 
     //---------------------------------
     // test wel via reference
-    cb.hwif_in.r4.f.value <= 'hBB;
+    cb.hwif_in.r4.f.next <= 'hBB;
     // toggle wel
     cpuif.write('h0, 'h10_00_00);
     cpuif.write('h0, 'h00_00_00);
     cpuif.assert_read('h10, 'hBB);
 
-    cb.hwif_in.r4.f.value <= 'hCC;
+    cb.hwif_in.r4.f.next <= 'hCC;
     // toggle wel
     cpuif.write('h0, 'h10_00_00);
     cpuif.write('h0, 'h00_00_00);
     cpuif.assert_read('h10, 'hCC);
+
+    //---------------------------------
+    // test we and next via reference
+    cb.hwif_in.r5.f_next_value <= 'h54;
+    cpuif.assert_read('h14, 'h55);
+    cb.hwif_in.r5.f_next_value <= 'h56;
+    cb.hwif_in.r5.f_we <= '1;
+    @cb;
+    cb.hwif_in.r5.f_next_value <= '0;
+    cb.hwif_in.r5.f_we <= '0;
+    cpuif.assert_read('h14, 'h56);
 {% endblock %}
