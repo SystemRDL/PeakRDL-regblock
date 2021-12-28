@@ -186,16 +186,16 @@ field -> enable
 ^^^^^^^^^^^^^^^
 |EX|
 
+field -> mask
+^^^^^^^^^^^^^
+|EX|
+
 field -> haltenable
 ^^^^^^^^^^^^^^^^^^^
 |EX|
 
 field -> haltmask
 ^^^^^^^^^^^^^^^^^
-|EX|
-
-field -> mask
-^^^^^^^^^^^^^
 |EX|
 
 

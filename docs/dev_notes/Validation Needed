@@ -95,12 +95,20 @@ X Signals marked as field_reset or cpuif_reset need to have activehigh/activelow
   specified. (8.2.1-d states that activehigh/low does not have an implied default state if unset!)
   Also applies to signals referenced by resetsignal
 
+X incrvalue/decrvalue needs to be the same or narrower than counter itself
+
+X field shall be hw writable if "next" is assigned.
+
+X sticky=true + "(posedge|negedge|bothedge) intr"
+    Edge-sensitivty doesnt make sense for full-field stickiness
+
+X we/wel + implied or explicit "sticky"/"stickybit"
+        we/wel modifier doesnt make sense here.
+
 ! hwclr/hwset/we/wel probably shouldn't be able to reference itself
     y->hwclr = y;
     y->we = y;
     ... it works, but should it be allowed? Seems like user-error
-
-X incrvalue/decrvalue needs to be the same or narrower than counter itself
 
 ! counter field that saturates should not set overflow
     counter; incrsaturate; overflow;
@@ -113,7 +121,7 @@ X incrvalue/decrvalue needs to be the same or narrower than counter itself
 
 ! incrwidth/decrwidth must be between 1 and the width of the counter
 
-X field shall be hw writable if "next" is assigned.
+! Illegal to use enable/mask/haltenable/haltmask on non-intr fields
 
 ================================================================================
 Things that need validation by this exporter
