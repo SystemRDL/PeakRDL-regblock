@@ -23,12 +23,10 @@ class AlwaysWrite(NextStateConditional):
         return "1"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
-
         hwmask = field.get_property('hwmask')
         hwenable = field.get_property('hwenable')
         I = self.exp.hwif.get_input_identifier(field)
-        R = f"field_storage.{field_path}"
+        R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
             next_val = f"{I} & ~{M} | {R} & {M}"
@@ -36,7 +34,7 @@ class AlwaysWrite(NextStateConditional):
             E = self.exp.dereferencer.get_value(hwenable)
             next_val = f"{I} & {E} | {R} & ~{E}"
         else:
-            next_val = self.exp.hwif.get_input_identifier(field)
+            next_val = I
 
         return [
             f"next_c = {next_val};",

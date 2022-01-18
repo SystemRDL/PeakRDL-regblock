@@ -62,8 +62,12 @@ class CombinationalStructGenerator(RDLStructGenerator):
 class FieldStorageStructGenerator(RDLStructGenerator):
 
     def enter_Field(self, node: 'FieldNode') -> None:
+        self.push_struct(node.inst_name)
+
         if node.implements_storage:
-            self.add_member(node.inst_name, node.width)
+            self.add_member("value", node.width)
+
+        self.pop_struct()
 
 
 class FieldLogicGenerator(RDLForLoopGenerator):
@@ -104,7 +108,6 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         context = {
             'node': node,
             'reset': reset_value_str,
-            'field_path': get_indexed_path(self.exp.top_node, node),
             'field_logic': self.field_logic,
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
@@ -117,8 +120,6 @@ class FieldLogicGenerator(RDLForLoopGenerator):
 
 
     def assign_field_outputs(self, node: 'FieldNode') -> None:
-        field_path = get_indexed_path(self.exp.top_node, node)
-
         # Field value output
         if self.exp.hwif.has_value_output(node):
             output_identifier = self.exp.hwif.get_output_identifier(node)

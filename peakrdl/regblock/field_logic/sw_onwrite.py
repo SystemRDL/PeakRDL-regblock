@@ -38,9 +38,9 @@ class WriteOneSet(_OnWrite):
     onwritetype = OnWriteType.woset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
+        R = self.exp.field_logic.get_storage_identifier(field)
         return [
-            f"next_c = field_storage.{field_path} | {self._wr_data(field)};",
+            f"next_c = {R} | {self._wr_data(field)};",
             f"load_next_c = '1;",
         ]
 
@@ -49,9 +49,9 @@ class WriteOneClear(_OnWrite):
     onwritetype = OnWriteType.woclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
+        R = self.exp.field_logic.get_storage_identifier(field)
         return [
-            f"next_c = field_storage.{field_path} & ~{self._wr_data(field)};",
+            f"next_c = {R} & ~{self._wr_data(field)};",
             f"load_next_c = '1;",
         ]
 
@@ -60,9 +60,9 @@ class WriteOneToggle(_OnWrite):
     onwritetype = OnWriteType.wot
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
+        R = self.exp.field_logic.get_storage_identifier(field)
         return [
-            f"next_c = field_storage.{field_path} ^ {self._wr_data(field)};",
+            f"next_c = {R} ^ {self._wr_data(field)};",
             f"load_next_c = '1;",
         ]
 
@@ -71,9 +71,9 @@ class WriteZeroSet(_OnWrite):
     onwritetype = OnWriteType.wzs
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
+        R = self.exp.field_logic.get_storage_identifier(field)
         return [
-            f"next_c = field_storage.{field_path} | ~{self._wr_data(field)};",
+            f"next_c = {R} | ~{self._wr_data(field)};",
             f"load_next_c = '1;",
         ]
 
@@ -82,9 +82,9 @@ class WriteZeroClear(_OnWrite):
     onwritetype = OnWriteType.wzc
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
+        R = self.exp.field_logic.get_storage_identifier(field)
         return [
-            f"next_c = field_storage.{field_path} & {self._wr_data(field)};",
+            f"next_c = {R} & {self._wr_data(field)};",
             f"load_next_c = '1;",
         ]
 
@@ -93,9 +93,9 @@ class WriteZeroToggle(_OnWrite):
     onwritetype = OnWriteType.wzt
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
+        R = self.exp.field_logic.get_storage_identifier(field)
         return [
-            f"next_c = field_storage.{field_path} ^ ~{self._wr_data(field)};",
+            f"next_c = {R} ^ ~{self._wr_data(field)};",
             f"load_next_c = '1;",
         ]
 
@@ -104,7 +104,6 @@ class WriteClear(_OnWrite):
     onwritetype = OnWriteType.wclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
         return [
             f"next_c = '0;",
             f"load_next_c = '1;",
@@ -115,7 +114,6 @@ class WriteSet(_OnWrite):
     onwritetype = OnWriteType.wset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
         return [
             f"next_c = '1;",
             f"load_next_c = '1;",
@@ -126,7 +124,6 @@ class Write(_OnWrite):
     onwritetype = None
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
         return [
             f"next_c = {self._wr_data(field)};",
             f"load_next_c = '1;",

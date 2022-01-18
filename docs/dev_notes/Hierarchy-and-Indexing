@@ -40,7 +40,7 @@ For example, given this RDL:
         } rf_loop[16];
     };
 
-The 'next' assignment will have a reference that has the following hierarchcial
+The 'next' assignment will have a reference that has the following hierarchical
 path:
     top.rf_loop[].x[3].f1
                 |   |

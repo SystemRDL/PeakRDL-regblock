@@ -21,11 +21,9 @@ class HWSet(NextStateConditional):
         return identifier
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
-
         hwmask = field.get_property('hwmask')
         hwenable = field.get_property('hwenable')
-        R = f"field_storage.{field_path}"
+        R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
             next_val = f"{R} | ~{M}"
@@ -56,11 +54,9 @@ class HWClear(NextStateConditional):
         return identifier
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        field_path = self.get_field_path(field)
-
         hwmask = field.get_property('hwmask')
         hwenable = field.get_property('hwenable')
-        R = f"field_storage.{field_path}"
+        R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
             next_val = f"{R} & {M}"

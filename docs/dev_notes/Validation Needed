@@ -123,6 +123,8 @@ X we/wel + implied or explicit "sticky"/"stickybit"
 
 ! Illegal to use enable/mask/haltenable/haltmask on non-intr fields
 
+! sticky/stickybit shall be hw writable
+
 ================================================================================
 Things that need validation by this exporter
 ================================================================================

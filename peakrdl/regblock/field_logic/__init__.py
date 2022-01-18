@@ -69,7 +69,7 @@ class FieldLogic:
         """
         assert field.implements_storage
         path = get_indexed_path(self.top_node, field)
-        return f"field_storage.{path}"
+        return f"field_storage.{path}.value"
 
     def get_field_combo_identifier(self, field: 'FieldNode', name: str) -> str:
         """
