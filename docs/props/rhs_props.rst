@@ -206,8 +206,8 @@ Register
 
 reg -> intr
 ^^^^^^^^^^^
-|NO|
+|EX|
 
 reg -> halt
 ^^^^^^^^^^^
-|NO|
+|EX|

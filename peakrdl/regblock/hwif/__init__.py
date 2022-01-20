@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Union, List, Set, Dict
 
-from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode
+from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode, RegNode
 from systemrdl.rdltypes import PropertyReference
 
 from ..utils import get_indexed_path
@@ -182,10 +182,15 @@ class Hwif:
         raise RuntimeError("Unhandled reference to: %s", obj)
 
 
-    def get_implied_prop_output_identifier(self, field: FieldNode, prop: str) -> str:
-        assert prop in {
-            "anded", "ored", "xored", "swmod", "swacc",
-            "incrthreshold", "decrthreshold", "overflow", "underflow"
-        }
-        path = get_indexed_path(self.top_node, field)
+    def get_implied_prop_output_identifier(self, node: Union[FieldNode, RegNode], prop: str) -> str:
+        if isinstance(node, FieldNode):
+            assert prop in {
+                "anded", "ored", "xored", "swmod", "swacc",
+                "incrthreshold", "decrthreshold", "overflow", "underflow",
+            }
+        elif isinstance(node, RegNode):
+            assert prop in {
+                "intr", "halt",
+            }
+        path = get_indexed_path(self.top_node, node)
         return "hwif_out." + path + "." + prop

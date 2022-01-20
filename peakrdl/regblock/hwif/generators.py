@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from ..struct_generator import RDLFlatStructGenerator
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, SignalNode, FieldNode
+    from systemrdl.node import Node, SignalNode, FieldNode, RegNode
     from . import Hwif
 
 class InputStructGenerator_Hier(RDLFlatStructGenerator):
@@ -102,6 +102,13 @@ class OutputStructGenerator_Hier(RDLFlatStructGenerator):
 
     def exit_Field(self, node: 'FieldNode') -> None:
         self.pop_struct()
+
+    def exit_Reg(self, node: 'RegNode') -> None:
+        if node.is_interrupt_reg:
+            self.add_member('intr')
+            if node.is_halt_reg:
+                self.add_member('halt')
+        super().exit_Reg(node)
 
 #-------------------------------------------------------------------------------
 class InputStructGenerator_TypeScope(InputStructGenerator_Hier):

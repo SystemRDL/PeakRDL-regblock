@@ -8,7 +8,7 @@ from ..utils import get_indexed_path, get_always_ff_event
 
 if TYPE_CHECKING:
     from . import FieldLogic
-    from systemrdl.node import FieldNode
+    from systemrdl.node import FieldNode, RegNode
 
 class CombinationalStructGenerator(RDLStructGenerator):
 
@@ -61,11 +61,18 @@ class CombinationalStructGenerator(RDLStructGenerator):
 
 class FieldStorageStructGenerator(RDLStructGenerator):
 
+    def __init__(self, field_logic: 'FieldLogic'):
+        super().__init__()
+        self.field_logic = field_logic
+
     def enter_Field(self, node: 'FieldNode') -> None:
         self.push_struct(node.inst_name)
 
         if node.implements_storage:
             self.add_member("value", node.width)
+
+        if self.field_logic.has_next_q(node):
+            self.add_member("next_q", node.width)
 
         self.pop_struct()
 
@@ -79,6 +86,13 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         self.field_storage_template = self.field_logic.exp.jj_env.get_template(
             "field_logic/templates/field_storage.sv"
         )
+        self.intr_fields = []
+        self.halt_fields = []
+
+
+    def enter_Reg(self, node: 'RegNode') -> None:
+        self.intr_fields = []
+        self.halt_fields = []
 
 
     def enter_Field(self, node: 'FieldNode') -> None:
@@ -86,6 +100,65 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             self.generate_field_storage(node)
 
         self.assign_field_outputs(node)
+
+        if node.get_property('intr'):
+            self.intr_fields.append(node)
+            if node.get_property('haltenable') or node.get_property('haltmask'):
+                self.halt_fields.append(node)
+
+
+    def exit_Reg(self, node: 'RegNode') -> None:
+        # Assign register's intr output
+        if self.intr_fields:
+            strs = []
+            for field in self.intr_fields:
+                enable = field.get_property('enable')
+                mask = field.get_property('mask')
+                F = self.exp.dereferencer.get_value(field)
+                if enable:
+                    E = self.exp.dereferencer.get_value(enable)
+                    s = f"|({F} & {E})"
+                elif mask:
+                    M = self.exp.dereferencer.get_value(mask)
+                    s = f"|({F} & ~{M})"
+                else:
+                    s = f"|{F}"
+                strs.append(s)
+
+            self.add_content(
+                f"assign {self.exp.hwif.get_implied_prop_output_identifier(node, 'intr')} ="
+            )
+            self.add_content(
+                "    "
+                + "\n    || ".join(strs)
+                + ";"
+            )
+
+        # Assign register's halt output
+        if self.halt_fields:
+            strs = []
+            for field in self.halt_fields:
+                enable = field.get_property('haltenable')
+                mask = field.get_property('haltmask')
+                F = self.exp.dereferencer.get_value(field)
+                if enable:
+                    E = self.exp.dereferencer.get_value(enable)
+                    s = f"|({F} & {E})"
+                elif mask:
+                    M = self.exp.dereferencer.get_value(mask)
+                    s = f"|({F} & ~{M})"
+                else:
+                    s = f"|{F}"
+                strs.append(s)
+
+            self.add_content(
+                f"assign {self.exp.hwif.get_implied_prop_output_identifier(node, 'halt')} ="
+            )
+            self.add_content(
+                "    "
+                + "\n    || ".join(strs)
+                + ";"
+            )
 
 
     def generate_field_storage(self, node: 'FieldNode') -> None:
@@ -115,6 +188,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'get_always_ff_event': lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
             'get_value': self.exp.dereferencer.get_value,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,
+            'get_input_identifier': self.exp.hwif.get_input_identifier,
         }
         self.add_content(self.field_storage_template.render(context))
 

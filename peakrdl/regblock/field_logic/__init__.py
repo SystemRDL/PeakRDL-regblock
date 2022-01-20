@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from systemrdl.rdltypes import PropertyReference, PrecedenceType
+from systemrdl.rdltypes import PropertyReference, PrecedenceType, InterruptType
 from systemrdl.node import Node
 
 from .bases import AssignmentPrecedence, NextStateConditional
@@ -9,6 +9,7 @@ from . import sw_onwrite
 from . import sw_singlepulse
 from . import hw_write
 from . import hw_set_clr
+from . import hw_interrupts
 
 from ..utils import get_indexed_path
 
@@ -33,7 +34,7 @@ class FieldLogic:
         return self.exp.top_node
 
     def get_storage_struct(self) -> str:
-        struct_gen = FieldStorageStructGenerator()
+        struct_gen = FieldStorageStructGenerator(self)
         s = struct_gen.get_struct(self.top_node, "field_storage_t")
 
         # Only declare the storage struct if it exists
@@ -70,6 +71,15 @@ class FieldLogic:
         assert field.implements_storage
         path = get_indexed_path(self.top_node, field)
         return f"field_storage.{path}.value"
+
+    def get_next_q_identifier(self, field: 'FieldNode') -> str:
+        """
+        Returns the Verilog string that represents the storage register element
+        for the delayed 'next' input value
+        """
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
+        return f"field_storage.{path}.next_q"
 
     def get_field_combo_identifier(self, field: 'FieldNode', name: str) -> str:
         """
@@ -194,6 +204,23 @@ class FieldLogic:
         return "1'b0"
 
 
+    def has_next_q(self, field: 'FieldNode') -> bool:
+        """
+        Some fields require a delayed version of their 'next' input signal in
+        order to do edge-detection.
+
+        Returns True if this is the case.
+        """
+        if field.get_property('intr type') in {
+            InterruptType.posedge,
+            InterruptType.negedge,
+            InterruptType.bothedge
+        }:
+            return True
+
+        return False
+
+
     #---------------------------------------------------------------------------
     # Field Logic Conditionals
     #---------------------------------------------------------------------------
@@ -260,6 +287,14 @@ class FieldLogic:
         self.add_hw_conditional(hw_write.AlwaysWrite(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_write.WELWrite(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_write.WEWrite(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.Sticky(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.Stickybit(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.PosedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.NegedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.BothedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.PosedgeNonsticky(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.NegedgeNonsticky(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.BothedgeNonsticky(self.exp), AssignmentPrecedence.HW_WRITE)
 
         self.add_hw_conditional(hw_set_clr.HWClear(self.exp), AssignmentPrecedence.HWCLR)
 

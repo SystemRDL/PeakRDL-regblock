@@ -29,4 +29,7 @@ always_ff {{get_always_ff_event(resetsignal)}} begin
     end else {% endif %}if({{field_logic.get_field_combo_identifier(node, "load_next")}}) begin
         {{field_logic.get_storage_identifier(node)}} <= {{field_logic.get_field_combo_identifier(node, "next")}};
     end
+    {%- if field_logic.has_next_q(node) %}
+    {{field_logic.get_next_q_identifier(node)}} <= {{get_input_identifier(node)}};
+    {%- endif %}
 end

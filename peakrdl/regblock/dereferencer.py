@@ -191,7 +191,8 @@ class Dereferencer:
 
 
     def get_reg_propref_value(self, reg: RegNode, prop_name: str) -> str:
-        # TODO: halt, intr
+        if prop_name in {'halt', 'intr'}:
+            return self.hwif.get_implied_prop_output_identifier(reg, prop_name)
         raise NotImplementedError
 
 

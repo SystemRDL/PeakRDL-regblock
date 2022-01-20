@@ -103,7 +103,7 @@ X sticky=true + "(posedge|negedge|bothedge) intr"
     Edge-sensitivty doesnt make sense for full-field stickiness
 
 X we/wel + implied or explicit "sticky"/"stickybit"
-        we/wel modifier doesnt make sense here.
+    we/wel modifier doesn't make sense here.
 
 ! hwclr/hwset/we/wel probably shouldn't be able to reference itself
     y->hwclr = y;

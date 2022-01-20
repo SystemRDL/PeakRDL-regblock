@@ -396,45 +396,52 @@ Interrupt Properties
 intr
 ^^^^
 
+If set, this field becomes an interrupt field.
+The enclosing register infers an output signal ``hwif_out..intr`` which denotes
+that an interrupt is active. This is an or-reduction of all interrupt fields
+after applying the appropriate ``enable`` or ``mask`` to the field value.
+
 level (default)
-    |NO|
+    |EX|
+
+    Interrupt is level-sensitive.
 
 posedge
-    |NO|
+    |EX|
 
 negedge
-    |NO|
+    |EX|
 
 bothedge
-    |NO|
+    |EX|
 
 nonsticky
-    |NO|
+    |EX|
 
 
 enable
 ^^^^^^
-|NO|
+|EX|
 
 mask
 ^^^^
-|NO|
+|EX|
 
 haltenable
 ^^^^^^^^^^
-|NO|
+|EX|
 
 haltmask
 ^^^^^^^^
-|NO|
+|EX|
 
 sticky
 ^^^^^^
-|NO|
+|EX|
 
 stickybit
 ^^^^^^^^^
-|NO|
+|EX|
 
 
 --------------------------------------------------------------------------------
