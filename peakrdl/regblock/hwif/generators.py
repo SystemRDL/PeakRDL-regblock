@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 from ..struct_generator import RDLFlatStructGenerator
+from systemrdl.node import FieldNode
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, SignalNode, FieldNode, RegNode
+    from systemrdl.node import Node, SignalNode, RegNode
     from . import Hwif
 
 class InputStructGenerator_Hier(RDLFlatStructGenerator):
@@ -119,7 +120,12 @@ class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
             # Add prefix to prevent collision when mixing namespace methods
             scope_path = "xtern__" + super().get_typdef_name(node)
 
-        return f'{scope_path}__{node.type_name}__in_t'
+        if isinstance(node, FieldNode):
+            extra_suffix = get_field_type_name_suffix(node)
+        else:
+            extra_suffix = ""
+
+        return f'{scope_path}__{node.type_name}{extra_suffix}__in_t'
 
 class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node') -> str:
@@ -129,4 +135,32 @@ class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
             # Add prefix to prevent collision when mixing namespace methods
             scope_path = "xtern__" + super().get_typdef_name(node)
 
-        return f'{scope_path}__{node.type_name}__out_t'
+        if isinstance(node, FieldNode):
+            extra_suffix = get_field_type_name_suffix(node)
+        else:
+            extra_suffix = ""
+
+        return f'{scope_path}__{node.type_name}{extra_suffix}__out_t'
+
+
+def get_field_type_name_suffix(field: FieldNode) -> str:
+    """
+    Fields may reuse the same type, but end up instantiating different widths
+    Uniquify the type name further if the field width was overridden when instantiating
+    """
+    if field.inst.original_def is None:
+        return ""
+
+    if field.inst.original_def.type_name is None:
+        # is an anonymous definition. No extra suffix needed
+        return ""
+
+    if "fieldwidth" in field.list_properties():
+        # fieldwidth was explicitly set. This type name is already sufficiently distinct
+        return ""
+
+    if field.width == 1:
+        # field width is the default. Skip suffix
+        return ""
+
+    return f"_w{field.width}"
