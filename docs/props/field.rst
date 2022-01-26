@@ -402,46 +402,113 @@ that an interrupt is active. This is an or-reduction of all interrupt fields
 after applying the appropriate ``enable`` or ``mask`` to the field value.
 
 level (default)
-    |EX|
+    |OK|
 
-    Interrupt is level-sensitive.
+    Interrupt is level-sensitive. If a bit on the field's ``hwif_in..next`` input
+    is '1', it will trigger an interrupt event.
 
 posedge
-    |EX|
+    |OK|
+
+    If a bit on the field's ``hwif_in..next`` input transitions from '0' to '1',
+    it will trigger an interrupt event. This transition shall still be synchronous
+    to the register block's clock.
 
 negedge
-    |EX|
+    |OK|
+
+    If a bit on the field's ``hwif_in..next`` input transitions from '1' to '0',
+    it will trigger an interrupt event. This transition shall still be synchronous
+    to the register block's clock.
 
 bothedge
-    |EX|
+    |OK|
+
+    If a bit on the field's ``hwif_in..next`` input transitions from '0' to '1' or '1' to '0',
+    it will trigger an interrupt event. This transition shall still be synchronous
+    to the register block's clock.
 
 nonsticky
-    |EX|
+    |OK|
 
 
 enable
 ^^^^^^
-|EX|
+|OK|
+
+Reference to a field or signal that, if set to 1, define which bits in the field
+are used to assert an interrupt.
+
 
 mask
 ^^^^
-|EX|
+|OK|
+
+Reference to a field or signal that, if set to 1, define which bits in the field
+are *not* used to assert an interrupt.
+
 
 haltenable
 ^^^^^^^^^^
-|EX|
+|OK|
+
+Reference to a field or signal that, if set to 1, define which bits in the field
+are used to assert the halt output.
+
+If this property is set, the enclosing register will infer a ``hwif_out..halt`` output.
+
 
 haltmask
 ^^^^^^^^
-|EX|
+|OK|
 
-sticky
-^^^^^^
-|EX|
+Reference to a field or signal that, if set to 1, define which bits in the field
+are *not* used to assert the halt output.
+
+If this property is set, the enclosing register will infer a ``hwif_out..halt`` output.
+
 
 stickybit
 ^^^^^^^^^
-|EX|
+|OK|
+
+When an interrupt trigger occurs, a stickybit field will set the corresponding
+bit to '1' and hold it until it is cleared by a software access.
+
+The interrupt trigger depends on the interrupt type. By default, interrupts are
+level-sensitive, but the interrupt modifiers allow for edge-sensitive triggers as
+well.
+
+The waveform below demonstrates a level-sensitive interrupt:
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',                 wave: 'p.....'},
+            {name: 'hwif_in..next',       wave: '010...'},
+            {name: '<field value>',       wave: '0.1...'}
+        ]
+    }
+
+
+sticky
+^^^^^^
+|OK|
+
+Unlike ``stickybit`` fields, a sticky field will latch an entire value. The
+value is latched as soon as ``hwif_in..next`` is nonzero, and is held until the
+field contents are cleared back to 0 by a software access.
+
+.. wavedrom::
+
+    {
+        signal: [
+            {name: 'clk',                 wave: 'p.....'},
+            {name: 'hwif_in..next',       wave: '23.22.', data: [0,10,20,30]},
+            {name: '<field value>',       wave: '2.3...', data: [0, 10]}
+        ]
+    }
 
 
 --------------------------------------------------------------------------------

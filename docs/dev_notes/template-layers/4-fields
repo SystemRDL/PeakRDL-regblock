@@ -53,7 +53,7 @@ TODO:
     Provide a mechanism for users to extend/override field behavior
 
 TODO:
-    Does the endinness the user sets matter anywhere?
+    Does the endianness the user sets matter anywhere?
 
 Implementation
     Makes sense to use a listener class
@@ -63,7 +63,7 @@ Be sure to skip alias registers
 --------------------------------------------------------------------------------
 
 NextStateConditional Class
-    Decribes a single conditional action that determines the next state of a field
+    Describes a single conditional action that determines the next state of a field
     Provides information to generate the following content:
         if(<conditional>) begin
             <assignments>
@@ -110,22 +110,22 @@ FieldBuilder Class
         NextStateConditional objects are stored in a dictionary as follows:
             _conditionals {
                 assignment_precedence: [
-                    conditional_option_3,
-                    conditional_option_2,
                     conditional_option_1,
+                    conditional_option_2,
+                    conditional_option_3,
                 ]
             }
 
     add_conditional(self, conditional, assignment_precedence):
         Inserts the NextStateConditional into the given assignment precedence bin
-        The last one added to a precedence bin is first in that bin's search order
+        The first one added to a precedence bin is first in that bin's search order
 
     init_conditionals(self) -> None:
         Called from __init__.
         loads all possible conditionals into self.conditionals list
         This function is to provide a hook for the user to add their own.
 
-        Do not do fancy class intospection. Load them explicitly by name like so:
+        Do not do fancy class introspection. Load them explicitly by name like so:
             self.add_conditional(MyNextState(), AssignmentPrecedence.SW_ACCESS)
 
         If user wants to extend this class, they can pile onto the bins of conditionals freely!

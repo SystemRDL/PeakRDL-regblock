@@ -1,0 +1,106 @@
+addrmap top {
+    //---------------------------------
+    reg {
+        field ctrl_t {
+            sw=rw; hw=na;
+        };
+        ctrl_t irq0[8] = 0;
+        ctrl_t irq1[1] = 0;
+    }
+    ctrl_enable     @ 0x100,
+    ctrl_mask       @ 0x104,
+    ctrl_haltenable @ 0x108,
+    ctrl_haltmask   @ 0x10c;
+    //---------------------------------
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            level intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    }
+    level_irqs_1 @ 0x0,
+    level_irqs_2 @ 0x4,
+    level_irqs_3 @ 0x8;
+
+    level_irqs_2.irq0->enable = ctrl_enable.irq0;
+    level_irqs_2.irq1->enable = ctrl_enable.irq1;
+    level_irqs_2.irq0->haltenable = ctrl_haltenable.irq0;
+    level_irqs_2.irq1->haltenable = ctrl_haltenable.irq1;
+    level_irqs_3.irq0->mask = ctrl_mask.irq0;
+    level_irqs_3.irq1->mask = ctrl_mask.irq1;
+    level_irqs_3.irq0->haltmask = ctrl_haltmask.irq0;
+    level_irqs_3.irq1->haltmask = ctrl_haltmask.irq1;
+    //---------------------------------
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            posedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } posedge_irqs @ 0x10;
+
+    //---------------------------------
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            negedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } negedge_irqs @ 0x20;
+
+    //---------------------------------
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            bothedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } bothedge_irqs @ 0x30;
+
+    //---------------------------------
+
+    reg {
+        field intr_t {
+            sw=r; hw=w;
+            nonsticky intr;
+        };
+
+        intr_t level_active[1];
+        intr_t posedge_active[1];
+        intr_t negedge_active[1];
+        intr_t bothedge_active[1];
+        intr_t level_halt_active[1];
+    } top_irq @ 0x40;
+
+    top_irq.level_active->next = level_irqs_1->intr;
+    top_irq.posedge_active->next = posedge_irqs->intr;
+    top_irq.negedge_active->next = negedge_irqs->intr;
+    top_irq.bothedge_active->next = bothedge_irqs->intr;
+    top_irq.level_halt_active->next = level_irqs_2->halt;
+
+    //---------------------------------
+    reg {
+        field {
+            sw=rw; hw=w;
+            sticky;
+        } stickyfield[8] = 0;
+    } stickyreg @ 0x50;
+
+};

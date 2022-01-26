@@ -235,7 +235,6 @@ class FieldLogic:
 
         If multiple conditionals of the same precedence are registered, they are
         searched sequentially and only the first to match the given field is used.
-        Conditionals are searched in reverse order that they were registered.
         """
         if precedence not in self._hw_conditionals:
             self._hw_conditionals[precedence] = []
@@ -253,7 +252,6 @@ class FieldLogic:
 
         If multiple conditionals of the same precedence are registered, they are
         searched sequentially and only the first to match the given field is used.
-        Conditionals are searched in reverse order that they were registered.
         """
         if precedence not in self._sw_conditionals:
             self._sw_conditionals[precedence] = []
@@ -272,29 +270,29 @@ class FieldLogic:
         self.add_sw_conditional(sw_onread.ClearOnRead(self.exp), AssignmentPrecedence.SW_ONREAD)
         self.add_sw_conditional(sw_onread.SetOnRead(self.exp), AssignmentPrecedence.SW_ONREAD)
 
-        self.add_sw_conditional(sw_onwrite.WriteOneSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteOneClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteOneToggle(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteZeroSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteZeroClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteZeroToggle(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
-        self.add_sw_conditional(sw_onwrite.WriteSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
         self.add_sw_conditional(sw_onwrite.Write(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteZeroToggle(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteZeroClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteZeroSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteOneToggle(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteOneClear(self.exp), AssignmentPrecedence.SW_ONWRITE)
+        self.add_sw_conditional(sw_onwrite.WriteOneSet(self.exp), AssignmentPrecedence.SW_ONWRITE)
 
         self.add_sw_conditional(sw_singlepulse.Singlepulse(self.exp), AssignmentPrecedence.SW_SINGLEPULSE)
 
-        self.add_hw_conditional(hw_write.AlwaysWrite(self.exp), AssignmentPrecedence.HW_WRITE)
-        self.add_hw_conditional(hw_write.WELWrite(self.exp), AssignmentPrecedence.HW_WRITE)
-        self.add_hw_conditional(hw_write.WEWrite(self.exp), AssignmentPrecedence.HW_WRITE)
-        self.add_hw_conditional(hw_interrupts.Sticky(self.exp), AssignmentPrecedence.HW_WRITE)
-        self.add_hw_conditional(hw_interrupts.Stickybit(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.PosedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.NegedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.BothedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.PosedgeNonsticky(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.NegedgeNonsticky(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.BothedgeNonsticky(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.Sticky(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts.Stickybit(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_write.WEWrite(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_write.WELWrite(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_write.AlwaysWrite(self.exp), AssignmentPrecedence.HW_WRITE)
 
         self.add_hw_conditional(hw_set_clr.HWClear(self.exp), AssignmentPrecedence.HWCLR)
 
@@ -308,6 +306,7 @@ class FieldLogic:
             for conditional in conditionals[precedence]:
                 if conditional.is_match(field):
                     result.append(conditional)
+                    break
         return result
 
 

@@ -44,6 +44,7 @@ Links
    :hidden:
    :caption: CPU Interfaces
 
+   cpuif/addressing
    cpuif/apb3
    cpuif/advanced
 

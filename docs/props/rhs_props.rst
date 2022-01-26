@@ -206,8 +206,12 @@ Register
 
 reg -> intr
 ^^^^^^^^^^^
-|EX|
+|OK|
+
+References the register's ``hwif_out..intr`` signal.
 
 reg -> halt
 ^^^^^^^^^^^
-|EX|
+|OK|
+
+References the register's ``hwif_out..halt`` signal.

@@ -18,8 +18,8 @@ python3 -m pip install test/requirements.txt
 
 # Running tests
 
-Tests can be launched from the test directory using `pytest``.
-Use ``pytest -n auto`` to run tests in parallel.
+Tests can be launched from the test directory using `pytest`.
+Use `pytest -n auto` to run tests in parallel.
 
 To run all tests:
 ```bash
@@ -36,12 +36,12 @@ pytest
 
 # Test organization
 
-The goal for this test infrastructre is to make it easy to add small-standalone
+The goal for this test infrastructure is to make it easy to add small-standalone
 testcases, with minimal repetition/boilerplate code that is usually present in
 SystemVerilog testbenches.
 
 To accomplish this, Jinja templates are used extensively to generate the
-resulting ``tb.sv`` file, as well as assist in dynamic testcase parameterization.
+resulting `tb.sv` file, as well as assist in dynamic testcase parameterization.
 
 
 

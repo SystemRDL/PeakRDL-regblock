@@ -105,12 +105,13 @@ X sticky=true + "(posedge|negedge|bothedge) intr"
 X we/wel + implied or explicit "sticky"/"stickybit"
     we/wel modifier doesn't make sense here.
 
-! hwclr/hwset/we/wel probably shouldn't be able to reference itself
-    y->hwclr = y;
-    y->we = y;
-    ... it works, but should it be allowed? Seems like user-error
+X sticky/stickybit shall be hw writable
 
-! counter field that saturates should not set overflow
+X Illegal to use enable/mask/haltenable/haltmask on non-intr fields
+
+X incrwidth/decrwidth must be between 1 and the width of the counter
+
+X counter field that saturates should not set overflow
     counter; incrsaturate; overflow;
     counter; decrsaturate; underflow;
 
@@ -119,11 +120,10 @@ X we/wel + implied or explicit "sticky"/"stickybit"
 
     Same goes to prop references to overflow/underflow
 
-! incrwidth/decrwidth must be between 1 and the width of the counter
-
-! Illegal to use enable/mask/haltenable/haltmask on non-intr fields
-
-! sticky/stickybit shall be hw writable
+! hwclr/hwset/we/wel probably shouldn't be able to reference itself
+    y->hwclr = y;
+    y->we = y;
+    ... it works, but should it be allowed? Seems like user-error
 
 ================================================================================
 Things that need validation by this exporter
@@ -148,7 +148,7 @@ X Warn/error on any signal with cpuif_reset set, that is not in the top-level
 
 ! async data signals
     Only supporting async signals if they are exclusively used in resets.
-    Anyhting else declared as "async" shall emit a warning that it is ignored
+    Anything else declared as "async" shall emit a warning that it is ignored
     I have zero interest in implementing resynchronizers
 
 ! Error if a property references a non-signal component, or property reference from
