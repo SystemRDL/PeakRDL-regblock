@@ -1,11 +1,13 @@
 from itertools import product
 
 from .cpuifs.apb3 import APB3, FlatAPB3
+from .cpuifs.passthrough import Passthrough
 
 
 all_cpuif = [
     APB3(),
     FlatAPB3(),
+    Passthrough(),
 ]
 
 def get_permutations(spec):

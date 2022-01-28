@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from systemrdl import SignalNode
 
 class CpuifBase:
-    template_path = "cpuif/base_tmpl.sv"
+    template_path = ""
 
     def __init__(self, exp:'RegblockExporter', cpuif_reset:Optional['SignalNode'], data_width:int=32, addr_width:int=32):
         self.exp = exp

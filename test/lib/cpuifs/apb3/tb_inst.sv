@@ -6,7 +6,7 @@ apb3_intf #(
 apb3_intf_driver #(
     .DATA_WIDTH({{exporter.cpuif.data_width}}),
     .ADDR_WIDTH({{exporter.cpuif.addr_width}})
-) cpuif(
+) cpuif (
     .clk(clk),
     .rst(rst),
     .m_apb(s_apb)

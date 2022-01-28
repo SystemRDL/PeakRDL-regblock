@@ -11,10 +11,6 @@ module {{module_name}} (
         {%- endif %}
         {%- endfor %}
 
-        {%- for interrupt in interrupts %}
-        // TODO:
-        {%- endfor %}
-
         {{cpuif.port_declaration|indent(8)}}
         {%- if hwif.has_input_struct or hwif.has_output_struct %},{% endif %}
 
@@ -30,8 +26,8 @@ module {{module_name}} (
     logic [{{cpuif.data_width-1}}:0] cpuif_wr_data;
 
     logic cpuif_rd_ack;
-    logic [{{cpuif.data_width-1}}:0] cpuif_rd_data;
     logic cpuif_rd_err;
+    logic [{{cpuif.data_width-1}}:0] cpuif_rd_data;
 
     logic cpuif_wr_ack;
     logic cpuif_wr_err;

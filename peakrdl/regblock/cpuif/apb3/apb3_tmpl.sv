@@ -1,6 +1,3 @@
-{% extends "cpuif/base_tmpl.sv" %}
-
-{% block body %}
 // Request
 logic is_active;
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
@@ -36,4 +33,3 @@ end
 assign {{cpuif.signal("pready")}} = cpuif_rd_ack | cpuif_wr_ack;
 assign {{cpuif.signal("prdata")}} = cpuif_rd_data;
 assign {{cpuif.signal("pslverr")}} = cpuif_rd_err | cpuif_wr_err;
-{%- endblock body%}
