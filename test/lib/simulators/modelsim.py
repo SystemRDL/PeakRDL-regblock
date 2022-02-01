@@ -19,6 +19,12 @@ class ModelSim(Simulator):
 
             # Ignore noisy warning about vopt-time checking of always_comb/always_latch
             "-suppress", "2583",
+
+            # all warnings are errors
+            "-warning", "error",
+
+            # except this one.. TODO: figure out if I can avoid this
+            "-suppress", "13314",
         ]
 
         # Add source files

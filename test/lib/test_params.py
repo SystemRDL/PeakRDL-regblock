@@ -1,12 +1,15 @@
 from itertools import product
 
 from .cpuifs.apb3 import APB3, FlatAPB3
+from .cpuifs.axi4lite import AXI4Lite, FlatAXI4Lite
 from .cpuifs.passthrough import Passthrough
 
 
 all_cpuif = [
     APB3(),
     FlatAPB3(),
+    AXI4Lite(),
+    FlatAXI4Lite(),
     Passthrough(),
 ]
 
