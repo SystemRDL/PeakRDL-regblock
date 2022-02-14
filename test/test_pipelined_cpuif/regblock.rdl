@@ -1,0 +1,8 @@
+addrmap regblock {
+    default sw=rw;
+    default hw=r;
+
+    reg {
+        field {} x[31:0] = 0;
+    } x[64] @ 0 += 4;
+};

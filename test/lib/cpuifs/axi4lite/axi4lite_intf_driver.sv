@@ -77,7 +77,7 @@ interface axi4lite_intf_driver #(
         input RRESP;
     endclocking
 
-    task reset();
+    task automatic reset();
         cb.AWVALID <= '0;
         cb.AWADDR <= '0;
         cb.AWPROT <= '0;
@@ -95,13 +95,20 @@ interface axi4lite_intf_driver #(
         @cb;
     end
 
-    task write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
+    semaphore txn_aw_mutex = new(1);
+    semaphore txn_w_mutex = new(1);
+    semaphore txn_b_mutex = new(1);
+    semaphore txn_ar_mutex = new(1);
+    semaphore txn_r_mutex = new(1);
+
+    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
         bit w_before_aw;
         w_before_aw = $urandom_range(1,0);
-        ##0;
 
         fork
             begin
+                txn_aw_mutex.get();
+                ##0;
                 if(w_before_aw) repeat($urandom_range(2,0)) @cb;
                 cb.AWVALID <= '1;
                 cb.AWADDR <= addr;
@@ -109,9 +116,12 @@ interface axi4lite_intf_driver #(
                 @(cb);
                 while(cb.AWREADY !== 1'b1) @(cb);
                 cb.AWVALID <= '0;
+                txn_aw_mutex.put();
             end
 
             begin
+                txn_w_mutex.get();
+                ##0;
                 if(!w_before_aw) repeat($urandom_range(2,0)) @cb;
                 cb.WVALID <= '1;
                 cb.WDATA <= data;
@@ -120,39 +130,47 @@ interface axi4lite_intf_driver #(
                 while(cb.WREADY !== 1'b1) @(cb);
                 cb.WVALID <= '0;
                 cb.WSTRB <= '0;
+                txn_w_mutex.put();
             end
 
             begin
+                txn_b_mutex.get();
+                @cb;
                 while(cb.BREADY !== 1'b1 && cb.BVALID !== 1'b1) @(cb);
                 assert(!$isunknown(cb.BRESP)) else $error("Read from 0x%0x returned X's on BRESP", addr);
+                txn_b_mutex.put();
             end
         join
     endtask
 
-    task read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
-        ##0;
+    task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
 
         fork
             begin
+                txn_ar_mutex.get();
+                ##0;
                 cb.ARVALID <= '1;
                 cb.ARADDR <= addr;
                 cb.ARPROT <= '0;
                 @(cb);
                 while(cb.ARREADY !== 1'b1) @(cb);
                 cb.ARVALID <= '0;
+                txn_ar_mutex.put();
             end
 
             begin
+                txn_r_mutex.get();
                 @cb;
                 while(!(cb.RREADY === 1'b1 && cb.RVALID === 1'b1)) @(cb);
                 assert(!$isunknown(cb.RDATA)) else $error("Read from 0x%0x returned X's on RDATA", addr);
                 assert(!$isunknown(cb.RRESP)) else $error("Read from 0x%0x returned X's on RRESP", addr);
                 data = cb.RDATA;
+                txn_r_mutex.put();
             end
         join
     endtask
 
-    task assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
+    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
         logic [DATA_WIDTH-1:0] data;
         read(addr, data);
         data &= mask;

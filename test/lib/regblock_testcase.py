@@ -16,7 +16,7 @@ from peakrdl.regblock import RegblockExporter
 from .cpuifs.base import CpuifTestMode
 from .cpuifs.apb3 import APB3
 
-from .simulators.modelsim import ModelSim
+from .simulators.questa import Questa
 
 
 class RegblockTestCase(unittest.TestCase):
@@ -40,9 +40,9 @@ class RegblockTestCase(unittest.TestCase):
     retime_read_response = False
 
     #: Abort test if it exceeds this number of clock cycles
-    timeout_clk_cycles = 1000
+    timeout_clk_cycles = 5000
 
-    simulator_cls = ModelSim
+    simulator_cls = Questa
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest

@@ -16,7 +16,8 @@ Install from `PyPi`_ using pip
 
 .. code-block:: bash
 
-   python3 -m pip install peakrdl-regblock
+   # NOT RELEASED YET
+   # python3 -m pip install peakrdl-regblock
 
 .. _PyPi: https://pypi.org/project/peakrdl-regblock
 
@@ -47,6 +48,7 @@ Links
    cpuif/addressing
    cpuif/apb3
    cpuif/advanced
+   cpuif/internal_protocol
 
 .. toctree::
    :hidden:

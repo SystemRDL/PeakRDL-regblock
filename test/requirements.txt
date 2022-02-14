@@ -1,4 +1,4 @@
 pytest
 parameterized
-pytest-xdist
+pytest-parallel
 jinja2-simple-tags

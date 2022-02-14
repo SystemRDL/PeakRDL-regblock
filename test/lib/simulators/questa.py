@@ -4,27 +4,21 @@ import os
 
 from . import Simulator
 
-class ModelSim(Simulator):
+class Questa(Simulator):
     def compile(self) -> None:
         cmd = [
             "vlog", "-sv", "-quiet", "-l", "build.log",
 
             "+incdir+%s" % os.path.join(os.path.dirname(__file__), ".."),
 
-            # Free version of ModelSim throws errors if generate/endgenerate
-            # blocks are not used.
-            # These have been made optional long ago. Modern versions of SystemVerilog do
-            # not require them and I prefer not to add them.
-            "-suppress", "2720",
-
-            # Ignore noisy warning about vopt-time checking of always_comb/always_latch
-            "-suppress", "2583",
+            # Use strict LRM conformance
+            "-svinputport=net",
 
             # all warnings are errors
             "-warning", "error",
 
-            # except this one.. TODO: figure out if I can avoid this
-            "-suppress", "13314",
+            # Ignore noisy warning about vopt-time checking of always_comb/always_latch
+            "-suppress", "2583",
         ]
 
         # Add source files
@@ -42,6 +36,7 @@ class ModelSim(Simulator):
         # call vsim
         cmd = [
             "vsim", "-quiet",
+            "-voptargs=+acc",
             "-msgmode", "both",
             "-do", "set WildcardFilter [lsearch -not -all -inline $WildcardFilter Memory]",
             "-do", "log -r /*;",

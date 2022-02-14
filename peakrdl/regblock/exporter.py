@@ -76,6 +76,12 @@ class RegblockExporter:
         if kwargs:
             raise TypeError("got an unexpected keyword argument '%s'" % list(kwargs.keys())[0])
 
+        min_read_latency = 0
+        min_write_latency = 0
+        if retime_read_fanin:
+            min_read_latency += 1
+        if retime_read_response:
+            min_read_latency += 1
 
         # Scan the design for any unsupported features
         # Also collect pre-export information
@@ -114,6 +120,8 @@ class RegblockExporter:
             "readback": self.readback,
             "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.dereferencer, resetsignal),
             "retime_read_response": retime_read_response,
+            "min_read_latency": min_read_latency,
+            "min_write_latency": min_write_latency,
         }
 
         # Write out design

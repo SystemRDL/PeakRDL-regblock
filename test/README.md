@@ -1,12 +1,14 @@
 
 # Test Dependencies
 
-## ModelSim
+## Questa
 
-Testcases require an installation of ModelSim/QuestaSim, and for `vlog` & `vsim`
+Testcases require an installation of the Questa simulator, and for `vlog` & `vsim`
 commands to be visible via the PATH environment variable.
 
-ModelSim - Intel FPGA Edition can be downloaded for free from https://fpgasoftware.intel.com/ and is sufficient to run unit tests.
+*Questa - Intel FPGA Starter Edition* can be downloaded for free from
+https://fpgasoftware.intel.com/ and is sufficient to run unit tests. You will need
+to generate a free license file to unlock the software: https://licensing.intel.com/psg/s/sales-signup-evaluationlicenses
 
 
 ## Python Packages
@@ -19,7 +21,7 @@ python3 -m pip install test/requirements.txt
 # Running tests
 
 Tests can be launched from the test directory using `pytest`.
-Use `pytest -n auto` to run tests in parallel.
+Use `pytest --workers auto` to run tests in parallel.
 
 To run all tests:
 ```bash

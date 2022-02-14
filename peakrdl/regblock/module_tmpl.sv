@@ -24,6 +24,8 @@ module {{module_name}} (
     logic cpuif_req_is_wr;
     logic [{{cpuif.addr_width-1}}:0] cpuif_addr;
     logic [{{cpuif.data_width-1}}:0] cpuif_wr_data;
+    logic cpuif_req_stall_wr;
+    logic cpuif_req_stall_rd;
 
     logic cpuif_rd_ack;
     logic cpuif_rd_err;
@@ -33,6 +35,40 @@ module {{module_name}} (
     logic cpuif_wr_err;
 
     {{cpuif.get_implementation()|indent}}
+
+{% if min_read_latency == min_write_latency %}
+    // Read & write latencies are balanced. Stalls not required
+    assign cpuif_req_stall_rd = '0;
+    assign cpuif_req_stall_wr = '0;
+{%- elif min_read_latency > min_write_latency %}
+    // Read latency > write latency. May need to delay next write that follows a read
+    logic [{{min_read_latency - min_write_latency - 1}}:0] cpuif_req_stall_sr;
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            cpuif_req_stall_sr <= '0;
+        end else if(cpuif_req && !cpuif_req_is_wr) begin
+            cpuif_req_stall_sr <= '1;
+        end else begin
+            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
+        end
+    end
+    assign cpuif_req_stall_rd = '0;
+    assign cpuif_req_stall_wr = cpuif_req_stall_sr[0];
+{%- else %}
+    // Write latency > read latency. May need to delay next read that follows a write
+    logic [{{min_write_latency - min_read_latency - 1}}:0] cpuif_req_stall_sr;
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            cpuif_req_stall_sr <= '0;
+        end else if(cpuif_req && cpuif_req_is_wr) begin
+            cpuif_req_stall_sr <= '1;
+        end else begin
+            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
+        end
+    end
+    assign cpuif_req_stall_rd = cpuif_req_stall_sr[0];
+    assign cpuif_req_stall_wr = '0;
+{%- endif %}
 
     //--------------------------------------------------------------------------
     // Address Decode
@@ -47,14 +83,14 @@ module {{module_name}} (
         {{address_decode.get_implementation()|indent(8)}}
     end
 
-    // Writes are always granted with no error response
-    assign cpuif_wr_ack = cpuif_req & cpuif_req_is_wr;
-    assign cpuif_wr_err = '0;
-
     // Pass down signals to next stage
     assign decoded_req = cpuif_req;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
+
+    // Writes are always granted with no error response
+    assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
+    assign cpuif_wr_err = '0;
 
     //--------------------------------------------------------------------------
     // Field logic

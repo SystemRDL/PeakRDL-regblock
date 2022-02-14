@@ -40,7 +40,7 @@ interface apb3_intf_driver #(
         input PSLVERR;
     endclocking
 
-    task reset();
+    task automatic reset();
         cb.PSEL <= '0;
         cb.PENABLE <= '0;
         cb.PWRITE <= '0;
@@ -48,7 +48,10 @@ interface apb3_intf_driver #(
         cb.PWDATA <= '0;
     endtask
 
-    task write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
+    semaphore txn_mutex = new(1);
+
+    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
+        txn_mutex.get();
         ##0;
 
         // Initiate transfer
@@ -66,9 +69,11 @@ interface apb3_intf_driver #(
         // Wait for response
         while(cb.PREADY !== 1'b1) @(cb);
         reset();
+        txn_mutex.put();
     endtask
 
-    task read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
+    task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
+        txn_mutex.get();
         ##0;
 
         // Initiate transfer
@@ -89,9 +94,10 @@ interface apb3_intf_driver #(
         assert(!$isunknown(cb.PSLVERR)) else $error("Read from 0x%0x returned X's on PSLVERR", addr);
         data = cb.PRDATA;
         reset();
+        txn_mutex.put();
     endtask
 
-    task assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
+    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
         logic [DATA_WIDTH-1:0] data;
         read(addr, data);
         data &= mask;
