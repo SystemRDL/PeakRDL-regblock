@@ -47,6 +47,7 @@ Links
 
    cpuif/addressing
    cpuif/apb3
+   cpuif/axi4lite
    cpuif/advanced
    cpuif/internal_protocol
 

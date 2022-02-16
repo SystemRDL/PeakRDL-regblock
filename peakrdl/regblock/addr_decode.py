@@ -87,7 +87,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
 
     def enter_Reg(self, node: RegNode) -> None:
-        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req & (cpuif_addr == {self._get_address_str(node)});"
+        s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)});"
         self.add_content(s)
 
 

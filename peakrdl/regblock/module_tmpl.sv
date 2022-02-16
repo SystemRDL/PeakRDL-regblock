@@ -36,10 +36,12 @@ module {{module_name}} (
 
     {{cpuif.get_implementation()|indent}}
 
+    logic cpuif_req_masked;
 {% if min_read_latency == min_write_latency %}
     // Read & write latencies are balanced. Stalls not required
     assign cpuif_req_stall_rd = '0;
     assign cpuif_req_stall_wr = '0;
+    assign cpuif_req_masked = cpuif_req;
 {%- elif min_read_latency > min_write_latency %}
     // Read latency > write latency. May need to delay next write that follows a read
     logic [{{min_read_latency - min_write_latency - 1}}:0] cpuif_req_stall_sr;
@@ -54,6 +56,7 @@ module {{module_name}} (
     end
     assign cpuif_req_stall_rd = '0;
     assign cpuif_req_stall_wr = cpuif_req_stall_sr[0];
+    assign cpuif_req_masked = cpuif_req & !(cpuif_req_is_wr & cpuif_req_stall_wr);
 {%- else %}
     // Write latency > read latency. May need to delay next read that follows a write
     logic [{{min_write_latency - min_read_latency - 1}}:0] cpuif_req_stall_sr;
@@ -68,6 +71,7 @@ module {{module_name}} (
     end
     assign cpuif_req_stall_rd = cpuif_req_stall_sr[0];
     assign cpuif_req_stall_wr = '0;
+    assign cpuif_req_masked = cpuif_req & !(!cpuif_req_is_wr & cpuif_req_stall_rd);
 {%- endif %}
 
     //--------------------------------------------------------------------------
@@ -84,7 +88,7 @@ module {{module_name}} (
     end
 
     // Pass down signals to next stage
-    assign decoded_req = cpuif_req;
+    assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
 

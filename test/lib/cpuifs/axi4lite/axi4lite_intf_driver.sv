@@ -136,7 +136,7 @@ interface axi4lite_intf_driver #(
             begin
                 txn_b_mutex.get();
                 @cb;
-                while(cb.BREADY !== 1'b1 && cb.BVALID !== 1'b1) @(cb);
+                while(!(cb.BREADY === 1'b1 && cb.BVALID === 1'b1)) @(cb);
                 assert(!$isunknown(cb.BRESP)) else $error("Read from 0x%0x returned X's on BRESP", addr);
                 txn_b_mutex.put();
             end

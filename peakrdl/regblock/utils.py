@@ -32,4 +32,7 @@ def get_always_ff_event(dereferencer: 'Dereferencer', resetsignal: 'Optional[Sig
     return "@(posedge clk)"
 
 def clog2(n: int) -> int:
-    return n.bit_length() - 1
+    return (n-1).bit_length()
+
+def is_pow2(x: int) -> bool:
+    return (x > 0) and ((x & (x - 1)) == 0)

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 
-from ..utils import get_always_ff_event, clog2
+from ..utils import get_always_ff_event, clog2, is_pow2
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -25,6 +25,7 @@ class CpuifBase:
             "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "clog2": clog2,
+            "is_pow2": is_pow2,
         }
 
         template = self.exp.jj_env.get_template(self.template_path)

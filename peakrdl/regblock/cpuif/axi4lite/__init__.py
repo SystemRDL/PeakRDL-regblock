@@ -14,6 +14,28 @@ class AXI4Lite_Cpuif(CpuifBase):
     def data_width_bytes(self) -> int:
         return self.data_width // 8
 
+    @property
+    def regblock_latency(self) -> int:
+        return max(self.exp.min_read_latency, self.exp.min_write_latency)
+
+    @property
+    def max_outstanding(self) -> int:
+        """
+        Best pipelined performance is when the max outstanding transactions
+        is the design's latency + 2.
+        Anything beyond that does not have any effect, aside from adding unnecessary
+        logic and additional buffer-bloat latency.
+        """
+        return self.regblock_latency + 2
+
+    @property
+    def resp_buffer_size(self) -> int:
+        """
+        Response buffer size must be greater or equal to max outstanding
+        transactions to prevent response overrun.
+        """
+        return self.max_outstanding
+
 
 class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
     @property

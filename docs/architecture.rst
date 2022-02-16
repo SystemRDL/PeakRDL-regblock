@@ -51,4 +51,5 @@ optimally reduced.
 
 A second optional read response retiming register can be enabled in-line with the
 path back to the CPU interface layer. This can be useful if the CPU interface protocol
-used has a fully combinational response path, and needs to be retimed further.
+used has a fully combinational response path, and the design's complexity requires
+this path to be retimed further.
