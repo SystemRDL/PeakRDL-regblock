@@ -100,7 +100,7 @@ Both are valid and CPU interface logic shall be designed to anticipate either.
             {"name": "cpuif_addr",       "wave": "x2x..", "data": ["A"]},
             {},
             {"name": "cpuif_*_ack",      "wave": "010.."},
-            {"name": "cpuif_*_err",      "wave": "x2x.."},
+            {"name": "cpuif_*_err",      "wave": "x2x.."}
         ],
         "foot": {
             "text": "Zero-latency transfer"
@@ -117,7 +117,7 @@ Both are valid and CPU interface logic shall be designed to anticipate either.
             {"name": "cpuif_addr",       "wave": "x2x|...", "data": ["A"]},
             {},
             {"name": "cpuif_*_ack",      "wave": "0..|10."},
-            {"name": "cpuif_*_err",      "wave": "x..|2x."},
+            {"name": "cpuif_*_err",      "wave": "x..|2x."}
         ],
         "foot": {
             "text": "Transfer with non-zero latency"
@@ -142,7 +142,7 @@ For brevity, only showing non-zero latency transfers.
             {},
             {"name": "cpuif_rd_ack",     "wave": "0..|10."},
             {"name": "cpuif_rd_err",     "wave": "x..|0x."},
-            {"name": "cpuif_rd_data",    "wave": "x..|5x.", "data": ["D"]},
+            {"name": "cpuif_rd_data",    "wave": "x..|5x.", "data": ["D"]}
         ],
         "foot": {
             "text": "Read Transaction"
@@ -161,7 +161,7 @@ For brevity, only showing non-zero latency transfers.
    			{"name": "cpuif_wr_data",    "wave": "x5x|...", "data": ["D"]},
             {},
             {"name": "cpuif_wr_ack",     "wave": "0..|10."},
-            {"name": "cpuif_wr_err",     "wave": "x..|0x."},
+            {"name": "cpuif_wr_err",     "wave": "x..|0x."}
         ],
         "foot": {
             "text": "Write Transaction"
@@ -184,7 +184,7 @@ If the CPU interface supports it, read and write operations can be pipelined.
             {},
             {"name": "cpuif_rd_ack",     "wave": "0.1..0."},
             {"name": "cpuif_rd_err",     "wave": "x.0..x."},
-            {"name": "cpuif_rd_data",    "wave": "x.555x.", "data": ["D1", "D2", "D3"]},
+            {"name": "cpuif_rd_data",    "wave": "x.555x.", "data": ["D1", "D2", "D3"]}
         ]
     }
 
@@ -216,8 +216,7 @@ In the following example, the regblock is configured such that:
             {"name": "cpuif_req_stall_wr", "wave": "0...1.0."},
             {},
             {"name": "cpuif_rd_ack",       "wave": "0...220.", "data": ["R1", "R2"]},
-            {"name": "cpuif_wr_ack",       "wave": "0220..20", "data": ["W1", "W2", "W3"]},
-
+            {"name": "cpuif_wr_ack",       "wave": "0220..20", "data": ["W1", "W2", "W3"]}
         ]
     }
 
