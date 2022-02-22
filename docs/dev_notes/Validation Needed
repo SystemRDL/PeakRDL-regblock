@@ -174,3 +174,8 @@ X Warn/error on any signal with cpuif_reset set, that is not in the top-level
     - each regfile/addrmap/stride shall be aligned to the largest regwidth it encloses
         --> Should i promote this check to the compiler? At least as a warnable condition
             Currently i think I only do the more stringent case of block alignment.
+
+! Add warning for sticky race condition
+    stickybit and other similar situations generally should use hw precedence.
+    Emit a warning as appropriate
+    Or should this be a compiler warning??

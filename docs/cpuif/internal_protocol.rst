@@ -93,34 +93,34 @@ Both are valid and CPU interface logic shall be designed to anticipate either.
 .. wavedrom::
 
     {
-        signal: [
-            {name: 'clk',              wave: 'p....'},
-            {name: 'cpuif_req',        wave: '010..'},
-            {name: 'cpuif_req_is_wr',  wave: 'x2x..'},
-            {name: 'cpuif_addr',       wave: 'x2x..', data: ['A']},
+        'signal': [
+            {'name': 'clk',              'wave': 'p....'},
+            {'name': 'cpuif_req',        'wave': '010..'},
+            {'name': 'cpuif_req_is_wr',  'wave': 'x2x..'},
+            {'name': 'cpuif_addr',       'wave': 'x2x..', data: ['A']},
             {},
-            {name: 'cpuif_*_ack',      wave: '010..'},
-            {name: 'cpuif_*_err',      wave: 'x2x..'},
+            {'name': 'cpuif_*_ack',      'wave': '010..'},
+            {'name': 'cpuif_*_err',      'wave': 'x2x..'},
         ],
-        foot: {
-            text: "Zero-latency transfer"
+        'foot': {
+            'text': "Zero-latency transfer"
         }
     }
 
 .. wavedrom::
 
     {
-        signal: [
-            {name: 'clk',              wave: 'p..|...'},
-            {name: 'cpuif_req',        wave: '010|...'},
-            {name: 'cpuif_req_is_wr',  wave: 'x2x|...'},
-            {name: 'cpuif_addr',       wave: 'x2x|...', data: ['A']},
+        'signal': [
+            {'name': 'clk',              'wave': 'p..|...'},
+            {'name': 'cpuif_req',        'wave': '010|...'},
+            {'name': 'cpuif_req_is_wr',  'wave': 'x2x|...'},
+            {'name': 'cpuif_addr',       'wave': 'x2x|...', data: ['A']},
             {},
-            {name: 'cpuif_*_ack',      wave: '0..|10.'},
-            {name: 'cpuif_*_err',      wave: 'x..|2x.'},
+            {'name': 'cpuif_*_ack',      'wave': '0..|10.'},
+            {'name': 'cpuif_*_err',      'wave': 'x..|2x.'},
         ],
-        foot: {
-            text: "Transfer with non-zero latency"
+        'foot': {
+            'text': "Transfer with non-zero latency"
         }
     }
 
@@ -134,18 +134,18 @@ For brevity, only showing non-zero latency transfers.
 .. wavedrom::
 
     {
-        signal: [
-            {name: 'clk',              wave: 'p..|...'},
-            {name: 'cpuif_req',        wave: '010|...'},
-            {name: 'cpuif_req_is_wr',  wave: 'x0x|...'},
-            {name: 'cpuif_addr',       wave: 'x3x|...', data: ['A']},
+        'signal': [
+            {'name': 'clk',              'wave': 'p..|...'},
+            {'name': 'cpuif_req',        'wave': '010|...'},
+            {'name': 'cpuif_req_is_wr',  'wave': 'x0x|...'},
+            {'name': 'cpuif_addr',       'wave': 'x3x|...', data: ['A']},
             {},
-            {name: 'cpuif_rd_ack',     wave: '0..|10.'},
-            {name: 'cpuif_rd_err',     wave: 'x..|0x.'},
-            {name: 'cpuif_rd_data',    wave: 'x..|5x.', data: ['D']},
+            {'name': 'cpuif_rd_ack',     'wave': '0..|10.'},
+            {'name': 'cpuif_rd_err',     'wave': 'x..|0x.'},
+            {'name': 'cpuif_rd_data',    'wave': 'x..|5x.', data: ['D']},
         ],
-        foot: {
-            text: "Read Transaction"
+        'foot': {
+            'text': "Read Transaction"
         }
     }
 
@@ -153,18 +153,18 @@ For brevity, only showing non-zero latency transfers.
 .. wavedrom::
 
     {
-        signal: [
-            {name: 'clk',              wave: 'p..|...'},
-            {name: 'cpuif_req',        wave: '010|...'},
-            {name: 'cpuif_req_is_wr',  wave: 'x1x|...'},
-            {name: 'cpuif_addr',       wave: 'x3x|...', data: ['A']},
-   			{name: 'cpuif_wr_data',    wave: 'x5x|...', data: ['D']},
+        'signal': [
+            {'name': 'clk',              'wave': 'p..|...'},
+            {'name': 'cpuif_req',        'wave': '010|...'},
+            {'name': 'cpuif_req_is_wr',  'wave': 'x1x|...'},
+            {'name': 'cpuif_addr',       'wave': 'x3x|...', data: ['A']},
+   			{'name': 'cpuif_wr_data',    'wave': 'x5x|...', data: ['D']},
             {},
-            {name: 'cpuif_wr_ack',     wave: '0..|10.'},
-            {name: 'cpuif_wr_err',     wave: 'x..|0x.'},
+            {'name': 'cpuif_wr_ack',     'wave': '0..|10.'},
+            {'name': 'cpuif_wr_err',     'wave': 'x..|0x.'},
         ],
-        foot: {
-            text: "Write Transaction"
+        'foot': {
+            'text': "Write Transaction"
         }
     }
 
@@ -176,15 +176,15 @@ If the CPU interface supports it, read and write operations can be pipelined.
 .. wavedrom::
 
     {
-        signal: [
-            {name: 'clk',              wave: 'p......'},
-            {name: 'cpuif_req',        wave: '01..0..'},
-            {name: 'cpuif_req_is_wr',  wave: 'x0..x..'},
-            {name: 'cpuif_addr',       wave: 'x333x..', data: ['A1', 'A2', 'A3']},
+        'signal': [
+            {'name': 'clk',              'wave': 'p......'},
+            {'name': 'cpuif_req',        'wave': '01..0..'},
+            {'name': 'cpuif_req_is_wr',  'wave': 'x0..x..'},
+            {'name': 'cpuif_addr',       'wave': 'x333x..', data: ['A1', 'A2', 'A3']},
             {},
-            {name: 'cpuif_rd_ack',     wave: '0.1..0.'},
-            {name: 'cpuif_rd_err',     wave: 'x.0..x.'},
-            {name: 'cpuif_rd_data',    wave: 'x.555x.', data: ['D1', 'D2', 'D3']},
+            {'name': 'cpuif_rd_ack',     'wave': '0.1..0.'},
+            {'name': 'cpuif_rd_err',     'wave': 'x.0..x.'},
+            {'name': 'cpuif_rd_data',    'wave': 'x.555x.', data: ['D1', 'D2', 'D3']},
         ]
     }
 
@@ -208,15 +208,15 @@ In the following example, the regblock is configured such that:
 .. wavedrom::
 
     {
-        signal: [
-            {name: 'clk',                wave: 'p.......'},
-            {name: 'cpuif_req',          wave: '01.....0'},
-            {name: 'cpuif_req_is_wr',    wave: 'x1.0.1.x'},
-            {name: 'cpuif_addr',         wave: 'x33443.x', data: ['W1', 'W2', 'R1', 'R2', 'W3']},
-            {name: 'cpuif_req_stall_wr', wave: '0...1.0.'},
+        'signal': [
+            {'name': 'clk',                'wave': 'p.......'},
+            {'name': 'cpuif_req',          'wave': '01.....0'},
+            {'name': 'cpuif_req_is_wr',    'wave': 'x1.0.1.x'},
+            {'name': 'cpuif_addr',         'wave': 'x33443.x', data: ['W1', 'W2', 'R1', 'R2', 'W3']},
+            {'name': 'cpuif_req_stall_wr', 'wave': '0...1.0.'},
             {},
-            {name: 'cpuif_rd_ack',       wave: '0...220.', data: ['R1', 'R2']},
-            {name: 'cpuif_wr_ack',       wave: '0220..20', data: ['W1', 'W2', 'W3']},
+            {'name': 'cpuif_rd_ack',       'wave': '0...220.', data: ['R1', 'R2']},
+            {'name': 'cpuif_wr_ack',       'wave': '0220..20', data: ['W1', 'W2', 'W3']},
 
         ]
     }
