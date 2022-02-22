@@ -1,11 +1,29 @@
 AMBA AXI4-Lite
 ==============
 
-TODO: Describe the following
+Implements the register block using an
+`AMBA AXI4-Lite <https://developer.arm.com/documentation/ihi0022/e/AMBA-AXI4-Lite-Interface-Specification>`_
+CPU interface.
 
-* List of interface signals
+The AXI4-Lite CPU interface comes in two i/o port flavors:
 
-    * interface name & modports (link to advanced topics in case user wants to override)
-    * flattened equivalents
+SystemVerilog Interface
+    Class: :class:`peakrdl.regblock.cpuif.axi4lite.AXI4Lite_Cpuif`
 
-* Download link to SV interface definition
+    Interface Definition: :download:`apb3_intf.sv <../../test/lib/cpuifs/axi4lite/axi4lite_intf.sv>`
+
+Flattened inputs/outputs
+    Flattens the interface into descrete input and output ports.
+
+    Class: :class:`peakrdl.regblock.cpuif.axi4lite.AXI4Lite_Cpuif_flattened`
+
+
+Pipelined Performance
+---------------------
+This implementation of the AXI4-Lite interface supports transaction pipelining
+which can significantly improve performance of back-to-back transfers.
+
+In order to support transaction pipelining, the CPU interface will accept multiple
+concurrent transactions. The number of outstanding transactions allowed is automatically
+determined based on the register file pipeline depth (affected by retiming options),
+and influences the depth of the internal transaction response skid buffer.

@@ -16,7 +16,7 @@ from .utils import get_always_ff_event
 from .scan_design import DesignScanner
 
 class RegblockExporter:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         user_template_dir = kwargs.pop("user_template_dir", None)
 
         # Check for stray kwargs
@@ -57,7 +57,53 @@ class RegblockExporter:
         )
 
 
-    def export(self, node: Union[RootNode, AddrmapNode], output_dir:str, **kwargs):
+    def export(self, node: Union[RootNode, AddrmapNode], output_dir:str, **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        node: AddrmapNode
+            Top-level SystemRDL node to export.
+        output_dir: str
+            Path to the output directory where generated SystemVerilog will be written.
+            Output includes two files: a module definition and package definition.
+        cpuif_cls: :class:`peakrdl.regblock.cpuif.CpuifBase`
+            Specify the class type that implements the CPU interface of your choice.
+            Defaults to AMBA APB3.
+        module_name: str
+            Override the SystemVerilog module name. By default, the module name
+            is the top-level node's name.
+        package_name: str
+            Override the SystemVerilog package name. By default, the package name
+            is the top-level node's name with a "_pkg" suffix.
+        reuse_hwif_typedefs: bool
+            By default, the exporter will attempt to re-use hwif struct definitions for
+            nodes that are equivalent. This allows for better modularity and type reuse.
+            Struct type names are derived using the SystemRDL component's type
+            name and declared lexical scope path.
+
+            If this is not desireable, override this parameter to ``False`` and structs
+            will be generated more naively using their hierarchical paths.
+        retime_read_fanin: bool
+            Set this to ``True`` to enable additional read path retiming.
+            For large register blocks that operate at demanding clock rates, this
+            may be necessary in order to manage large readback fan-in.
+
+            The retiming flop stage is automatically placed in the most optimal point in the
+            readback path so that logic-levels and fanin are minimized.
+
+            Enabling this option will increase read transfer latency by 1 clock cycle.
+        retime_read_response: bool
+            Set this to ``True`` to enable an additional retiming flop stage between
+            the readback mux and the CPU interface response logic.
+            This option may be beneficial for some CPU interfaces that implement the
+            response logic fully combinationally. Enabling this stage can better
+            isolate timing paths in the register file from the rest of your system.
+
+            Enabling this when using CPU interfaces that already implement the
+            response path sequentially may not result in any meaningful timing improvement.
+
+            Enabling this option will increase read transfer latency by 1 clock cycle.
+        """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
             self.top_node = node.top

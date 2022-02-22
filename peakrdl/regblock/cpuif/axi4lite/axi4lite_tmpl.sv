@@ -1,5 +1,4 @@
-// LATENCY = {{cpuif.regblock_latency}}
-// MAX OUTSTANDING = {{cpuif.max_outstanding}}
+// Max Outstanding Transactions: {{cpuif.max_outstanding}}
 logic [{{clog2(cpuif.max_outstanding+1)-1}}:0] axil_n_in_flight;
 logic axil_prev_was_rd;
 logic axil_arvalid;
@@ -11,6 +10,8 @@ logic axil_wvalid;
 logic [{{cpuif.data_width-1}}:0] axil_wdata;
 logic axil_aw_accept;
 logic axil_resp_acked;
+
+// Transaction request accpetance
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
     if({{get_resetsignal(cpuif.reset)}}) begin
         axil_prev_was_rd <= '0;

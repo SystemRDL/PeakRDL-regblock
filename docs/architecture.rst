@@ -49,6 +49,10 @@ fanin re-timing stage can be enabled. This stage is automatically inserted at a
 balanced point in the read-data reduction so that fanin and logic-levels are
 optimally reduced.
 
+.. figure:: diagrams/readback.png
+    :width: 65%
+    :align: center
+
 A second optional read response retiming register can be enabled in-line with the
 path back to the CPU interface layer. This can be useful if the CPU interface protocol
 used has a fully combinational response path, and the design's complexity requires

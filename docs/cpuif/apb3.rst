@@ -1,11 +1,31 @@
-AMBA APB3
-=========
+AMBA 3 APB
+==========
 
-TODO: Describe the following
+Implements the register block using an
+`AMBA 3 APB <https://developer.arm.com/documentation/ihi0024/b/Introduction/About-the-AMBA-3-APB>`_
+CPU interface.
 
-* List of interface signals
+The APB3 CPU interface comes in two i/o port flavors:
 
-    * interface name & modports (link to advanced topics in case user wants to override)
-    * flattened equivalents
+SystemVerilog Interface
+    Class: :class:`peakrdl.regblock.cpuif.apb3.APB3_Cpuif`
 
-* Download link to SV interface definition
+    Interface Definition: :download:`apb3_intf.sv <../../test/lib/cpuifs/apb3/apb3_intf.sv>`
+
+Flattened inputs/outputs
+    Flattens the interface into descrete input and output ports.
+
+    Class: :class:`peakrdl.regblock.cpuif.apb3.APB3_Cpuif_flattened`
+
+
+.. warning::
+    Some IP vendors will incorrectly implement the address signalling
+    assuming word-addresses. (that each increment of ``PADDR`` is the next word)
+
+    For this exporter, values on the interface's ``PADDR`` input are interpreted
+    as byte-addresses. (a 32-bit APB bus increments ``PADDR`` in steps of 4)
+    Although APB protocol does not allow for unaligned transfers, this is in
+    accordance to the official AMBA bus specification.
+
+    Be sure to double-check the interpretation of your interconnect IP. A simple
+    bit-shift operation can be used to correct this if necessary.
