@@ -102,9 +102,9 @@ at its saturation value.
     {
         "signal": [
             {"name": "clk",            "wave": "p......"},
-            {"name": 'hwif_in..decr',  "wave": "0101010"},
-            {"name": '<counter>',      "wave": '=.=....', "data": [1,0]},
-            {"name": '<decrsaturate>', "wave": "0.1...."}
+            {"name": "hwif_in..decr",  "wave": "0101010"},
+            {"name": "<counter>",      "wave": "=.=....", "data": [1,0]},
+            {"name": "<decrsaturate>", "wave": "0.1...."}
         ],
         "foot": {
             "text": "A 4-bit counter saturating"
@@ -149,9 +149,9 @@ at its saturation value.
     {
         "signal": [
             {"name": "clk",            "wave": "p......"},
-            {"name": 'hwif_in..incr',  "wave": "0101010"},
-            {"name": '<counter>',      "wave": '=.=....', "data": [14,15]},
-            {"name": '<incrsaturate>', "wave": "0.1...."}
+            {"name": "hwif_in..incr",  "wave": "0101010"},
+            {"name": "<counter>",      "wave": "=.=....", "data": [14,15]},
+            {"name": "<incrsaturate>", "wave": "0.1...."}
         ],
         "foot": {
             "text": "A 4-bit counter saturating"

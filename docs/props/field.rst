@@ -25,8 +25,8 @@ If set, field will get cleared back to zero after being written.
 
     {"signal": [
         {"name": "clk",             "wave": "p....."},
-      	{"name": '<swmod>',         "wave": "0.10.."},
-        {"name": 'hwif_out..value', "wave": "0..10."}
+      	{"name": "<swmod>",         "wave": "0.10.."},
+        {"name": "hwif_out..value", "wave": "0..10."}
     ]}
 
 sw
@@ -45,8 +45,8 @@ operation.
 
     {"signal": [
         {"name": "clk",             "wave": "p...."},
-        {"name": 'hwif_in..next',   "wave": 'x.=x.', "data": ["D"]},
-        {"name": 'hwif_out..swacc', "wave": "0.10."}
+        {"name": "hwif_in..next",   "wave": "x.=x.", "data": ["D"]},
+        {"name": "hwif_out..swacc", "wave": "0.10."}
     ]}
 
 
@@ -61,8 +61,8 @@ field is being modified by software.
 
     {"signal": [
         {"name": "clk",             "wave": "p....."},
-        {"name": 'hwif_out..value', "wave": '=..=..', "data": ["old", "new"]},
-        {"name": 'hwif_out..swmod', "wave": "0.10.."}
+        {"name": "hwif_out..value", "wave": "=..=..", "data": ["old", "new"]},
+        {"name": "hwif_out..swmod", "wave": "0.10.."}
     ]}
 
 
@@ -143,10 +143,10 @@ If true, infers the existence of input signal: ``hwif_in..we``, ``hwif_in..wel``
 
     {"signal": [
         {"name": "clk",             "wave": "p...."},
-        {"name": 'hwif_in..next',   "wave": 'x.=x.', "data": ["D"]},
-        {"name": 'hwif_in..we',     "wave": "0.10.",},
-        {"name": 'hwif_in..wel',    "wave": "1.01.",},
-        {"name": '<field value>',   "wave": 'x..=.', "data": ["D"]}
+        {"name": "hwif_in..next",   "wave": "x.=x.", "data": ["D"]},
+        {"name": "hwif_in..we",     "wave": "0.10.",},
+        {"name": "hwif_in..wel",    "wave": "1.01.",},
+        {"name": "<field value>",   "wave": "x..=.", "data": ["D"]}
     ]}
 
 boolean
@@ -218,9 +218,9 @@ asserted if the counter value is greater or equal to the threshold.
     {
         "signal": [
             {"name": "clk",                     "wave": "p......"},
-            {"name": 'hwif_in..incr',           "wave": "01...0."},
-            {"name": '<counter>',               "wave": '=.=3==..', "data": [4,5,6,7,8,9]},
-            {"name": 'hwif_out..incrthreshold', "wave": "0..1...."}
+            {"name": "hwif_in..incr",           "wave": "01...0."},
+            {"name": "<counter>",               "wave": "=.=3==..", "data": [4,5,6,7,8,9]},
+            {"name": "hwif_out..incrthreshold", "wave": "0..1...."}
         ],
         "foot": {
             "text": "Example where incrthreshold = 6"
@@ -274,9 +274,9 @@ the counter is about to wrap.
     {
         "signal": [
             {"name": "clk",                "wave": "p......."},
-            {"name": 'hwif_in..incr',      "wave": "0101010."},
-            {"name": '<counter>',          "wave": '=.=.=.=.', "data": [14,15,0,1]},
-            {"name": 'hwif_out..overflow', "wave": "0..10..."}
+            {"name": "hwif_in..incr",      "wave": "0101010."},
+            {"name": "<counter>",          "wave": "=.=.=.=.", "data": [14,15,0,1]},
+            {"name": "hwif_out..overflow", "wave": "0..10..."}
         ],
         "foot": {
             "text": "A 4-bit counter overflowing"
@@ -324,9 +324,9 @@ asserted if the counter value is less than or equal to the threshold.
     {
         "signal": [
             {"name": "clk",                     "wave": "p......"},
-            {"name": 'hwif_in..decr',           "wave": "01...0."},
-            {"name": '<counter>',               "wave": '=.=3==..', "data": [9,8,7,6,5,4]},
-            {"name": 'hwif_out..decrthreshold', "wave": "0..1...."}
+            {"name": "hwif_in..decr",           "wave": "01...0."},
+            {"name": "<counter>",               "wave": "=.=3==.", "data": [9,8,7,6,5,4]},
+            {"name": "hwif_out..decrthreshold", "wave": "0..1..."}
         ],
         "foot": {
             "text": "Example where incrthreshold = 7"
@@ -379,9 +379,9 @@ the counter is about to wrap.
     {
         "signal": [
             {"name": "clk",                 "wave": "p......."},
-            {"name": 'hwif_in..decr',       "wave": "0101010."},
-            {"name": '<counter>',           "wave": '=.=.=.=.', "data": [1,0,15,14]},
-            {"name": 'hwif_out..underflow', "wave": "0..10..."}
+            {"name": "hwif_in..decr",       "wave": "0101010."},
+            {"name": "<counter>",           "wave": "=.=.=.=.", "data": [1,0,15,14]},
+            {"name": "hwif_out..underflow", "wave": "0..10..."}
         ],
         "foot": {
             "text": "A 4-bit counter underflowing"
@@ -486,8 +486,8 @@ The waveform below demonstrates a level-sensitive interrupt:
     {
         "signal": [
             {"name": "clk",                 "wave": "p....."},
-            {"name": 'hwif_in..next',       "wave": "010..."},
-            {"name": '<field value>',       "wave": "0.1..."}
+            {"name": "hwif_in..next",       "wave": "010..."},
+            {"name": "<field value>",       "wave": "0.1..."}
         ]
     }
 
@@ -505,8 +505,8 @@ field contents are cleared back to 0 by a software access.
     {
         "signal": [
             {"name": "clk",                 "wave": "p....."},
-            {"name": 'hwif_in..next',       "wave": "23.22.", "data": [0,10,20,30]},
-            {"name": '<field value>',       "wave": "2.3...", "data": [0, 10]}
+            {"name": "hwif_in..next",       "wave": "23.22.", "data": [0,10,20,30]},
+            {"name": "<field value>",       "wave": "2.3...", "data": [0, 10]}
         ]
     }
 
