@@ -144,8 +144,8 @@ If true, infers the existence of input signal: ``hwif_in..we``, ``hwif_in..wel``
     {"signal": [
         {"name": "clk",             "wave": "p...."},
         {"name": "hwif_in..next",   "wave": "x.=x.", "data": ["D"]},
-        {"name": "hwif_in..we",     "wave": "0.10.",},
-        {"name": "hwif_in..wel",    "wave": "1.01.",},
+        {"name": "hwif_in..we",     "wave": "0.10."},
+        {"name": "hwif_in..wel",    "wave": "1.01."},
         {"name": "<field value>",   "wave": "x..=.", "data": ["D"]}
     ]}
 
