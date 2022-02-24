@@ -1,5 +1,5 @@
-from ..lib.regblock_testcase import RegblockTestCase
+from ..lib.sim_testcase import SimTestCase
 
-class Test(RegblockTestCase):
+class Test(SimTestCase):
     def test_dut(self):
         self.run_test()

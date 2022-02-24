@@ -1,4 +1,8 @@
 from typing import TYPE_CHECKING, Optional
+import inspect
+import os
+
+import jinja2 as jj
 
 from ..utils import get_always_ff_event, clog2, is_pow2
 
@@ -7,6 +11,8 @@ if TYPE_CHECKING:
     from systemrdl import SignalNode
 
 class CpuifBase:
+
+    # Path is relative to class that defines it
     template_path = ""
 
     def __init__(self, exp:'RegblockExporter', cpuif_reset:Optional['SignalNode'], data_width:int=32, addr_width:int=32):
@@ -20,6 +26,13 @@ class CpuifBase:
         raise NotImplementedError()
 
     def get_implementation(self) -> str:
+        class_dir = os.path.dirname(inspect.getfile(self.__class__))
+        loader = jj.FileSystemLoader(class_dir)
+        jj_env = jj.Environment(
+            loader=loader,
+            undefined=jj.StrictUndefined,
+        )
+
         context = {
             "cpuif": self,
             "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
@@ -28,5 +41,5 @@ class CpuifBase:
             "is_pow2": is_pow2,
         }
 
-        template = self.exp.jj_env.get_template(self.template_path)
+        template = jj_env.get_template(self.template_path)
         return template.render(context)

@@ -17,8 +17,6 @@ from .scan_design import DesignScanner
 
 class RegblockExporter:
     def __init__(self, **kwargs) -> None:
-        user_template_dir = kwargs.pop("user_template_dir", None)
-
         # Check for stray kwargs
         if kwargs:
             raise TypeError("got an unexpected keyword argument '%s'" % list(kwargs.keys())[0])
@@ -34,22 +32,12 @@ class RegblockExporter:
         self.min_read_latency = 0
         self.min_write_latency = 0
 
-        if user_template_dir:
-            loader = jj.ChoiceLoader([
-                jj.FileSystemLoader(user_template_dir),
-                jj.FileSystemLoader(os.path.dirname(__file__)),
-                jj.PrefixLoader({
-                    'user': jj.FileSystemLoader(user_template_dir),
-                    'base': jj.FileSystemLoader(os.path.dirname(__file__)),
-                }, delimiter=":")
-            ])
-        else:
-            loader = jj.ChoiceLoader([
-                jj.FileSystemLoader(os.path.dirname(__file__)),
-                jj.PrefixLoader({
-                    'base': jj.FileSystemLoader(os.path.dirname(__file__)),
-                }, delimiter=":")
-            ])
+        loader = jj.ChoiceLoader([
+            jj.FileSystemLoader(os.path.dirname(__file__)),
+            jj.PrefixLoader({
+                'base': jj.FileSystemLoader(os.path.dirname(__file__)),
+            }, delimiter=":")
+        ])
 
         self.jj_env = jj.Environment(
             loader=loader,

@@ -1,7 +1,7 @@
 from ..base import CpuifBase
 
 class APB3_Cpuif(CpuifBase):
-    template_path = "cpuif/apb3/apb3_tmpl.sv"
+    template_path = "apb3_tmpl.sv"
 
     @property
     def port_declaration(self) -> str:

@@ -1,7 +1,7 @@
 from ..base import CpuifBase
 
 class AXI4Lite_Cpuif(CpuifBase):
-    template_path = "cpuif/axi4lite/axi4lite_tmpl.sv"
+    template_path = "axi4lite_tmpl.sv"
 
     @property
     def port_declaration(self) -> str:

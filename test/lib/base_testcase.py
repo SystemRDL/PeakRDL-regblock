@@ -7,19 +7,14 @@ import inspect
 import pathlib
 
 import pytest
-import jinja2 as jj
 from systemrdl import RDLCompiler
-
-from .sv_line_anchor import SVLineAnchor
 
 from peakrdl.regblock import RegblockExporter
 from .cpuifs.base import CpuifTestMode
 from .cpuifs.apb3 import APB3
 
-from .simulators.questa import Questa
 
-
-class RegblockTestCase(unittest.TestCase):
+class BaseTestCase(unittest.TestCase):
     #: Path to the testcase's RDL file.
     #: Relative to the testcase's dir. If unset, the first RDL file found in the
     #: testcase dir will be used
@@ -39,13 +34,10 @@ class RegblockTestCase(unittest.TestCase):
     retime_read_fanin = False
     retime_read_response = False
 
-    #: Abort test if it exceeds this number of clock cycles
-    timeout_clk_cycles = 5000
-
-    simulator_cls = Questa
-
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
+
+    exporter = RegblockExporter()
 
     @pytest.fixture(autouse=True)
     def _load_request(self, request):
@@ -57,10 +49,10 @@ class RegblockTestCase(unittest.TestCase):
         return class_dir
 
     @classmethod
-    def get_build_dir(cls) -> str:
+    def get_run_dir(cls) -> str:
         this_dir = cls.get_testcase_dir()
-        build_dir = os.path.join(this_dir, "run.out", cls.__name__)
-        return build_dir
+        run_dir = os.path.join(this_dir, "run.out", cls.__name__)
+        return run_dir
 
     @classmethod
     def _write_params(cls) -> None:
@@ -68,7 +60,7 @@ class RegblockTestCase(unittest.TestCase):
         Write out the class parameters to a file so that it is easier to debug
         how a testcase was parameterized
         """
-        path = os.path.join(cls.get_build_dir(), "params.txt")
+        path = os.path.join(cls.get_run_dir(), "params.txt")
 
         with open(path, 'w') as f:
             for k, v in cls.__dict__.items():
@@ -78,7 +70,7 @@ class RegblockTestCase(unittest.TestCase):
 
 
     @classmethod
-    def _export_regblock(cls) -> RegblockExporter:
+    def _export_regblock(cls):
         """
         Call the peakrdl.regblock exporter to generate the DUT
         """
@@ -94,10 +86,9 @@ class RegblockTestCase(unittest.TestCase):
         rdlc.compile_file(rdl_file)
         root = rdlc.elaborate(cls.rdl_elab_target, "regblock", cls.rdl_elab_params)
 
-        exporter = RegblockExporter()
-        exporter.export(
+        cls.exporter.export(
             root,
-            cls.get_build_dir(),
+            cls.get_run_dir(),
             module_name="regblock",
             package_name="regblock_pkg",
             cpuif_cls=cls.cpuif.cpuif_cls,
@@ -105,88 +96,26 @@ class RegblockTestCase(unittest.TestCase):
             retime_read_response=cls.retime_read_response,
         )
 
-        return exporter
-
-    @classmethod
-    def _generate_tb(cls, exporter: RegblockExporter):
-        """
-        Render the testbench template into actual tb.sv
-        """
-        template_root_path = os.path.join(os.path.dirname(__file__), "..")
-        loader = jj.FileSystemLoader(
-            template_root_path
-        )
-        jj_env = jj.Environment(
-            loader=loader,
-            undefined=jj.StrictUndefined,
-            extensions=[SVLineAnchor],
-        )
-
-        context = {
-            "cls": cls,
-            "exporter": exporter,
-        }
-
-        # template path needs to be relative to the Jinja loader root
-        template_path = os.path.join(cls.get_testcase_dir(), "tb_template.sv")
-        template_path = os.path.relpath(template_path, template_root_path)
-        template = jj_env.get_template(template_path)
-
-        output_path = os.path.join(cls.get_build_dir(), "tb.sv")
-        stream = template.stream(context)
-        stream.dump(output_path)
-
-
     @classmethod
     def setUpClass(cls):
         # Create fresh build dir
-        build_dir = cls.get_build_dir()
-        if os.path.exists(build_dir):
-            shutil.rmtree(build_dir)
-        pathlib.Path(build_dir).mkdir(parents=True, exist_ok=True)
+        run_dir = cls.get_run_dir()
+        if os.path.exists(run_dir):
+            shutil.rmtree(run_dir)
+        pathlib.Path(run_dir).mkdir(parents=True, exist_ok=True)
 
         cls._write_params()
 
         # Convert testcase RDL file --> SV
-        exporter = cls._export_regblock()
-
-        # Create testbench from template
-        cls._generate_tb(exporter)
-
-        simulator = cls.simulator_cls(testcase_cls=cls)
-
-        # cd into the build directory
-        cwd = os.getcwd()
-        os.chdir(cls.get_build_dir())
-        try:
-            simulator.compile()
-        finally:
-            # cd back
-            os.chdir(cwd)
+        cls._export_regblock()
 
 
     def setUp(self) -> None:
-        # cd into the build directory
+        # cd into the run directory
         self.original_cwd = os.getcwd()
-        os.chdir(self.get_build_dir())
+        os.chdir(self.get_run_dir())
 
 
     def run_test(self, plusargs:List[str] = None) -> None:
         simulator = self.simulator_cls(testcase_cls_inst=self)
         simulator.run(plusargs)
-
-
-    def tearDown(self) -> None:
-        # cd back
-        os.chdir(self.original_cwd)
-
-
-    def assertSimLogPass(self, path: str):
-        self.assertTrue(os.path.isfile(path))
-
-        with open(path, encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("# ** Error"):
-                    self.fail(line)
-                elif line.startswith("# ** Fatal"):
-                    self.fail(line)

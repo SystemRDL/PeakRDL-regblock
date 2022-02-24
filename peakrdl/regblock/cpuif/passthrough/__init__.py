@@ -1,7 +1,7 @@
 from ..base import CpuifBase
 
 class PassthroughCpuif(CpuifBase):
-    template_path = "cpuif/passthrough/passthrough_tmpl.sv"
+    template_path = "passthrough_tmpl.sv"
 
     @property
     def port_declaration(self) -> str:

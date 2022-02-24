@@ -11,12 +11,28 @@ https://fpgasoftware.intel.com/ and is sufficient to run unit tests. You will ne
 to generate a free license file to unlock the software: https://licensing.intel.com/psg/s/sales-signup-evaluationlicenses
 
 
+
+## Vivado (optional)
+
+To run synthesis tests, Vivado needs to be installed and visible via the PATH environment variable.
+
+Vivado can be downloaded for free from: https://www.xilinx.com/support/download.html
+
+To skip synthesis tests, export the following environment variable:
+```bash
+export SKIP_SYNTH_TESTS=1
+```
+
+
+
 ## Python Packages
 Install dependencies required for running tests
 
 ```bash
 python3 -m pip install test/requirements.txt
 ```
+
+
 
 # Running tests
 
@@ -34,6 +50,7 @@ You can also run a specific testcase. For example:
 cd test/test_hw_access
 pytest
 ```
+
 
 
 # Test organization

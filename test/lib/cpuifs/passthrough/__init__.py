@@ -4,6 +4,7 @@ from peakrdl.regblock.cpuif.passthrough import PassthroughCpuif
 
 class Passthrough(CpuifTestMode):
     cpuif_cls = PassthroughCpuif
+    rtl_files = []
     tb_files = [
         "passthrough_driver.sv",
     ]
