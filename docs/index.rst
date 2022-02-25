@@ -98,7 +98,7 @@ Links
    cpuif/axi4lite
    cpuif/passthrough
    cpuif/internal_protocol
-   cpuif/advanced
+   cpuif/customizing
 
 .. toctree::
    :hidden:

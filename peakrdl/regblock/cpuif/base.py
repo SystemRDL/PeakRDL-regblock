@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class CpuifBase:
 
-    # Path is relative to class that defines it
+    # Path is relative to the location of the class that assigns this variable
     template_path = ""
 
     def __init__(self, exp:'RegblockExporter', cpuif_reset:Optional['SignalNode'], data_width:int=32, addr_width:int=32):
@@ -25,8 +25,21 @@ class CpuifBase:
     def port_declaration(self) -> str:
         raise NotImplementedError()
 
+
+    def _get_template_path_class_dir(self) -> str:
+        """
+        Traverse up the MRO and find the first class that explicitly assigns
+        template_path. Returns the directory that contains the class definition.
+        """
+        for cls in inspect.getmro(self.__class__):
+            if "template_path" in cls.__dict__:
+                class_dir = os.path.dirname(inspect.getfile(cls))
+                return class_dir
+        raise RuntimeError
+
+
     def get_implementation(self) -> str:
-        class_dir = os.path.dirname(inspect.getfile(self.__class__))
+        class_dir = self._get_template_path_class_dir()
         loader = jj.FileSystemLoader(class_dir)
         jj_env = jj.Environment(
             loader=loader,

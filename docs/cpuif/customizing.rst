@@ -1,0 +1,74 @@
+Customizing your own CPU interface
+==================================
+
+Bring your own SystemVerilog interface
+--------------------------------------
+
+This exporter comes pre-bundled with its own SystemVerilog interface declarations.
+What if you already have your own SystemVerilog interface declaration that you prefer?
+
+Not a problem! As long as your interface definition is similar enough, it is easy
+to customize and existing CPUIF definition.
+
+
+The SystemVerilog interface definition bundled with this project for :ref:`cpuif_axi4lite`
+uses the following style and naming conventions:
+
+* SystemVerilog interface type name is ``axi4lite_intf``
+* Defines modports named ``master`` and ``slave``
+* Interface signals are all upper-case: ``AWREADY``, ``AWVALID``, etc...
+
+Lets assume your preferred SV interface uses a slightly different naming convention:
+
+* SystemVerilog interface type name is ``axi4_lite_interface``
+* Modports are capitalized and use suffixes ``Master_mp`` and ``Slave_mp``
+* Interface signals are all lower-case: ``awready``, ``awvalid``, etc...
+
+Rather than rewriting a new CPU interface definition, you can extend and adjust the existing one:
+
+.. code-block:: python
+
+    from peakrdl.regblock.cpuif.axi4lite import AXI4Lite_Cpuif
+
+    class My_AXI4Lite(AXI4Lite_Cpuif):
+        @property
+        def port_declaration(self) -> str:
+            return "axi4_lite_interface.Slave_mp s_axil"
+
+        def signal(self, name:str) -> str:
+            return "s_axil." + name.lower()
+
+Then use your custom CPUIF during export:
+
+.. code-block:: python
+
+   exporter = RegblockExporter()
+   exporter.export(
+      root, "path/to/output_dir",
+      cpuif_cls=My_AXI4Lite
+   )
+
+
+
+Custom CPU Interface Protocol
+-----------------------------
+
+If you require a CPU interface protocol that is not included in this project,
+you can define your own.
+
+1. Create a SystemVerilog CPUIF implementation template file.
+
+    This contains the SystemVerilog implementation of the bus protocol. The logic
+    in this shall implement a translation between your custom protocol and the
+    :ref:`cpuif_protocol`.
+
+    Reminder that this template will be preprocessed using Jinja, so you can use
+    some templating tags to dynamically render content. See the implementations of
+    existing CPU interfaces as an example.
+
+2. Create a Python class that defines your CPUIF
+
+    Extend your class from :class:`peakrdl.regblock.cpuif.CpuifBase`.
+    Define the port declaration string, and provide a reference to your template file.
+
+3. Use your new CPUIF definition when exporting!

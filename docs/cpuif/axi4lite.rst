@@ -1,3 +1,5 @@
+.. _cpuif_axi4lite:
+
 AMBA AXI4-Lite
 ==============
 
