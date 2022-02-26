@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set
 from collections import OrderedDict
 
 from systemrdl.walker import RDLListener, RDLWalker
@@ -16,16 +16,16 @@ class DesignScanner(RDLListener):
 
     Also collects any information that is required prior to the start of the export process.
     """
-    def __init__(self, exp:'RegblockExporter'):
+    def __init__(self, exp:'RegblockExporter') -> None:
         self.exp = exp
         self.cpuif_data_width = 0
         self.msg = exp.top_node.env.msg
 
         # Collections of signals that were actually referenced by the design
-        self.in_hier_signal_paths = set()
-        self.out_of_hier_signals = OrderedDict()
+        self.in_hier_signal_paths = set() # type: Set[str]
+        self.out_of_hier_signals = OrderedDict() # type: OrderedDict[str, SignalNode]
 
-    def _get_out_of_hier_field_reset(self):
+    def _get_out_of_hier_field_reset(self) -> None:
         current_node = self.exp.top_node.parent
         while current_node is not None:
             for signal in current_node.signals():
@@ -35,7 +35,7 @@ class DesignScanner(RDLListener):
                     return
             current_node = current_node.parent
 
-    def do_scan(self):
+    def do_scan(self) -> None:
         # Collect cpuif reset, if any.
         cpuif_reset = self.exp.top_node.cpuif_reset
         if cpuif_reset is not None:

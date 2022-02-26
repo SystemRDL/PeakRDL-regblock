@@ -17,6 +17,6 @@ class Singlepulse(NextStateConditional):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         return [
-            f"next_c = '0;",
-            f"load_next_c = '1;",
+            "next_c = '0;",
+            "load_next_c = '1;",
         ]

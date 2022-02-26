@@ -5,15 +5,20 @@ import jinja2 as jj
 from .sv_line_anchor import SVLineAnchor
 
 from .simulators.questa import Questa
+from .simulators import StubSimulator
 
 from .base_testcase import BaseTestCase
+
+SIM_CLS = Questa
+if os.environ.get("STUB_SIMULATOR", False):
+    SIM_CLS = StubSimulator
 
 
 class SimTestCase(BaseTestCase):
     #: Abort test if it exceeds this number of clock cycles
     timeout_clk_cycles = 5000
 
-    simulator_cls = Questa
+    simulator_cls = SIM_CLS
 
     @classmethod
     def _generate_tb(cls):

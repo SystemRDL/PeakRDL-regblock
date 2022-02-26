@@ -1,5 +1,5 @@
-Customizing your own CPU interface
-==================================
+Customizing the CPU interface
+=============================
 
 Bring your own SystemVerilog interface
 --------------------------------------
@@ -33,9 +33,11 @@ Rather than rewriting a new CPU interface definition, you can extend and adjust 
     class My_AXI4Lite(AXI4Lite_Cpuif):
         @property
         def port_declaration(self) -> str:
+            # Override the port declaration text to use the alternate type name and modport style
             return "axi4_lite_interface.Slave_mp s_axil"
 
         def signal(self, name:str) -> str:
+            # Override the signal names to be lowercase instead
             return "s_axil." + name.lower()
 
 Then use your custom CPUIF during export:

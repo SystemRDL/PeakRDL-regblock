@@ -24,3 +24,10 @@ class Simulator:
 
     def run(self, plusargs:List[str] = None) -> None:
         raise NotImplementedError
+
+class StubSimulator(Simulator):
+    def compile(self) -> None:
+        pass
+
+    def run(self, plusargs:List[str] = None) -> None:
+        pass

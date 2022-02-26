@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from ..forloop_generator import RDLForLoopGenerator, LoopBody
 
@@ -30,8 +30,8 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         # array. The array width is equal to the CPUIF bus width. Each entry in
         # the array represents an aligned read access.
         self.current_offset = 0
-        self.start_offset_stack = []
-        self.dim_stack = []
+        self.start_offset_stack = [] # type: List[int]
+        self.dim_stack = [] # type: List[int]
 
     @property
     def current_offset_str(self) -> str:
@@ -99,7 +99,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
 
         # Number of registers enclosed in this loop
         n_regs = self.current_offset - start_offset
-        self.current_loop.n_regs = n_regs
+        self.current_loop.n_regs = n_regs # type: ignore
 
         super().pop_loop()
 

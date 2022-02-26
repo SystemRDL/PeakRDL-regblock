@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, List
 
-from .bases import NextStateConditional
-
 from systemrdl.rdltypes import InterruptType
+
+from .bases import NextStateConditional
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
@@ -28,7 +28,7 @@ class Sticky(NextStateConditional):
         I = self.exp.hwif.get_input_identifier(field)
         return [
             f"next_c = {I};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 
@@ -51,7 +51,7 @@ class Stickybit(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} | {I};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class PosedgeStickybit(NextStateConditional):
@@ -77,7 +77,7 @@ class PosedgeStickybit(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} | (~{Iq} & {I});",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class NegedgeStickybit(NextStateConditional):
@@ -103,7 +103,7 @@ class NegedgeStickybit(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} | ({Iq} & ~{I});",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class BothedgeStickybit(NextStateConditional):
@@ -129,7 +129,7 @@ class BothedgeStickybit(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} | ({Iq} ^ {I});",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class PosedgeNonsticky(NextStateConditional):
@@ -152,7 +152,7 @@ class PosedgeNonsticky(NextStateConditional):
         Iq = self.exp.field_logic.get_next_q_identifier(field)
         return [
             f"next_c = ~{Iq} & {I};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class NegedgeNonsticky(NextStateConditional):
@@ -175,7 +175,7 @@ class NegedgeNonsticky(NextStateConditional):
         Iq = self.exp.field_logic.get_next_q_identifier(field)
         return [
             f"next_c = {Iq} & ~{I};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class BothedgeNonsticky(NextStateConditional):
@@ -198,5 +198,5 @@ class BothedgeNonsticky(NextStateConditional):
         Iq = self.exp.field_logic.get_next_q_identifier(field)
         return [
             f"next_c = {Iq} ^ {I};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]

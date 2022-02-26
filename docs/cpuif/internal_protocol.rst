@@ -193,12 +193,13 @@ be the same as a write for a given register block configuration. Typically read
 operations will be more deeply pipelined. This latency asymmetry would create a
 hazard for response collisions.
 
-In order to eliminate this hazard, additional stall signals are provided to delay
-an incoming transfer request if necessary. When asserted, the CPU interface shall
-hold the next pending request until the stall is cleared.
+In order to eliminate this hazard, additional stall signals (``cpuif_req_stall_rd``
+and ``cpuif_req_stall_wr``) are provided to delay the next incoming transfer
+request if necessary. When asserted, the CPU interface shall hold the next pending
+request until the stall is cleared.
 
 For non-pipelined CPU interfaces that only allow one outstanding transaction at a time,
-these can be safely ignored.
+these stall signals can be safely ignored.
 
 In the following example, the regblock is configured such that:
 

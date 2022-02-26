@@ -1,5 +1,4 @@
-import re
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Union, List
 
 from systemrdl.node import AddrmapNode, AddressableNode, RegNode, FieldNode
 
@@ -60,7 +59,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         super().__init__()
 
         # List of address strides for each dimension
-        self._array_stride_stack = []
+        self._array_stride_stack = [] # type: List[List[int]]
 
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> None:
@@ -80,7 +79,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
 
     def _get_address_str(self, node:AddressableNode) -> str:
-        a = "'h%x" % (node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address)
+        a = f"'h{(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address):x}"
         for i, stride in enumerate(self._array_stride_stack):
             a += f" + i{i}*'h{stride:x}"
         return a

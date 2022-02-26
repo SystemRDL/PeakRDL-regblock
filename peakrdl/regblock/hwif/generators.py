@@ -1,13 +1,15 @@
 from typing import TYPE_CHECKING
-from ..struct_generator import RDLFlatStructGenerator
+
 from systemrdl.node import FieldNode
+
+from ..struct_generator import RDLFlatStructGenerator
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, RegNode
     from . import Hwif
 
 class InputStructGenerator_Hier(RDLFlatStructGenerator):
-    def __init__(self, hwif: 'Hwif'):
+    def __init__(self, hwif: 'Hwif') -> None:
         super().__init__()
         self.hwif = hwif
         self.top_node = hwif.top_node

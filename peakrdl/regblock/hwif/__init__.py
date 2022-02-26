@@ -27,8 +27,8 @@ class Hwif:
         self.exp = exp
         self.package_name = package_name
 
-        self.has_input_struct = None
-        self.has_output_struct = None
+        self.has_input_struct = False
+        self.has_output_struct = False
 
         self.in_hier_signal_paths = in_hier_signal_paths
         self.out_of_hier_signals = out_of_hier_signals
@@ -147,7 +147,7 @@ class Hwif:
         elif isinstance(obj, PropertyReference):
             return self.get_implied_prop_input_identifier(obj.node, obj.name)
 
-        raise RuntimeError("Unhandled reference to: %s", obj)
+        raise RuntimeError(f"Unhandled reference to: {obj}")
 
 
     def get_implied_prop_input_identifier(self, field: FieldNode, prop: str) -> str:
@@ -179,7 +179,7 @@ class Hwif:
             assert obj.node.get_property(obj.name)
             return self.get_implied_prop_output_identifier(obj.node, obj.name)
 
-        raise RuntimeError("Unhandled reference to: %s", obj)
+        raise RuntimeError(f"Unhandled reference to: {obj}")
 
 
     def get_implied_prop_output_identifier(self, node: Union[FieldNode, RegNode], prop: str) -> str:

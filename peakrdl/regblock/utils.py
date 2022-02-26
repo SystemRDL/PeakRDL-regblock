@@ -1,5 +1,5 @@
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Match
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode
@@ -13,9 +13,9 @@ def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
     path = target_node.get_rel_path(top_node, empty_array_suffix="[!]")
     # replace unknown indexes with incrementing iterators i0, i1, ...
     class repl:
-        def __init__(self):
+        def __init__(self) -> None:
             self.i = 0
-        def __call__(self, match):
+        def __call__(self, match: Match) -> str:
             s = f'i{self.i}'
             self.i += 1
             return s

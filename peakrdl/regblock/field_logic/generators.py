@@ -1,14 +1,15 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from collections import OrderedDict
 
 from ..struct_generator import RDLStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
-from ..utils import get_indexed_path, get_always_ff_event
+from ..utils import get_always_ff_event
 
 if TYPE_CHECKING:
     from . import FieldLogic
     from systemrdl.node import FieldNode, RegNode
+    from .bases import SVLogic
 
 class CombinationalStructGenerator(RDLStructGenerator):
 
@@ -23,7 +24,7 @@ class CombinationalStructGenerator(RDLStructGenerator):
             return
 
         # collect any extra combo signals that this field requires
-        extra_combo_signals = OrderedDict()
+        extra_combo_signals = OrderedDict() # type: OrderedDict[str, SVLogic]
         for conditional in self.field_logic.get_conditionals(node):
             for signal in conditional.get_extra_combo_signals(node):
                 if signal.name in extra_combo_signals:
@@ -61,7 +62,7 @@ class CombinationalStructGenerator(RDLStructGenerator):
 
 class FieldStorageStructGenerator(RDLStructGenerator):
 
-    def __init__(self, field_logic: 'FieldLogic'):
+    def __init__(self, field_logic: 'FieldLogic') -> None:
         super().__init__()
         self.field_logic = field_logic
 
@@ -79,15 +80,15 @@ class FieldStorageStructGenerator(RDLStructGenerator):
 
 class FieldLogicGenerator(RDLForLoopGenerator):
     i_type = "genvar"
-    def __init__(self, field_logic: 'FieldLogic'):
+    def __init__(self, field_logic: 'FieldLogic') -> None:
         super().__init__()
         self.field_logic = field_logic
         self.exp = field_logic.exp
         self.field_storage_template = self.field_logic.exp.jj_env.get_template(
             "field_logic/templates/field_storage.sv"
         )
-        self.intr_fields = []
-        self.halt_fields = []
+        self.intr_fields = [] # type: List[FieldNode]
+        self.halt_fields = [] # type: List[FieldNode]
 
 
     def enter_Reg(self, node: 'RegNode') -> None:

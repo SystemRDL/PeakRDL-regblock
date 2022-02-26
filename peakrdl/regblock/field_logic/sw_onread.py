@@ -23,8 +23,8 @@ class ClearOnRead(_OnRead):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         return [
-            f"next_c = '0;",
-            f"load_next_c = '1;",
+            "next_c = '0;",
+            "load_next_c = '1;",
         ]
 
 
@@ -34,6 +34,6 @@ class SetOnRead(_OnRead):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         return [
-            f"next_c = '1;",
-            f"load_next_c = '1;",
+            "next_c = '1;",
+            "load_next_c = '1;",
         ]

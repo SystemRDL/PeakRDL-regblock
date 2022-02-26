@@ -41,7 +41,7 @@ class WriteOneSet(_OnWrite):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} | {self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class WriteOneClear(_OnWrite):
@@ -52,7 +52,7 @@ class WriteOneClear(_OnWrite):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} & ~{self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class WriteOneToggle(_OnWrite):
@@ -63,7 +63,7 @@ class WriteOneToggle(_OnWrite):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} ^ {self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class WriteZeroSet(_OnWrite):
@@ -74,7 +74,7 @@ class WriteZeroSet(_OnWrite):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} | ~{self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class WriteZeroClear(_OnWrite):
@@ -85,7 +85,7 @@ class WriteZeroClear(_OnWrite):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} & {self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class WriteZeroToggle(_OnWrite):
@@ -96,7 +96,7 @@ class WriteZeroToggle(_OnWrite):
         R = self.exp.field_logic.get_storage_identifier(field)
         return [
             f"next_c = {R} ^ ~{self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class WriteClear(_OnWrite):
@@ -105,8 +105,8 @@ class WriteClear(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         return [
-            f"next_c = '0;",
-            f"load_next_c = '1;",
+            "next_c = '0;",
+            "load_next_c = '1;",
         ]
 
 class WriteSet(_OnWrite):
@@ -115,8 +115,8 @@ class WriteSet(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         return [
-            f"next_c = '1;",
-            f"load_next_c = '1;",
+            "next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 class Write(_OnWrite):
@@ -126,5 +126,5 @@ class Write(_OnWrite):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         return [
             f"next_c = {self._wr_data(field)};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]

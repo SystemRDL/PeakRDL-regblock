@@ -61,8 +61,7 @@ class Dereferencer:
             else:
                 # No reset value defined!
                 obj.env.msg.warning(
-                    "Field '%s' is a constant but does not have a known value (missing reset). Assigning it a value of X."
-                    % obj.inst_name,
+                    f"Field '{obj.inst_name}' is a constant but does not have a known value (missing reset). Assigning it a value of X.",
                     obj.inst.inst_src_ref
                 )
                 return "'X"
@@ -79,7 +78,7 @@ class Dereferencer:
             else:
                 raise RuntimeError
 
-        raise RuntimeError("Unhandled reference to: %s" % obj)
+        raise RuntimeError(f"Unhandled reference to: {obj}")
 
 
     def get_field_propref_value(self, field: FieldNode, prop_name: str) -> str:
@@ -187,7 +186,7 @@ class Dereferencer:
         }:
             return self.field_logic.get_field_combo_identifier(field, prop_name)
 
-        raise RuntimeError("Unhandled reference to: %s->%s" % (field, prop_name))
+        raise RuntimeError(f"Unhandled reference to: {field}->{prop_name}")
 
 
     def get_reg_propref_value(self, reg: RegNode, prop_name: str) -> str:

@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Any, Type
 
 import jinja2 as jj
 from systemrdl.node import AddrmapNode, RootNode
@@ -16,10 +16,10 @@ from .utils import get_always_ff_event
 from .scan_design import DesignScanner
 
 class RegblockExporter:
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         # Check for stray kwargs
         if kwargs:
-            raise TypeError("got an unexpected keyword argument '%s'" % list(kwargs.keys())[0])
+            raise TypeError(f"got an unexpected keyword argument '{list(kwargs.keys())[0]}'")
 
 
         self.top_node = None # type: AddrmapNode
@@ -45,7 +45,7 @@ class RegblockExporter:
         )
 
 
-    def export(self, node: Union[RootNode, AddrmapNode], output_dir:str, **kwargs) -> None:
+    def export(self, node: Union[RootNode, AddrmapNode], output_dir:str, **kwargs: Any) -> None:
         """
         Parameters
         ----------
@@ -99,18 +99,18 @@ class RegblockExporter:
             self.top_node = node
 
 
-        cpuif_cls = kwargs.pop("cpuif_cls", APB3_Cpuif)
-        module_name = kwargs.pop("module_name", self.top_node.inst_name)
-        package_name = kwargs.pop("package_name", module_name + "_pkg")
-        reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True)
+        cpuif_cls = kwargs.pop("cpuif_cls", APB3_Cpuif) # type: Type[CpuifBase]
+        module_name = kwargs.pop("module_name", self.top_node.inst_name) # type: str
+        package_name = kwargs.pop("package_name", module_name + "_pkg") # type: str
+        reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
 
         # Pipelining options
-        retime_read_fanin = kwargs.pop("retime_read_fanin", False)
-        retime_read_response = kwargs.pop("retime_read_response", True)
+        retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
+        retime_read_response = kwargs.pop("retime_read_response", True) # type: bool
 
         # Check for stray kwargs
         if kwargs:
-            raise TypeError("got an unexpected keyword argument '%s'" % list(kwargs.keys())[0])
+            raise TypeError(f"got an unexpected keyword argument '{list(kwargs.keys())[0]}'")
 
         self.min_read_latency = 0
         self.min_write_latency = 0

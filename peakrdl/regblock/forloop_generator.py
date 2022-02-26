@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Union
 import textwrap
 
 from systemrdl.walker import RDLListener, RDLWalker
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class Body:
 
     def __init__(self) -> None:
-        self.children = []
+        self.children = [] # type: List[Union[str, Body]]
 
     def __str__(self) -> str:
         s = '\n'.join((str(x) for x in self.children))
@@ -37,7 +37,7 @@ class ForLoopGenerator:
 
     def __init__(self) -> None:
         self._loop_level = 0
-        self._stack = []
+        self._stack = [] # type: List[Body]
 
     @property
     def current_loop(self) -> Body:
@@ -60,7 +60,7 @@ class ForLoopGenerator:
             self.current_loop.children.append(b)
         self._loop_level -= 1
 
-    def start(self):
+    def start(self) -> None:
         assert not self._stack
         b = Body()
         self._stack.append(b)

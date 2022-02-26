@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 
 class _StructBase:
-    def __init__(self):
-        self.children = [] # type: Union[str, _StructBase]
+    def __init__(self) -> None:
+        self.children = [] # type: List[Union[str, _StructBase]]
 
     def __str__(self) -> str:
         s = '\n'.join((str(x) for x in self.children))
@@ -65,8 +65,8 @@ class _TypedefStruct(_StructBase):
 
 class StructGenerator:
 
-    def __init__(self):
-        self._struct_stack = []
+    def __init__(self) -> None:
+        self._struct_stack = [] # type: List[_StructBase]
 
     @property
     def current_struct(self) -> _StructBase:
@@ -99,7 +99,7 @@ class StructGenerator:
             self.current_struct.children.append(s)
 
 
-    def start(self, type_name: str):
+    def start(self, type_name: str) -> None:
         assert not self._struct_stack
         s = _TypedefStruct(type_name)
         self._struct_stack.append(s)
@@ -155,16 +155,17 @@ class RDLStructGenerator(StructGenerator, RDLListener):
 
 class FlatStructGenerator(StructGenerator):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.typedefs = OrderedDict()
+        self.typedefs = OrderedDict() # type: OrderedDict[str, _TypedefStruct]
 
-    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None:
+    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None: # type: ignore # pylint: disable=arguments-differ
         s = _TypedefStruct(type_name, inst_name, array_dimensions)
         self._struct_stack.append(s)
 
     def pop_struct(self) -> None:
         s = self._struct_stack.pop()
+        assert isinstance(s, _TypedefStruct)
 
         if s.children:
             # struct is not empty. Attach it to the parent
@@ -176,6 +177,7 @@ class FlatStructGenerator(StructGenerator):
 
     def finish(self) -> Optional[str]:
         s = self._struct_stack.pop()
+        assert isinstance(s, _TypedefStruct)
         assert not self._struct_stack
 
         # no children, no struct.

@@ -35,7 +35,7 @@ class HWSet(NextStateConditional):
 
         return [
             f"next_c = {next_val};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
 
 
@@ -68,5 +68,5 @@ class HWClear(NextStateConditional):
 
         return [
             f"next_c = {next_val};",
-            f"load_next_c = '1;",
+            "load_next_c = '1;",
         ]
