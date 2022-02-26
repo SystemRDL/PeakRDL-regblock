@@ -2,9 +2,9 @@ name: build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   release:
     types:
       - published
@@ -43,7 +43,7 @@ jobs:
           cd test
           export SKIP_SYNTH_TESTS=1
           export STUB_SIMULATOR=1
-          pytest --workers auto
+          pytest
 
 #-------------------------------------------------------------------------------
   lint:
