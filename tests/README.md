@@ -47,14 +47,13 @@ Use `pytest --workers auto` to run tests in parallel.
 
 To run all tests:
 ```bash
-cd test/
-pytest
+python3 setup.py install
+pytest tests
 ```
 
 You can also run a specific testcase. For example:
 ```bash
-cd test/test_hw_access
-pytest
+pytest tests/test_hw_access
 ```
 
 

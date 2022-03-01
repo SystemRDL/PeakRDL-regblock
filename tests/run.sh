@@ -15,7 +15,7 @@ pip install -r $this_dir/requirements.txt
 
 # Install dut
 cd $this_dir/../
-python $this_dir/../setup.py install
+pip install .
 cd $this_dir
 
 # Run unit tests
@@ -23,7 +23,7 @@ export SKIP_SYNTH_TESTS=1
 pytest --workers auto
 
 # Run lint
-pylint --rcfile $this_dir/pylint.rc ../peakrdl
+pylint --rcfile $this_dir/pylint.rc ../src/peakrdl
 
 # Run static type checking
-mypy $this_dir/../peakrdl
+mypy $this_dir/../src/peakrdl
