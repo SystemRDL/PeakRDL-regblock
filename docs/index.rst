@@ -2,7 +2,7 @@ Introduction
 ============
 
 PeakRDL-regblock is a free and open-source control & status register (CSR) compiler.
-This code generator that will translate your SystemRDL register descripton into
+This code generator that will translate your SystemRDL register description into
 a synthesizable SystemVerilog RTL module that can be easily instantiated into
 your hardware design.
 
@@ -16,16 +16,11 @@ your hardware design.
 Installing
 ----------
 
-.. important::
-
-   This project has no official releases yet and is still under active development!
-
 Install from `PyPi`_ using pip
 
 .. code-block:: bash
 
-   # NOT RELEASED YET
-   # python3 -m pip install peakrdl-regblock
+   python3 -m pip install peakrdl-regblock
 
 .. _PyPi: https://pypi.org/project/peakrdl-regblock
 

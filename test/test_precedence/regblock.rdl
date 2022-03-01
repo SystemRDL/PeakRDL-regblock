@@ -1,0 +1,26 @@
+addrmap top {
+    reg {
+        field {
+            sw=rw;
+            hw=w; we;
+            precedence=sw;
+        } f_sw = 0;
+        field {
+            sw=rw;
+            hw=w; we;
+            precedence=hw;
+        } f_hw = 0;
+    } r1 @ 0x0;
+
+    reg {
+        default counter;
+        default sw=r;
+        default hw=na;
+
+        field {} f_sw_count[3:0] = 0;
+        field {} f_hw_count[7:4] = 0;
+    } r1_events @ 0x4;
+
+    r1_events.f_sw_count->incr = r1.f_sw;
+    r1_events.f_hw_count->incr = r1.f_hw;
+};

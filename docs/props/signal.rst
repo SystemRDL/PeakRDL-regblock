@@ -7,19 +7,19 @@ Signal Properties
 
 activehigh/activelow
 --------------------
-|EX|
+|OK|
 
 sync/async
 ----------
-|EX|
+|OK|
 
 Only supported for signals used as resets to infer edge-sensitive reset.
 Ignored in all other contexts.
 
 cpuif_reset
 -----------
-|EX|
+|OK|
 
 field_reset
 -----------
-|EX|
+|OK|

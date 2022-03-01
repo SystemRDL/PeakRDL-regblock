@@ -533,7 +533,7 @@ paritycheck
 
 precedence
 ^^^^^^^^^^
-|EX|
+|OK|
 
 reset
 ^^^^^

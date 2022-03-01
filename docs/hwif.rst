@@ -48,4 +48,4 @@ For example, a simple design such as:
     hwif_in.my_reg[1].my_field.we
 
 For brevity in this documentation, hwif features will be described using shorthand
-notation that omits the hierarchcal path: ``hwif_out..<feature>``
+notation that omits the hierarchical path: ``hwif_out..<feature>``

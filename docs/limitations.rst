@@ -29,3 +29,15 @@ No partial writes
 
 Some protocols describe byte-level write strobes. These are not supported yet.
 All write transfers must access the entire register width.
+
+
+Register width, Access width and CPUIF bus width
+------------------------------------------------
+To keep the initial architecture simpler, currently ``regwidth``, ``accesswidth``
+and the resulting CPU bus width has some limitations:
+
+* All registers shall have ``regwidth`` == ``accesswidth``
+* ``regwidth`` shall be the same across all registers within the block being exported.
+* The CPU interface's bus width is statically determined by the ``regwidth`` used.
+
+I have plans to remove these restrictions and allow for more flexibility in the future.

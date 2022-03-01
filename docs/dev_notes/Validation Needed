@@ -142,9 +142,28 @@ X Warn/error on any signal with cpuif_reset set, that is not in the top-level
     addrmap. At the very least, warn that it will be ignored
 
 
-! "bridge" addrmap not supported
+X "bridge" addrmap not supported
     export shall refuse to process an addrmap marked as a "bridge"
     Only need to check top-level. Compiler will enforce that child nodes arent bridges
+
+X regwidth/accesswidth is sane
+    X accesswidth == regwidth
+        Enforce this for now. Dont feel like supporting fancy modes yet
+        X regwidth < accesswidth
+            This is illegal and is enforced by the compiler.
+        X regwidth > accesswidth
+            Need to extend address decode strobes to have multiple bits
+            this is where looking at endianness matters to determine field placement
+            Dont feel like supporting this yet
+    X constant regwidth?
+        For now, probably limit to only allow the same regwidth everywhere?
+
+
+X Do not allow unaligned addresses
+    All offsets & strides shall be a multiple of the regwidth used
+
+    X each reg needs to be aligned to its width
+    X each regfile/addrmap/stride shall be aligned to the largest regwidth it encloses
 
 ! async data signals
     Only supporting async signals if they are exclusively used in resets.
@@ -153,27 +172,6 @@ X Warn/error on any signal with cpuif_reset set, that is not in the top-level
 
 ! Error if a property references a non-signal component, or property reference from
     outside the export hierarchy
-
-! regwidth/accesswidth is sane
-    ! accesswidth == regwidth
-        Enforce this for now. Dont feel like supporting fancy modes yet
-        X regwidth < accesswidth
-            This is illegal and is enforced by the compiler.
-        ! regwidth > accesswidth
-            Need to extend address decode strobes to have multiple bits
-            this is where looking at endinaness matters to determine field placement
-            Dont feel like supporting this yet
-    ! constant regwidth?
-        For now, probably limit to only allow the same regwidth everywhere?
-
-
-! Do not allow unaligned addresses
-    All offsets & strides shall be a multiple of the regwidth used
-
-    - each reg needs to be aligned to its width
-    - each regfile/addrmap/stride shall be aligned to the largest regwidth it encloses
-        --> Should i promote this check to the compiler? At least as a warnable condition
-            Currently i think I only do the more stringent case of block alignment.
 
 ! Add warning for sticky race condition
     stickybit and other similar situations generally should use hw precedence.
