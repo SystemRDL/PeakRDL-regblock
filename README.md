@@ -3,7 +3,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/peakrdl-regblock.svg)](https://pypi.org/project/peakrdl-regblock)
 
 # PeakRDL-regblock
-Generate SystemVerilog RTL that implements a register block from compiled SystemRDL input.
+Compile SystemRDL into a SystemVerilog control/status register (CSR) block
 
 ## Documentation
 See the [PeakRDL-regblock Documentation](http://peakrdl-regblock.readthedocs.io) for more details

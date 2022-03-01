@@ -10,6 +10,7 @@ your hardware design.
 * Options for many popular CPU interface protocols (AMBA APB, AXI4-Lite, and more)
 * Configurable pipelining options for designs with fast clock rates.
 * Broad support for SystemRDL 2.0 features
+* Fully synthesizable SystemVerilog. Tested on Xilinx/AMD's Vivado & Intel Quartus
 
 
 
