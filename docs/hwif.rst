@@ -8,7 +8,7 @@ using two struct ports:
 * ``hwif_out``
 
 All field inputs and outputs as well as signals are consolidated into these
-struct ports. The presence of each depends on the specific contents of the desgin
+struct ports. The presence of each depends on the specific contents of the design
 being exported.
 
 

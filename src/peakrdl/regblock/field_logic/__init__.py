@@ -266,7 +266,6 @@ class FieldLogic:
         same assignment precedence.
         """
 
-        # TODO: Add all the other things
         self.add_sw_conditional(sw_onread.ClearOnRead(self.exp), AssignmentPrecedence.SW_ONREAD)
         self.add_sw_conditional(sw_onread.SetOnRead(self.exp), AssignmentPrecedence.SW_ONREAD)
 

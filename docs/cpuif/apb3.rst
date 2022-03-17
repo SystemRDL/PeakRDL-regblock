@@ -10,10 +10,10 @@ The APB3 CPU interface comes in two i/o port flavors:
 SystemVerilog Interface
     Class: :class:`peakrdl.regblock.cpuif.apb3.APB3_Cpuif`
 
-    Interface Definition: :download:`apb3_intf.sv <../../test/lib/cpuifs/apb3/apb3_intf.sv>`
+    Interface Definition: :download:`apb3_intf.sv <../../tests/lib/cpuifs/apb3/apb3_intf.sv>`
 
 Flattened inputs/outputs
-    Flattens the interface into descrete input and output ports.
+    Flattens the interface into discrete input and output ports.
 
     Class: :class:`peakrdl.regblock.cpuif.apb3.APB3_Cpuif_flattened`
 
