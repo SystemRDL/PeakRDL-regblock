@@ -2,7 +2,7 @@ Introduction
 ============
 
 PeakRDL-regblock is a free and open-source control & status register (CSR) compiler.
-This code generator that will translate your SystemRDL register description into
+This code generator translates your SystemRDL register description into
 a synthesizable SystemVerilog RTL module that can be easily instantiated into
 your hardware design.
 
