@@ -152,9 +152,9 @@ logic [{{clog2(cpuif.resp_buffer_size)}}:0] axil_resp_rptr;
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
     if({{get_resetsignal(cpuif.reset)}}) begin
         for(int i=0; i<{{cpuif.resp_buffer_size}}; i++) begin
-            axil_resp_buffer[i].is_wr = '0;
-            axil_resp_buffer[i].err = '0;
-            axil_resp_buffer[i].rdata = '0;
+            axil_resp_buffer[i].is_wr <= '0;
+            axil_resp_buffer[i].err <= '0;
+            axil_resp_buffer[i].rdata <= '0;
         end
         axil_resp_wptr <= '0;
         axil_resp_rptr <= '0;
@@ -162,13 +162,13 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
         // Store responses in buffer until AXI response channel accepts them
         if(cpuif_rd_ack || cpuif_wr_ack) begin
             if(cpuif_rd_ack) begin
-                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].is_wr = '0;
-                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].err = cpuif_rd_err;
-                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].rdata = cpuif_rd_data;
+                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].is_wr <= '0;
+                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].err <= cpuif_rd_err;
+                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].rdata <= cpuif_rd_data;
 
             end else if(cpuif_wr_ack) begin
-                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].is_wr = '1;
-                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].err = cpuif_wr_err;
+                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].is_wr <= '1;
+                axil_resp_buffer[axil_resp_wptr[{{clog2(cpuif.resp_buffer_size)-1}}:0]].err <= cpuif_wr_err;
             end
             {%- if is_pow2(cpuif.resp_buffer_size) %}
             axil_resp_wptr <= axil_resp_wptr + 1'b1;
