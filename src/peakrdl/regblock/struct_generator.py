@@ -159,7 +159,7 @@ class FlatStructGenerator(StructGenerator):
         super().__init__()
         self.typedefs = OrderedDict() # type: OrderedDict[str, _TypedefStruct]
 
-    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None: # type: ignore # pylint: disable=arguments-differ
+    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None: # type: ignore # pylint: disable=arguments-renamed
         s = _TypedefStruct(type_name, inst_name, array_dimensions)
         self._struct_stack.append(s)
 

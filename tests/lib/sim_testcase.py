@@ -20,6 +20,8 @@ class SimTestCase(BaseTestCase):
 
     simulator_cls = SIM_CLS
 
+    tb_template_file = "tb_template.sv"
+
     @classmethod
     def _generate_tb(cls):
         """
@@ -41,7 +43,7 @@ class SimTestCase(BaseTestCase):
         }
 
         # template path needs to be relative to the Jinja loader root
-        template_path = os.path.join(cls.get_testcase_dir(), "tb_template.sv")
+        template_path = os.path.join(cls.get_testcase_dir(), cls.tb_template_file)
         template_path = os.path.relpath(template_path, template_root_path)
         template = jj_env.get_template(template_path)
 
