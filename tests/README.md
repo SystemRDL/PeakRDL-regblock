@@ -56,6 +56,13 @@ You can also run a specific testcase. For example:
 pytest tests/test_hw_access
 ```
 
+Alternatively, launch tests using the helper script. This handles installing
+dependencies into a virtual environment automatically.
+```bash
+cd tests
+./run.sh
+```
+
 
 
 # Test organization

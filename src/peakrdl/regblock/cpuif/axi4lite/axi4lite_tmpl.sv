@@ -140,8 +140,8 @@ struct {
     logic [{{cpuif.data_width-1}}:0] rdata;
 } axil_resp_buffer[{{roundup_pow2(cpuif.resp_buffer_size)}}];
 {%- if not is_pow2(cpuif.resp_buffer_size) %}
-// axil_resp_buffer is intentionally padded to the next power of two despite there
-// only being {{cpuif.resp_buffer_size}} actual entries.
+// axil_resp_buffer is intentionally padded to the next power of two despite
+// only requiring {{cpuif.resp_buffer_size}} entries.
 // This is to avoid quirks in some tools that cannot handle indexing into a non-power-of-2 array.
 // Unused entries are expected to be optimized away
 {% endif %}
