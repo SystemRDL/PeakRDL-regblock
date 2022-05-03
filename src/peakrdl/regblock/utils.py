@@ -36,3 +36,6 @@ def clog2(n: int) -> int:
 
 def is_pow2(x: int) -> bool:
     return (x > 0) and ((x & (x - 1)) == 0)
+
+def roundup_pow2(x: int) -> int:
+    return 1<<(x-1).bit_length()

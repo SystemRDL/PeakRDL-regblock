@@ -4,7 +4,7 @@ import os
 
 import jinja2 as jj
 
-from ..utils import get_always_ff_event, clog2, is_pow2
+from ..utils import get_always_ff_event, clog2, is_pow2, roundup_pow2
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -52,6 +52,7 @@ class CpuifBase:
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "clog2": clog2,
             "is_pow2": is_pow2,
+            "roundup_pow2": roundup_pow2,
         }
 
         template = jj_env.get_template(self.template_path)

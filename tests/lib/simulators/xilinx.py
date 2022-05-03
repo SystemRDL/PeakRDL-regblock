@@ -59,3 +59,5 @@ class Xilinx(Simulator):
                     self.testcase_cls_inst.fail(line)
                 elif line.startswith("Fatal:"):
                     self.testcase_cls_inst.fail(line)
+                elif line.startswith("FATAL_ERROR:"):
+                    self.testcase_cls_inst.fail(line)
