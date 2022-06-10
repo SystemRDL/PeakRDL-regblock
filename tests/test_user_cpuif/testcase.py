@@ -1,6 +1,6 @@
 import os
 
-from peakrdl.regblock.cpuif.apb3 import APB3_Cpuif
+from peakrdl_regblock.cpuif.apb3 import APB3_Cpuif
 from ..lib.cpuifs.apb3 import APB3
 from ..lib.base_testcase import BaseTestCase
 

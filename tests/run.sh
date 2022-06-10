@@ -23,7 +23,7 @@ export SKIP_SYNTH_TESTS=1
 pytest --workers auto
 
 # Run lint
-pylint --rcfile $this_dir/pylint.rc ../src/peakrdl
+pylint --rcfile $this_dir/pylint.rc ../src/peakrdl_regblock
 
 # Run static type checking
-mypy $this_dir/../src/peakrdl
+mypy $this_dir/../src/peakrdl_regblock

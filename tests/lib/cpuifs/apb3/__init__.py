@@ -1,6 +1,6 @@
 from ..base import CpuifTestMode
 
-from peakrdl.regblock.cpuif.apb3 import APB3_Cpuif, APB3_Cpuif_flattened
+from peakrdl_regblock.cpuif.apb3 import APB3_Cpuif, APB3_Cpuif_flattened
 
 class APB3(CpuifTestMode):
     cpuif_cls = APB3_Cpuif

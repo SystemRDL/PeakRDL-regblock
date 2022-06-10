@@ -54,7 +54,7 @@ class RegblockExporter:
         output_dir: str
             Path to the output directory where generated SystemVerilog will be written.
             Output includes two files: a module definition and package definition.
-        cpuif_cls: :class:`peakrdl.regblock.cpuif.CpuifBase`
+        cpuif_cls: :class:`peakrdl_regblock.cpuif.CpuifBase`
             Specify the class type that implements the CPU interface of your choice.
             Defaults to AMBA APB3.
         module_name: str

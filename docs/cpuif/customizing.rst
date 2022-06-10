@@ -28,7 +28,7 @@ Rather than rewriting a new CPU interface definition, you can extend and adjust 
 
 .. code-block:: python
 
-    from peakrdl.regblock.cpuif.axi4lite import AXI4Lite_Cpuif
+    from peakrdl_regblock.cpuif.axi4lite import AXI4Lite_Cpuif
 
     class My_AXI4Lite(AXI4Lite_Cpuif):
         @property
@@ -70,7 +70,7 @@ you can define your own.
 
 2. Create a Python class that defines your CPUIF
 
-    Extend your class from :class:`peakrdl.regblock.cpuif.CpuifBase`.
+    Extend your class from :class:`peakrdl_regblock.cpuif.CpuifBase`.
     Define the port declaration string, and provide a reference to your template file.
 
 3. Use your new CPUIF definition when exporting!

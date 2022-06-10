@@ -1,5 +1,5 @@
 Exporter API
 ============
 
-.. autoclass:: peakrdl.regblock.RegblockExporter
+.. autoclass:: peakrdl_regblock.RegblockExporter
     :members:

@@ -37,8 +37,8 @@ implementation from SystemRDL source.
     :emphasize-lines: 2-3, 23-27
 
     from systemrdl import RDLCompiler, RDLCompileError
-    from peakrdl.regblock import RegblockExporter
-    from peakrdl.regblock.cpuif.apb3 import APB3_Cpuif
+    from peakrdl_regblock import RegblockExporter
+    from peakrdl_regblock.cpuif.apb3 import APB3_Cpuif
 
     input_files = [
         "PATH/TO/my_register_block.rdl"

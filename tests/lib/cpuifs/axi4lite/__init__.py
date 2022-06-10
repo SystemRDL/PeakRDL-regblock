@@ -1,6 +1,6 @@
 from ..base import CpuifTestMode
 
-from peakrdl.regblock.cpuif.axi4lite import AXI4Lite_Cpuif, AXI4Lite_Cpuif_flattened
+from peakrdl_regblock.cpuif.axi4lite import AXI4Lite_Cpuif, AXI4Lite_Cpuif_flattened
 
 class AXI4Lite(CpuifTestMode):
     cpuif_cls = AXI4Lite_Cpuif

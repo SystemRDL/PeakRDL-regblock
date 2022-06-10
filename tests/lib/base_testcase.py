@@ -9,7 +9,7 @@ import pathlib
 import pytest
 from systemrdl import RDLCompiler
 
-from peakrdl.regblock import RegblockExporter
+from peakrdl_regblock import RegblockExporter
 from .cpuifs.base import CpuifTestMode
 from .cpuifs.apb3 import APB3
 
@@ -72,7 +72,7 @@ class BaseTestCase(unittest.TestCase):
     @classmethod
     def _export_regblock(cls):
         """
-        Call the peakrdl.regblock exporter to generate the DUT
+        Call the peakrdl_regblock exporter to generate the DUT
         """
         this_dir = cls.get_testcase_dir()
 

@@ -65,7 +65,7 @@ jobs:
 
       - name: Run Lint
         run: |
-          pylint --rcfile tests/pylint.rc peakrdl
+          pylint --rcfile tests/pylint.rc peakrdl_regblock
 
 #-------------------------------------------------------------------------------
   mypy:
@@ -83,7 +83,7 @@ jobs:
 
       - name: Type Check
         run: |
-          mypy --config-file tests/mypy.ini src/peakrdl
+          mypy --config-file tests/mypy.ini src/peakrdl_regblock
 
 #-------------------------------------------------------------------------------
   build_sdist:
