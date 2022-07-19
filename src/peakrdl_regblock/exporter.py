@@ -99,9 +99,9 @@ class RegblockExporter:
             self.top_node = node
 
 
-        cpuif_cls = kwargs.pop("cpuif_cls", APB3_Cpuif) # type: Type[CpuifBase]
-        module_name = kwargs.pop("module_name", self.top_node.inst_name) # type: str
-        package_name = kwargs.pop("package_name", module_name + "_pkg") # type: str
+        cpuif_cls = kwargs.pop("cpuif_cls", None) or APB3_Cpuif # type: Type[CpuifBase]
+        module_name = kwargs.pop("module_name", None) or self.top_node.inst_name # type: str
+        package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
 
         # Pipelining options

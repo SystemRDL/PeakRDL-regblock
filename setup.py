@@ -27,6 +27,11 @@ setuptools.setup(
         "systemrdl-compiler>=1.22.0",
         "Jinja2>=2.11",
     ],
+    entry_points = {
+        "peakrdl.exporters": [
+            'regblock = peakrdl_regblock.__peakrdl__:Exporter'
+        ]
+    },
     classifiers=(
         #"Development Status :: 5 - Production/Stable",
         "Development Status :: 3 - Alpha",
