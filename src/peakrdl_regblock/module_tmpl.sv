@@ -7,9 +7,9 @@ module {{module_name}} (
 
         {%- for signal in user_out_of_hier_signals %}
         {%- if signal.width == 1 %}
-        input wire {{signal.inst_name}},
+        input wire {{kwf(signal.inst_name)}},
         {%- else %}
-        input wire [{{signal.width-1}}:0] {{signal.inst_name}},
+        input wire [{{signal.width-1}}:0] {{kwf(signal.inst_name)}},
         {%- endif %}
         {%- endfor %}
 

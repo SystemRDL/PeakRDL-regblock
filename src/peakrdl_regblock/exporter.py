@@ -8,6 +8,7 @@ from .addr_decode import AddressDecode
 from .field_logic import FieldLogic
 from .dereferencer import Dereferencer
 from .readback import Readback
+from .identifier_filter import kw_filter as kwf
 
 from .cpuif import CpuifBase
 from .cpuif.apb3 import APB3_Cpuif
@@ -100,7 +101,7 @@ class RegblockExporter:
 
 
         cpuif_cls = kwargs.pop("cpuif_cls", None) or APB3_Cpuif # type: Type[CpuifBase]
-        module_name = kwargs.pop("module_name", None) or self.top_node.inst_name # type: str
+        module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
         package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
 
@@ -158,6 +159,7 @@ class RegblockExporter:
             "retime_read_response": retime_read_response,
             "min_read_latency": self.min_read_latency,
             "min_write_latency": self.min_write_latency,
+            "kwf": kwf,
         }
 
         # Write out design

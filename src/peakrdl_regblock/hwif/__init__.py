@@ -4,6 +4,7 @@ from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, Addressable
 from systemrdl.rdltypes import PropertyReference
 
 from ..utils import get_indexed_path
+from ..identifier_filter import kw_filter as kwf
 
 from .generators import InputStructGenerator_Hier, OutputStructGenerator_Hier
 from .generators import InputStructGenerator_TypeScope, OutputStructGenerator_TypeScope
@@ -141,7 +142,7 @@ class Hwif:
             return "hwif_in." + path + ".next"
         elif isinstance(obj, SignalNode):
             if obj.get_path() in self.out_of_hier_signals:
-                return obj.inst_name
+                return kwf(obj.inst_name)
             path = get_indexed_path(self.top_node, obj)
             return "hwif_in." + path
         elif isinstance(obj, PropertyReference):

@@ -4,6 +4,8 @@ from collections import OrderedDict
 
 from systemrdl.walker import RDLListener, RDLWalker
 
+from .identifier_filter import kw_filter as kwf
+
 if TYPE_CHECKING:
     from typing import Union
 
@@ -131,25 +133,25 @@ class RDLStructGenerator(StructGenerator, RDLListener):
 
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> None:
-        self.push_struct(node.inst_name, node.array_dimensions)
+        self.push_struct(kwf(node.inst_name), node.array_dimensions)
 
     def exit_Addrmap(self, node: 'AddrmapNode') -> None:
         self.pop_struct()
 
     def enter_Regfile(self, node: 'RegfileNode') -> None:
-        self.push_struct(node.inst_name, node.array_dimensions)
+        self.push_struct(kwf(node.inst_name), node.array_dimensions)
 
     def exit_Regfile(self, node: 'RegfileNode') -> None:
         self.pop_struct()
 
     def enter_Reg(self, node: 'RegNode') -> None:
-        self.push_struct(node.inst_name, node.array_dimensions)
+        self.push_struct(kwf(node.inst_name), node.array_dimensions)
 
     def exit_Reg(self, node: 'RegNode') -> None:
         self.pop_struct()
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        self.add_member(node.inst_name, node.width)
+        self.add_member(kwf(node.inst_name), node.width)
 
 #-------------------------------------------------------------------------------
 
@@ -214,24 +216,24 @@ class RDLFlatStructGenerator(FlatStructGenerator, RDLListener):
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> None:
         type_name = self.get_typdef_name(node)
-        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+        self.push_struct(type_name, kwf(node.inst_name), node.array_dimensions)
 
     def exit_Addrmap(self, node: 'AddrmapNode') -> None:
         self.pop_struct()
 
     def enter_Regfile(self, node: 'RegfileNode') -> None:
         type_name = self.get_typdef_name(node)
-        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+        self.push_struct(type_name, kwf(node.inst_name), node.array_dimensions)
 
     def exit_Regfile(self, node: 'RegfileNode') -> None:
         self.pop_struct()
 
     def enter_Reg(self, node: 'RegNode') -> None:
         type_name = self.get_typdef_name(node)
-        self.push_struct(type_name, node.inst_name, node.array_dimensions)
+        self.push_struct(type_name, kwf(node.inst_name), node.array_dimensions)
 
     def exit_Reg(self, node: 'RegNode') -> None:
         self.pop_struct()
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        self.add_member(node.inst_name, node.width)
+        self.add_member(kwf(node.inst_name), node.width)

@@ -5,6 +5,7 @@ from systemrdl.node import AddrmapNode, AddressableNode, RegNode, FieldNode
 from .utils import get_indexed_path
 from .struct_generator import RDLStructGenerator
 from .forloop_generator import RDLForLoopGenerator
+from .identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
@@ -43,7 +44,7 @@ class AddressDecode:
 class DecodeStructGenerator(RDLStructGenerator):
 
     def enter_Reg(self, node: 'RegNode') -> None:
-        self.add_member(node.inst_name, array_dimensions=node.array_dimensions)
+        self.add_member(kwf(node.inst_name), array_dimensions=node.array_dimensions)
 
     # Stub out
     def exit_Reg(self, node: 'RegNode') -> None:

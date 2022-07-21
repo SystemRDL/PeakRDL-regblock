@@ -1,6 +1,8 @@
 import re
 from typing import TYPE_CHECKING, Match
 
+from .identifier_filter import kw_filter as kwf
+
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode
     from typing import Optional
@@ -11,15 +13,23 @@ def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
     TODO: Add words about indexing and why i'm doing this. Copy from logbook
     """
     path = target_node.get_rel_path(top_node, empty_array_suffix="[!]")
+
     # replace unknown indexes with incrementing iterators i0, i1, ...
-    class repl:
+    class ReplaceUnknown:
         def __init__(self) -> None:
             self.i = 0
         def __call__(self, match: Match) -> str:
             s = f'i{self.i}'
             self.i += 1
             return s
-    return re.sub(r'!', repl(), path)
+    path = re.sub(r'!', ReplaceUnknown(), path)
+
+    # Sanitize any SV keywords
+    def kw_filter_repl(m: Match) -> str:
+        return kwf(m.group(0))
+    path = re.sub(r'\w+', kw_filter_repl, path)
+
+    return path
 
 
 def get_always_ff_event(dereferencer: 'Dereferencer', resetsignal: 'Optional[SignalNode]') -> str:

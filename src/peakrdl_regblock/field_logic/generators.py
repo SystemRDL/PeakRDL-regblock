@@ -5,6 +5,7 @@ from collections import OrderedDict
 from ..struct_generator import RDLStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
 from ..utils import get_always_ff_event
+from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
     from . import FieldLogic
@@ -34,7 +35,7 @@ class CombinationalStructGenerator(RDLStructGenerator):
                 else:
                     extra_combo_signals[signal.name] = signal
 
-        self.push_struct(node.inst_name)
+        self.push_struct(kwf(node.inst_name))
         self.add_member("next", node.width)
         self.add_member("load_next")
         for signal in extra_combo_signals.values():
@@ -67,7 +68,7 @@ class FieldStorageStructGenerator(RDLStructGenerator):
         self.field_logic = field_logic
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        self.push_struct(node.inst_name)
+        self.push_struct(kwf(node.inst_name))
 
         if node.implements_storage:
             self.add_member("value", node.width)

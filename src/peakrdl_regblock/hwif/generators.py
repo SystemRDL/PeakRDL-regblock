@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from systemrdl.node import FieldNode
 
 from ..struct_generator import RDLFlatStructGenerator
+from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, RegNode
@@ -27,11 +28,11 @@ class InputStructGenerator_Hier(RDLFlatStructGenerator):
         # only emit the signal if design scanner detected it is actually being used
         path = node.get_path()
         if path in self.hwif.in_hier_signal_paths:
-            self.add_member(node.inst_name, node.width)
+            self.add_member(kwf(node.inst_name), node.width)
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
-        self.push_struct(type_name, node.inst_name)
+        self.push_struct(type_name, kwf(node.inst_name))
 
         # Provide input to field's next value if it is writable by hw, and it
         # was not overridden by the 'next' property
@@ -87,7 +88,7 @@ class OutputStructGenerator_Hier(RDLFlatStructGenerator):
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
-        self.push_struct(type_name, node.inst_name)
+        self.push_struct(type_name, kwf(node.inst_name))
 
         # Expose field's value if it is readable by hw
         if node.is_hw_readable:
