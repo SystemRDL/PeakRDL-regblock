@@ -12,6 +12,10 @@ your hardware design.
 * Broad support for SystemRDL 2.0 features
 * Fully synthesizable SystemVerilog. Tested on Xilinx/AMD's Vivado & Intel Quartus
 
+.. warning::
+
+    The PeakRDL-regblock SV generator is still in pre-production (v0.x version numbers).
+    During this time, I may decide to refactor things which could break compatibility.
 
 
 Installing
