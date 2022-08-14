@@ -448,7 +448,10 @@ Misc
 
 encode
 ^^^^^^
-|NO|
+If assigned a user-defined enumeration, the resulting package file will include
+its definition. Due to limitations from type-strictness rules in SystemVerilog,
+the field will remain as a ``logic`` datatype.
+
 
 next
 ^^^^

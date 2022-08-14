@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Type
 
 from systemrdl.node import FieldNode
 
@@ -8,6 +8,7 @@ from ..identifier_filter import kw_filter as kwf
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, RegNode
     from . import Hwif
+    from systemrdl.rdltypes import UserEnum
 
 class HWIFStructGenerator(RDLFlatStructGenerator):
     def __init__(self, hwif: 'Hwif', hwif_name: str) -> None:
@@ -177,6 +178,43 @@ class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
             extra_suffix = ""
 
         return f'{scope_path}__{node.type_name}{extra_suffix}__out_t'
+
+#-------------------------------------------------------------------------------
+class EnumGenerator:
+    """
+    Generator for user-defined enum definitions
+    """
+
+    def get_enums(self, user_enums: List[Type['UserEnum']]) -> Optional[str]:
+        if not user_enums:
+            return None
+
+        lines = []
+        for user_enum in user_enums:
+            lines.append(self._enum_typedef(user_enum))
+
+        return '\n\n'.join(lines)
+
+    @staticmethod
+    def _get_prefix(user_enum: Type['UserEnum']) -> str:
+        scope = user_enum.get_scope_path("__")
+        if scope:
+            return f"{scope}__{user_enum.type_name}"
+        else:
+            return user_enum.type_name
+
+    def _enum_typedef(self, user_enum: Type['UserEnum']) -> str:
+        prefix = self._get_prefix(user_enum)
+
+        lines = []
+        for enum_member in user_enum:
+            lines.append(f"    {prefix}__{enum_member.name} = 'd{enum_member.value}")
+
+        return (
+            "typedef enum {\n"
+            + ",\n".join(lines)
+            + f"\n}} {prefix}_e;"
+        )
 
 
 def get_field_type_name_suffix(field: FieldNode) -> str:

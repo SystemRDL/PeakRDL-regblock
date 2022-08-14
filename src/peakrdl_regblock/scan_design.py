@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Set, Optional
+from typing import TYPE_CHECKING, Set, Optional, Type, List
 from collections import OrderedDict
 
 from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
@@ -7,6 +7,7 @@ from systemrdl.node import SignalNode
 if TYPE_CHECKING:
     from systemrdl.node import Node, RegNode, FieldNode
     from .exporter import RegblockExporter
+    from systemrdl.rdltypes import UserEnum
 
 
 class DesignScanner(RDLListener):
@@ -28,6 +29,9 @@ class DesignScanner(RDLListener):
         self.has_writable_msb0_fields = False
         self.has_buffered_write_regs = False
         self.has_buffered_read_regs = False
+
+        # Track any referenced enums
+        self.user_enums = [] # type: List[Type[UserEnum]]
 
     def _get_out_of_hier_field_reset(self) -> None:
         current_node = self.exp.top_node.parent
@@ -82,6 +86,10 @@ class DesignScanner(RDLListener):
                     self.out_of_hier_signals[path] = value
                 else:
                     self.in_hier_signal_paths.add(path)
+
+            if prop_name == "encode":
+                if value not in self.user_enums:
+                    self.user_enums.append(value)
 
         return None
 
