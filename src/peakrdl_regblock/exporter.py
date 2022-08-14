@@ -137,6 +137,7 @@ class RegblockExporter:
             package_name=package_name,
             in_hier_signal_paths=scanner.in_hier_signal_paths,
             out_of_hier_signals=scanner.out_of_hier_signals,
+            in_hier_enums=scanner.in_hier_enums,
             reuse_typedefs=reuse_hwif_typedefs,
         )
 

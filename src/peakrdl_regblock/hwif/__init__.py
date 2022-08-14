@@ -1,13 +1,14 @@
 from typing import TYPE_CHECKING, Union, List, Set, Dict
 
 from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode, RegNode
-from systemrdl.rdltypes import PropertyReference
+from systemrdl.rdltypes import PropertyReference, UserEnum
 
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
 
 from .generators import InputStructGenerator_Hier, OutputStructGenerator_Hier
 from .generators import InputStructGenerator_TypeScope, OutputStructGenerator_TypeScope
+from .generators import EnumGenerator
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -22,6 +23,7 @@ class Hwif:
 
     def __init__(
         self, exp: 'RegblockExporter', package_name: str,
+        in_hier_enums: Set[UserEnum],
         in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
         reuse_typedefs: bool
     ):
@@ -33,6 +35,7 @@ class Hwif:
 
         self.in_hier_signal_paths = in_hier_signal_paths
         self.out_of_hier_signals = out_of_hier_signals
+        self.in_hier_enums = in_hier_enums
 
         if reuse_typedefs:
             self._gen_in_cls = InputStructGenerator_TypeScope
@@ -73,6 +76,13 @@ class Hwif:
             lines.append(structs_out)
         else:
             self.has_output_struct = False
+
+        gen_enum = EnumGenerator()
+        enums = gen_enum.get_enums(
+            self.in_hier_enums
+        )
+        if enums is not None:
+            lines.append(enums)
 
         return "\n\n".join(lines)
 

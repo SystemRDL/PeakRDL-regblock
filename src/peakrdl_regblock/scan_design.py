@@ -7,6 +7,7 @@ from systemrdl.node import SignalNode, AddressableNode
 if TYPE_CHECKING:
     from systemrdl.node import Node, RegNode, FieldNode
     from .exporter import RegblockExporter
+    from systemrdl.rdltypes import UserEnum
 
 
 class DesignScanner(RDLListener):
@@ -27,6 +28,9 @@ class DesignScanner(RDLListener):
         # Collections of signals that were actually referenced by the design
         self.in_hier_signal_paths = set() # type: Set[str]
         self.out_of_hier_signals = OrderedDict() # type: OrderedDict[str, SignalNode]
+
+        # Track any referenced enums
+        self.in_hier_enums = set() # type: Set[UserEnum]
 
     def _get_out_of_hier_field_reset(self) -> None:
         current_node = self.exp.top_node.parent
@@ -144,3 +148,5 @@ class DesignScanner(RDLListener):
                     self.out_of_hier_signals[path] = value
                 else:
                     self.in_hier_signal_paths.add(path)
+            if prop_name == 'encode':
+                self.in_hier_enums.add(value)
