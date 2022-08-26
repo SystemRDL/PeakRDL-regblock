@@ -33,6 +33,7 @@ class BaseTestCase(unittest.TestCase):
     # Other exporter args:
     retime_read_fanin = False
     retime_read_response = False
+    reuse_hwif_typedefs = True
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -94,6 +95,7 @@ class BaseTestCase(unittest.TestCase):
             cpuif_cls=cls.cpuif.cpuif_cls,
             retime_read_fanin=cls.retime_read_fanin,
             retime_read_response=cls.retime_read_response,
+            reuse_hwif_typedefs=cls.reuse_hwif_typedefs
         )
 
     @classmethod
