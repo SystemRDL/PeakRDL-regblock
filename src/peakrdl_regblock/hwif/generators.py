@@ -153,18 +153,19 @@ class EnumGenerator:
     Generator for user defined enums
     """
 
-    def get_enums(self, in_hier_enums: set['enum']) -> str:
+    def get_enums(self, in_hier_enums: set['enum.EnumMeta']) -> str:
         if not in_hier_enums:
             return None
 
         lines = []
         for user_enum_set in in_hier_enums:
+            lines.append(str(type(user_enum_set)))
             lines.append(self.enum_typedef(user_enum_set))
 
         return '\n\n'.join(lines)
 
     @staticmethod
-    def get_base_name(user_enum: 'UserEnum', seperator: str = '_'):
+    def get_base_name(user_enum: 'UserEnum', seperator: str = '_') -> str:
         scope = user_enum.get_scope_path(seperator)
         base_name = str(user_enum).split('.', maxsplit=1)[0]
         if scope:
@@ -172,8 +173,9 @@ class EnumGenerator:
         else:
             return base_name
 
-    def enum_typedef(self, user_enum_set: 'enum', seperator : str = '_') -> str:
+    def enum_typedef(self, user_enum_set: 'enum.EnumMeta', seperator : str = '_') -> str:
         lines = ['typedef enum {']
+        user_enum: 'UserEnum'
         for user_enum in user_enum_set:
             base_name = self.get_base_name(user_enum, seperator)
             enum_name = user_enum.rdl_name or user_enum.name
