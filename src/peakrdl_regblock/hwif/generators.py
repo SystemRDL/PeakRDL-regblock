@@ -159,7 +159,6 @@ class EnumGenerator:
 
         lines = []
         for user_enum_set in in_hier_enums:
-            lines.append(str(type(user_enum_set)))
             lines.append(self.enum_typedef(user_enum_set))
 
         return '\n\n'.join(lines)
