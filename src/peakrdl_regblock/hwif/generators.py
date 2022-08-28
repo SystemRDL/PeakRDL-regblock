@@ -154,7 +154,7 @@ class EnumGenerator:
     """
 
     def get_enums(self, in_hier_enums: set['enum']) -> str:
-        if not len(in_hier_enums):
+        if not in_hier_enums:
             return None
 
         lines = []
@@ -166,7 +166,7 @@ class EnumGenerator:
     @staticmethod
     def get_base_name(user_enum: 'UserEnum', seperator: str = '_'):
         scope = user_enum.get_scope_path(seperator)
-        base_name = str(user_enum).split('.')[0]
+        base_name = str(user_enum).split('.', maxsplit=1)[0]
         if scope:
             return f"{scope}{seperator}{base_name}"
         else:
