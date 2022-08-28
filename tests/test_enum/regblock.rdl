@@ -1,0 +1,12 @@
+addrmap top {
+    enum my_enum {
+        val_1 = 0 {name = "Value 1";};
+        val_2 = 4 {desc = "Second value";};
+    } ;
+    reg {
+        field {
+            encode = my_enum;
+            fieldwidth = 3;
+        } f[2:0] = my_enum::val_2;
+    } r0;
+};
