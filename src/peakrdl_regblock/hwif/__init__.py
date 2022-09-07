@@ -23,13 +23,15 @@ class Hwif:
     def __init__(
         self, exp: 'RegblockExporter', package_name: str,
         in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
-        reuse_typedefs: bool
+        reuse_typedefs: bool,
+        pack_structs: bool = False
     ):
         self.exp = exp
         self.package_name = package_name
 
         self.has_input_struct = False
         self.has_output_struct = False
+        self.pack_structs = pack_structs
 
         self.in_hier_signal_paths = in_hier_signal_paths
         self.out_of_hier_signals = out_of_hier_signals
@@ -40,6 +42,7 @@ class Hwif:
         else:
             self._gen_in_cls = InputStructGenerator_Hier
             self._gen_out_cls = OutputStructGenerator_Hier
+
 
     @property
     def top_node(self) -> AddrmapNode:
@@ -53,6 +56,7 @@ class Hwif:
         lines = []
 
         gen_in = self._gen_in_cls(self)
+        gen_in.packed = self.pack_structs
         structs_in = gen_in.get_struct(
             self.top_node,
             f"{self.top_node.inst_name}__in_t"
@@ -64,6 +68,7 @@ class Hwif:
             self.has_input_struct = False
 
         gen_out = self._gen_out_cls(self)
+        gen_out.packed = self.pack_structs
         structs_out = gen_out.get_struct(
             self.top_node,
             f"{self.top_node.inst_name}__out_t"

@@ -92,6 +92,8 @@ class RegblockExporter:
             response path sequentially may not result in any meaningful timing improvement.
 
             Enabling this option will increase read transfer latency by 1 clock cycle.
+        pack_structs: bool
+            Set this to ``True`` to produce packed structs for the HWIF definitions
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -104,6 +106,7 @@ class RegblockExporter:
         module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
         package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
+        pack_hwif_structs = kwargs.pop("pack_hwif_structs", False) # type: bool
 
         # Pipelining options
         retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
@@ -138,6 +141,7 @@ class RegblockExporter:
             in_hier_signal_paths=scanner.in_hier_signal_paths,
             out_of_hier_signals=scanner.out_of_hier_signals,
             reuse_typedefs=reuse_hwif_typedefs,
+            pack_structs=pack_hwif_structs,
         )
 
         self.readback = Readback(

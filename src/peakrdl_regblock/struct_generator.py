@@ -13,8 +13,9 @@ if TYPE_CHECKING:
 
 
 class _StructBase:
-    def __init__(self) -> None:
+    def __init__(self, packed : bool = False) -> None:
         self.children = [] # type: List[Union[str, _StructBase]]
+        self.packed = packed
 
     def __str__(self) -> str:
         s = '\n'.join((str(x) for x in self.children))
@@ -22,8 +23,8 @@ class _StructBase:
 
 
 class _AnonymousStruct(_StructBase):
-    def __init__(self, inst_name: str, array_dimensions: Optional[List[int]] = None):
-        super().__init__()
+    def __init__(self, inst_name: str, array_dimensions: Optional[List[int]] = None, packed: bool = False):
+        super().__init__(packed=packed)
         self.inst_name = inst_name
         self.array_dimensions = array_dimensions
 
@@ -34,34 +35,47 @@ class _AnonymousStruct(_StructBase):
             suffix = ""
 
         return (
-            "struct {\n"
+            "struct "
+            + ("packed " if self.packed else "")
+            + "{\n"
             + super().__str__()
             + f"\n}} {self.inst_name}{suffix};"
         )
 
 
 class _TypedefStruct(_StructBase):
-    def __init__(self, type_name: str, inst_name: Optional[str] = None, array_dimensions: Optional[List[int]] = None):
-        super().__init__()
+    def __init__(self, type_name: str, inst_name: Optional[str] = None, array_dimensions: Optional[List[int]] = None, packed: bool = False):
+        super().__init__(packed=packed)
         self.type_name = type_name
         self.inst_name = inst_name
         self.array_dimensions = array_dimensions
 
     def __str__(self) -> str:
         return (
-            "typedef struct {\n"
+            "typedef struct "
+            + ("packed " if self.packed else "")
+            + "{\n"
             + super().__str__()
             + f"\n}} {self.type_name};"
         )
 
     @property
     def instantiation(self) -> str:
-        if self.array_dimensions:
-            suffix = "[" + "][".join((str(n) for n in self.array_dimensions)) + "]"
-        else:
-            suffix = ""
+        if self.packed:
+            if self.array_dimensions:
+                dims = "[" + "][".join((f"{n-1}:0" for n in self.array_dimensions)) + "] "
+            else:
+                dims = ""
 
-        return f"{self.type_name} {self.inst_name}{suffix};"
+            return f"{self.type_name} {dims}{self.inst_name};"
+
+        else:
+            if self.array_dimensions:
+                suffix = "[" + "][".join((str(n) for n in self.array_dimensions)) + "]"
+            else:
+                suffix = ""
+
+            return f"{self.type_name} {self.inst_name}{suffix};"
 
 #-------------------------------------------------------------------------------
 
@@ -69,14 +83,14 @@ class StructGenerator:
 
     def __init__(self) -> None:
         self._struct_stack = [] # type: List[_StructBase]
+        self.packed = False
 
     @property
     def current_struct(self) -> _StructBase:
         return self._struct_stack[-1]
 
-
     def push_struct(self, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None:
-        s = _AnonymousStruct(inst_name, array_dimensions)
+        s = _AnonymousStruct(inst_name, array_dimensions, packed = self.packed)
         self._struct_stack.append(s)
 
 
@@ -103,7 +117,7 @@ class StructGenerator:
 
     def start(self, type_name: str) -> None:
         assert not self._struct_stack
-        s = _TypedefStruct(type_name)
+        s = _TypedefStruct(type_name, packed=self.packed)
         self._struct_stack.append(s)
 
     def finish(self) -> Optional[str]:
@@ -162,7 +176,7 @@ class FlatStructGenerator(StructGenerator):
         self.typedefs = OrderedDict() # type: OrderedDict[str, _TypedefStruct]
 
     def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None: # type: ignore # pylint: disable=arguments-renamed
-        s = _TypedefStruct(type_name, inst_name, array_dimensions)
+        s = _TypedefStruct(type_name, inst_name, array_dimensions, self.packed)
         self._struct_stack.append(s)
 
     def pop_struct(self) -> None:
