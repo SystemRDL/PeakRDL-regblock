@@ -17,7 +17,7 @@ class InputStructGenerator_Hier(RDLFlatStructGenerator):
 
     def get_typdef_name(self, node:'Node') -> str:
         base = node.get_rel_path(
-            self.top_node,
+            self.top_node.parent,
             hier_separator="__",
             array_suffix="x",
             empty_array_suffix="x"
@@ -80,7 +80,7 @@ class OutputStructGenerator_Hier(RDLFlatStructGenerator):
 
     def get_typdef_name(self, node:'Node') -> str:
         base = node.get_rel_path(
-            self.top_node,
+            self.top_node.parent,
             hier_separator="__",
             array_suffix="x",
             empty_array_suffix="x"
