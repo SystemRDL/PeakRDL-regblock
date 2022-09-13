@@ -173,6 +173,10 @@ X Do not allow unaligned addresses
 ! Error if a property references a non-signal component, or property reference from
     outside the export hierarchy
 
+! Error if a property is a reference to something that is external, or enclosed
+  in an external component.
+  Limit this check to child nodes inside the export hierarchy
+
 ! Add warning for sticky race condition
     stickybit and other similar situations generally should use hw precedence.
     Emit a warning as appropriate

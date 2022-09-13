@@ -9,6 +9,7 @@ interface passthrough_driver #(
         output logic m_cpuif_req_is_wr,
         output logic [ADDR_WIDTH-1:0] m_cpuif_addr,
         output logic [DATA_WIDTH-1:0] m_cpuif_wr_data,
+        output logic [DATA_WIDTH-1:0] m_cpuif_wr_biten,
         input wire m_cpuif_req_stall_wr,
         input wire m_cpuif_req_stall_rd,
         input wire m_cpuif_rd_ack,
@@ -27,6 +28,7 @@ interface passthrough_driver #(
         output m_cpuif_req_is_wr;
         output m_cpuif_addr;
         output m_cpuif_wr_data;
+        output m_cpuif_wr_biten;
         input m_cpuif_req_stall_wr;
         input m_cpuif_req_stall_rd;
         input m_cpuif_rd_ack;
@@ -41,12 +43,13 @@ interface passthrough_driver #(
         cb.m_cpuif_req_is_wr <= '0;
         cb.m_cpuif_addr <= '0;
         cb.m_cpuif_wr_data <= '0;
+        cb.m_cpuif_wr_biten <= '0;
     endtask
 
     semaphore txn_req_mutex = new(1);
     semaphore txn_resp_mutex = new(1);
 
-    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
+    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH-1:0] biten = '1);
         fork
             begin
                 // Initiate transfer
@@ -56,6 +59,7 @@ interface passthrough_driver #(
                 cb.m_cpuif_req_is_wr <= '1;
                 cb.m_cpuif_addr <= addr;
                 cb.m_cpuif_wr_data <= data;
+                cb.m_cpuif_wr_biten <= biten;
                 @(cb);
                 while(cb.m_cpuif_req_stall_wr !== 1'b0) @(cb);
                 reset();

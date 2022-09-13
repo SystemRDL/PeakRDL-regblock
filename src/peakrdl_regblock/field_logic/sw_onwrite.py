@@ -33,14 +33,25 @@ class _OnWrite(NextStateConditional):
             value = f"decoded_wr_data[{field.high}:{field.low}]"
         return value
 
+    def _wr_biten(self, field: 'FieldNode') -> str:
+        if field.msb < field.lsb:
+            # Field gets bitswapped since it is in [low:high] orientation
+            value = f"{{<<{{decoded_wr_biten[{field.high}:{field.low}]}}}}"
+        else:
+            value = f"decoded_wr_biten[{field.high}:{field.low}]"
+        return value
+
+
 class WriteOneSet(_OnWrite):
     comment = "SW write 1 set"
     onwritetype = OnWriteType.woset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {R} | {self._wr_data(field)};",
+            f"next_c = {R} | ({D} & {S});",
             "load_next_c = '1;",
         ]
 
@@ -50,8 +61,10 @@ class WriteOneClear(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {R} & ~{self._wr_data(field)};",
+            f"next_c = {R} & ~({D} & {S});",
             "load_next_c = '1;",
         ]
 
@@ -61,8 +74,10 @@ class WriteOneToggle(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {R} ^ {self._wr_data(field)};",
+            f"next_c = {R} ^ ({D} & {S});",
             "load_next_c = '1;",
         ]
 
@@ -72,8 +87,10 @@ class WriteZeroSet(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {R} | ~{self._wr_data(field)};",
+            f"next_c = {R} | (~{D} & {S});",
             "load_next_c = '1;",
         ]
 
@@ -83,8 +100,10 @@ class WriteZeroClear(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {R} & {self._wr_data(field)};",
+            f"next_c = {R} & ({D} | ~{S});",
             "load_next_c = '1;",
         ]
 
@@ -94,8 +113,10 @@ class WriteZeroToggle(_OnWrite):
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {R} ^ ~{self._wr_data(field)};",
+            f"next_c = {R} ^ (~{D} & {S});",
             "load_next_c = '1;",
         ]
 
@@ -124,7 +145,10 @@ class Write(_OnWrite):
     onwritetype = None
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
+        R = self.exp.field_logic.get_storage_identifier(field)
+        D = self._wr_data(field)
+        S = self._wr_biten(field)
         return [
-            f"next_c = {self._wr_data(field)};",
+            f"next_c = ({R} & ~{S}) | ({D} & {S});",
             "load_next_c = '1;",
         ]
