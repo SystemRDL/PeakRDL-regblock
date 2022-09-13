@@ -18,10 +18,10 @@ Registers instantiated using the ``alias`` keyword are not supported yet.
 
 Unaligned Registers
 -------------------
-All address offsets & strides shall be a multiple of the regwidth used. Specifically:
+All address offsets & strides shall be a multiple of the accesswidth used. Specifically:
 
-* Each register's address and array stride shall be aligned to it's regwidth.
-* Each regfile or addrmap shall use an offset and stride that is a multiple of the largest regwidth it encloses.
+* Each register's address and array stride shall be aligned to it's accesswidth.
+* Each regfile or addrmap shall use an offset and stride that is a multiple of the largest accesswidth it encloses.
 
 
 No partial writes
@@ -38,6 +38,5 @@ and the resulting CPU bus width has some limitations:
 
 * All registers shall have ``regwidth`` == ``accesswidth``
 * ``regwidth`` shall be the same across all registers within the block being exported.
-* The CPU interface's bus width is statically determined by the ``regwidth`` used.
 
 I have plans to remove these restrictions and allow for more flexibility in the future.

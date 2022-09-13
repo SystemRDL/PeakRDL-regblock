@@ -7,6 +7,13 @@ When exporting a design, you can select from a variety of popular CPU interface
 protocols. These are described in more detail in the pages that follow.
 
 
+Bus Width
+^^^^^^^^^
+The CPU interface bus width is automatically determined from the contents of the
+design being exported. The bus width is equal to the widest ``accesswidth``
+encountered in the deisgn.
+
+
 Addressing
 ^^^^^^^^^^
 

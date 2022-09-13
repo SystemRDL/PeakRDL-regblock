@@ -1,7 +1,7 @@
-from typing import TYPE_CHECKING, Set, List
+from typing import TYPE_CHECKING, Set, List, Optional
 from collections import OrderedDict
 
-from systemrdl.walker import RDLListener, RDLWalker
+from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
 from systemrdl.node import SignalNode, AddressableNode
 
 if TYPE_CHECKING:
@@ -21,8 +21,8 @@ class DesignScanner(RDLListener):
         self.cpuif_data_width = 0
         self.msg = exp.top_node.env.msg
 
-        # Keep track of max regwidth encountered in a given block
-        self.max_regwidth_stack = [] # type: List[int]
+        # Keep track of max accesswidth encountered in a given block
+        self.max_accesswidth_stack = [] # type: List[int]
 
         # Collections of signals that were actually referenced by the design
         self.in_hier_signal_paths = set() # type: Set[str]
@@ -68,37 +68,36 @@ class DesignScanner(RDLListener):
             raise ValueError
 
     def enter_Reg(self, node: 'RegNode') -> None:
-        regwidth = node.get_property('regwidth')
+        accesswidth = node.get_property('accesswidth')
 
-        self.max_regwidth_stack[-1] = max(self.max_regwidth_stack[-1], regwidth)
+        self.max_accesswidth_stack[-1] = max(self.max_accesswidth_stack[-1], accesswidth)
 
-        # The CPUIF's bus width is sized according to the largest register in the design
-        # TODO: make this user-overridable once more flexible regwidth/accesswidths are supported
-        self.cpuif_data_width = max(self.cpuif_data_width, regwidth)
+        # The CPUIF's bus width is sized according to the largest accesswidth in the design
+        self.cpuif_data_width = max(self.cpuif_data_width, accesswidth)
 
         # TODO: remove this limitation eventually
-        if regwidth != self.cpuif_data_width:
+        if accesswidth != self.cpuif_data_width:
             self.msg.error(
-                "register blocks with non-uniform regwidths are not supported yet",
-                node.inst.property_src_ref.get('regwidth', node.inst.inst_src_ref)
+                "register blocks with non-uniform accesswidth are not supported yet",
+                node.inst.property_src_ref.get('accesswidth', node.inst.inst_src_ref)
             )
 
         # TODO: remove this limitation eventually
-        if regwidth != node.get_property('accesswidth'):
+        if accesswidth != node.get_property('regwidth'):
             self.msg.error(
                 "Registers that have an accesswidth different from the register width are not supported yet",
                 node.inst.property_src_ref.get('accesswidth', node.inst.inst_src_ref)
             )
 
     def enter_AddressableComponent(self, node: AddressableNode) -> None:
-        self.max_regwidth_stack.append(0)
+        self.max_accesswidth_stack.append(0)
 
     def exit_AddressableComponent(self, node: AddressableNode) -> None:
-        max_block_regwidth = self.max_regwidth_stack.pop()
-        if self.max_regwidth_stack:
-            self.max_regwidth_stack[-1] = max(self.max_regwidth_stack[-1], max_block_regwidth)
+        max_block_accesswidth = self.max_accesswidth_stack.pop()
+        if self.max_accesswidth_stack:
+            self.max_accesswidth_stack[-1] = max(self.max_accesswidth_stack[-1], max_block_accesswidth)
 
-        alignment = int(max_block_regwidth / 8)
+        alignment = int(max_block_accesswidth / 8)
         if (node.raw_address_offset % alignment) != 0:
             self.msg.error(
                 f"Unaligned registers are not supported. Address offset of instance '{node.inst_name}' must be a multiple of {alignment}",
@@ -111,12 +110,14 @@ class DesignScanner(RDLListener):
                 node.inst.inst_src_ref
             )
 
-    def enter_Component(self, node: 'Node') -> None:
+    def enter_Component(self, node: 'Node') -> Optional[WalkerAction]:
         if node.external and (node != self.exp.top_node):
             self.msg.error(
                 "Exporter does not support external components",
                 node.inst.inst_src_ref
             )
+            # Do not inspect external components. None of my business
+            return WalkerAction.SkipDescendants
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         # If encountering a CPUIF reset that is nested within the register model,
