@@ -118,6 +118,7 @@ class DesignScanner(RDLListener):
             )
             # Do not inspect external components. None of my business
             return WalkerAction.SkipDescendants
+        return None
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         # If encountering a CPUIF reset that is nested within the register model,
