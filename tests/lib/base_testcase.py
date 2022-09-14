@@ -11,7 +11,7 @@ from systemrdl import RDLCompiler
 
 from peakrdl_regblock import RegblockExporter
 from .cpuifs.base import CpuifTestMode
-from .cpuifs.apb3 import APB3
+from .cpuifs.apb4 import APB4
 
 
 class BaseTestCase(unittest.TestCase):
@@ -28,7 +28,7 @@ class BaseTestCase(unittest.TestCase):
     rdl_elab_params = {}
 
     #: Define what CPUIF to use for this testcase
-    cpuif = APB3() # type: CpuifTestMode
+    cpuif = APB4() # type: CpuifTestMode
 
     # Other exporter args:
     retime_read_fanin = False

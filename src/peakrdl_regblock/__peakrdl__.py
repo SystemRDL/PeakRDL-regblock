@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from .exporter import RegblockExporter
-from .cpuif import apb3, axi4lite, passthrough
+from .cpuif import apb3, apb4, axi4lite, passthrough
 
 if TYPE_CHECKING:
     import argparse
@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 CPUIF_DICT = {
     "apb3": apb3.APB3_Cpuif,
     "apb3-flat": apb3.APB3_Cpuif_flattened,
+    "apb4": apb4.APB4_Cpuif,
+    "apb4-flat": apb4.APB4_Cpuif_flattened,
     "axi4-lite": axi4lite.AXI4Lite_Cpuif,
     "axi4-lite-flat": axi4lite.AXI4Lite_Cpuif_flattened,
     "passthrough": passthrough.PassthroughCpuif

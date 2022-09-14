@@ -11,7 +11,7 @@ from .readback import Readback
 from .identifier_filter import kw_filter as kwf
 
 from .cpuif import CpuifBase
-from .cpuif.apb3 import APB3_Cpuif
+from .cpuif.apb4 import APB4_Cpuif
 from .hwif import Hwif
 from .utils import get_always_ff_event
 from .scan_design import DesignScanner
@@ -57,7 +57,7 @@ class RegblockExporter:
             Output includes two files: a module definition and package definition.
         cpuif_cls: :class:`peakrdl_regblock.cpuif.CpuifBase`
             Specify the class type that implements the CPU interface of your choice.
-            Defaults to AMBA APB3.
+            Defaults to AMBA APB4.
         module_name: str
             Override the SystemVerilog module name. By default, the module name
             is the top-level node's name.
@@ -100,7 +100,7 @@ class RegblockExporter:
             self.top_node = node
 
 
-        cpuif_cls = kwargs.pop("cpuif_cls", None) or APB3_Cpuif # type: Type[CpuifBase]
+        cpuif_cls = kwargs.pop("cpuif_cls", None) or APB4_Cpuif # type: Type[CpuifBase]
         module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
         package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool

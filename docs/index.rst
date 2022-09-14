@@ -95,6 +95,7 @@ Links
 
     cpuif/introduction
     cpuif/apb3
+    cpuif/apb4
     cpuif/axi4lite
     cpuif/passthrough
     cpuif/internal_protocol
