@@ -10,10 +10,6 @@ class APB4_Cpuif(CpuifBase):
     def signal(self, name:str) -> str:
         return "s_apb." + name.upper()
 
-    @property
-    def data_width_bytes(self) -> int:
-        return self.data_width // 8
-
 
 class APB4_Cpuif_flattened(APB4_Cpuif):
     @property

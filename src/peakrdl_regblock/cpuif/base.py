@@ -22,6 +22,10 @@ class CpuifBase:
         self.addr_width = addr_width
 
     @property
+    def data_width_bytes(self) -> int:
+        return self.data_width // 8
+
+    @property
     def port_declaration(self) -> str:
         raise NotImplementedError()
 

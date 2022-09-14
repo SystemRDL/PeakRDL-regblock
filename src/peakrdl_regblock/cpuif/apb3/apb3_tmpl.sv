@@ -16,7 +16,7 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
                 {%- if cpuif.data_width == 8 %}
                 cpuif_addr <= {{cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:0];
                 {%- else %}
-                cpuif_addr <= { {{-cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width//8)}}], {{clog2(cpuif.data_width//8)}}'b0};
+                cpuif_addr <= { {{-cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
                 {%- endif %}
                 cpuif_wr_data <= {{cpuif.signal("pwdata")}};
             end
