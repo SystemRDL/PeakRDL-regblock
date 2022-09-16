@@ -24,13 +24,6 @@ All address offsets & strides shall be a multiple of the accesswidth used. Speci
 * Each regfile or addrmap shall use an offset and stride that is a multiple of the largest accesswidth it encloses.
 
 
-No partial writes
------------------
-
-Some protocols describe byte-level write strobes. These are not supported yet.
-All write transfers must access the entire register width.
-
-
 Register width, Access width and CPUIF bus width
 ------------------------------------------------
 To keep the initial architecture simpler, currently ``regwidth``, ``accesswidth``
