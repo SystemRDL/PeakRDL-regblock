@@ -1,8 +1,8 @@
 Customizing the CPU interface
 =============================
 
-Bring your own SystemVerilog interface
---------------------------------------
+Use your own existing SystemVerilog interface definition
+--------------------------------------------------------
 
 This exporter comes pre-bundled with its own SystemVerilog interface declarations.
 What if you already have your own SystemVerilog interface declaration that you prefer?
@@ -11,14 +11,15 @@ Not a problem! As long as your interface definition is similar enough, it is eas
 to customize and existing CPUIF definition.
 
 
-The SystemVerilog interface definition bundled with this project for :ref:`cpuif_axi4lite`
-uses the following style and naming conventions:
+As an example, let's use the SystemVerilog interface definition for
+:ref:`cpuif_axi4lite` that is bundled with this project. This interface uses
+ following style and naming conventions:
 
 * SystemVerilog interface type name is ``axi4lite_intf``
 * Defines modports named ``master`` and ``slave``
 * Interface signals are all upper-case: ``AWREADY``, ``AWVALID``, etc...
 
-Lets assume your preferred SV interface uses a slightly different naming convention:
+Lets assume your preferred SV interface definition uses a slightly different naming convention:
 
 * SystemVerilog interface type name is ``axi4_lite_interface``
 * Modports are capitalized and use suffixes ``Master_mp`` and ``Slave_mp``
@@ -33,7 +34,7 @@ Rather than rewriting a new CPU interface definition, you can extend and adjust 
     class My_AXI4Lite(AXI4Lite_Cpuif):
         @property
         def port_declaration(self) -> str:
-            # Override the port declaration text to use the alternate type name and modport style
+            # Override the port declaration text to use the alternate interface name and modport style
             return "axi4_lite_interface.Slave_mp s_axil"
 
         def signal(self, name:str) -> str:
@@ -73,4 +74,5 @@ you can define your own.
     Extend your class from :class:`peakrdl_regblock.cpuif.CpuifBase`.
     Define the port declaration string, and provide a reference to your template file.
 
-3. Use your new CPUIF definition when exporting!
+3. Use your new CPUIF definition when exporting.
+4. If you think the CPUIF protocol is something others might find useful, let me know and I can add it to PeakRDL!

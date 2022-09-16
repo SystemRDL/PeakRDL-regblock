@@ -11,9 +11,13 @@ onread/onwrite
 ^^^^^^^^^^^^^^
 |OK|
 
+All onread/onwrite actions are supported (except for ruser/wuser)
+
 rclr/rset
 ^^^^^^^^^
-See ``onread``
+|OK|
+
+See ``onread``. These are effectively aliases of the onread property.
 
 singlepulse
 ^^^^^^^^^^^
@@ -32,6 +36,7 @@ If set, field will get cleared back to zero after being written.
 sw
 ^^^
 |OK|
+All sw access modes are supported except for ``w1`` and ``rw1``.
 
 swacc
 ^^^^^
@@ -83,8 +88,9 @@ reference
 
 woclr/woset
 ^^^^^^^^^^^
-See ``onwrite``
+|OK|
 
+See ``onwrite``. These are effectively aliases of the onwrite property.
 
 --------------------------------------------------------------------------------
 
@@ -126,6 +132,9 @@ boolean
 reference
     |OK|
 
+    Reference to any single-bit internal object to drive this control.
+
+
 hwenable/hwmask
 ^^^^^^^^^^^^^^^
 |OK|
@@ -157,6 +166,7 @@ boolean
 reference
     |OK|
 
+    Reference to any single-bit internal object to drive this control.
 
 --------------------------------------------------------------------------------
 
@@ -535,8 +545,14 @@ precedence
 ^^^^^^^^^^
 |OK|
 
+Control whether hardware or software has precedence when field value update
+contention occurs. Software has precedence by default.
+
 reset
 ^^^^^
+Control the reset value of the field's storage element.
+If not specified, the field will not be reset.
+
 integer
     |OK|
 
@@ -546,3 +562,5 @@ reference
 resetsignal
 ^^^^^^^^^^^
 |OK|
+
+Provide an alternate reset trigger for this field.
