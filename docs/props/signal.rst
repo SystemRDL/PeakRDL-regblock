@@ -9,6 +9,8 @@ activehigh/activelow
 --------------------
 |OK|
 
+Only relevant for signals used as resets. Defines the reset signal's polarity.
+
 sync/async
 ----------
 |OK|
@@ -20,6 +22,12 @@ cpuif_reset
 -----------
 |OK|
 
+Specify that this signal shall be used as alternate reset signal for the CPU
+interface for this regblock.
+
 field_reset
 -----------
 |OK|
+
+Specify that this signal is used as an alternate reset signal for all fields
+instantiated in sub-hierarchies relative to this signal.

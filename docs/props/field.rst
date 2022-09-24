@@ -559,6 +559,8 @@ integer
 reference
     |OK|
 
+    Reference to a dynamic reset value.
+
 resetsignal
 ^^^^^^^^^^^
 |OK|
