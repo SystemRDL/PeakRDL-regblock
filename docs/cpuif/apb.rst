@@ -29,7 +29,7 @@ The APB3 CPU interface comes in two i/o port flavors:
 SystemVerilog Interface
     Class: :class:`peakrdl_regblock.cpuif.apb3.APB3_Cpuif`
 
-    Interface Definition: :download:`apb3_intf.sv <../../tests/lib/cpuifs/apb3/apb3_intf.sv>`
+    Interface Definition: :download:`apb3_intf.sv <../../hdl-src/apb3_intf.sv>`
 
 Flattened inputs/outputs
     Flattens the interface into discrete input and output ports.
@@ -49,7 +49,7 @@ The APB4 CPU interface comes in two i/o port flavors:
 SystemVerilog Interface
     Class: :class:`peakrdl_regblock.cpuif.apb4.APB4_Cpuif`
 
-    Interface Definition: :download:`apb4_intf.sv <../../tests/lib/cpuifs/apb4/apb4_intf.sv>`
+    Interface Definition: :download:`apb4_intf.sv <../../hdl-src/apb4_intf.sv>`
 
 Flattened inputs/outputs
     Flattens the interface into discrete input and output ports.

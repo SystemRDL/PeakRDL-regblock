@@ -13,7 +13,7 @@ to customize and existing CPUIF definition.
 
 As an example, let's use the SystemVerilog interface definition for
 :ref:`cpuif_axi4lite` that is bundled with this project. This interface uses
- following style and naming conventions:
+the following style and naming conventions:
 
 * SystemVerilog interface type name is ``axi4lite_intf``
 * Defines modports named ``master`` and ``slave``
