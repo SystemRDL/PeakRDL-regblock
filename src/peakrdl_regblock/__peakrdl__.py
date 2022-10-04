@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from .exporter import RegblockExporter
 from .cpuif import apb3, apb4, axi4lite, passthrough
+from .udps import ALL_UDPS
 
 if TYPE_CHECKING:
     import argparse
@@ -22,6 +23,8 @@ CPUIF_DICT = {
 
 class Exporter:
     short_desc = "Generate a SystemVerilog control/status register (CSR) block"
+
+    udp_definitions = ALL_UDPS
 
     def add_exporter_arguments(self, arg_group: 'argparse.ArgumentParser') -> None:
         arg_group.add_argument(

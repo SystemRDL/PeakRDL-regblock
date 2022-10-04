@@ -98,7 +98,8 @@ disable=
         abstract-method,
         protected-access,
         duplicate-code,
-        unused-argument
+        unused-argument,
+        consider-using-f-string
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

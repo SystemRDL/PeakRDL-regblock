@@ -38,11 +38,12 @@ Below is a simple example that demonstrates how to generate a SystemVerilog
 implementation from SystemRDL source.
 
 .. code-block:: python
-    :emphasize-lines: 2-3, 23-27
+    :emphasize-lines: 2-4, 29-33
 
     from systemrdl import RDLCompiler, RDLCompileError
     from peakrdl_regblock import RegblockExporter
     from peakrdl_regblock.cpuif.apb3 import APB3_Cpuif
+    from peakrdl_regblock.udps import ALL_UDPS
 
     input_files = [
         "PATH/TO/my_register_block.rdl"
@@ -50,6 +51,11 @@ implementation from SystemRDL source.
 
     # Create an instance of the compiler
     rdlc = RDLCompiler()
+
+    # Register all UDPs that 'regblock' requires
+    for udp in ALL_UDPS:
+        rdlc.register_udp(udp)
+
     try:
         # Compile your RDL files
         for input_file in input_files:

@@ -10,6 +10,8 @@ import pytest
 from systemrdl import RDLCompiler
 
 from peakrdl_regblock import RegblockExporter
+from peakrdl_regblock.udps import ALL_UDPS
+
 from .cpuifs.base import CpuifTestMode
 from .cpuifs.apb4 import APB4
 
@@ -84,6 +86,9 @@ class BaseTestCase(unittest.TestCase):
             rdl_file = glob.glob(os.path.join(this_dir, "*.rdl"))[0]
 
         rdlc = RDLCompiler()
+        for udp in ALL_UDPS:
+            rdlc.register_udp(udp)
+
         rdlc.compile_file(rdl_file)
         root = rdlc.elaborate(cls.rdl_elab_target, "regblock", cls.rdl_elab_params)
 

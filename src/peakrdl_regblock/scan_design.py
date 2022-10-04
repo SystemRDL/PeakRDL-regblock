@@ -146,3 +146,25 @@ class DesignScanner(RDLListener):
                     self.out_of_hier_signals[path] = value
                 else:
                     self.in_hier_signal_paths.add(path)
+
+
+        # 10.6.1-f: Any field that is software-writable or clear on read shall
+        # not span multiple software accessible sub-words (e.g., a 64-bit
+        # register with a 32-bit access width may not have a writable field with
+        # bits in both the upper and lower half of the register).
+        #
+        # Interpreting this further - this rule applies any time a field is
+        # software-modifiable by any means, including rclr, rset, ruser
+        # TODO: suppress this check for registers that have the appropriate
+        # buffer_writes/buffer_reads UDP set
+        parent_accesswidth = node.parent.get_property('accesswidth')
+        parent_regwidth = node.parent.get_property('regwidth')
+        if ((parent_accesswidth < parent_regwidth)
+                and (node.lsb // parent_accesswidth) != (node.msb // parent_accesswidth)
+                and (node.is_sw_writable or node.get_property('onread') is not None)):
+            # Field spans across sub-words
+            self.msg.error(
+                "Software-modifiable field '%s' shall not span multiple software-accessible subwords."
+                % node.inst_name,
+                node.inst.inst_src_ref
+            )
