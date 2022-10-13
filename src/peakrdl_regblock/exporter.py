@@ -15,6 +15,7 @@ from .cpuif.apb4 import APB4_Cpuif
 from .hwif import Hwif
 from .utils import get_always_ff_event
 from .scan_design import DesignScanner
+from .validate_design import DesignValidator
 
 class RegblockExporter:
     def __init__(self, **kwargs: Any) -> None:
@@ -120,18 +121,17 @@ class RegblockExporter:
         if retime_read_response:
             self.min_read_latency += 1
 
-        # Scan the design for any unsupported features
-        # Also collect pre-export information
+        # Scan the design for pre-export information
         scanner = DesignScanner(self)
         scanner.do_scan()
 
+        # Construct exporter components
         self.cpuif = cpuif_cls(
             self,
             cpuif_reset=self.top_node.cpuif_reset,
             data_width=scanner.cpuif_data_width,
             addr_width=self.top_node.size.bit_length()
         )
-
         self.hwif = Hwif(
             self,
             package_name=package_name,
@@ -139,11 +139,14 @@ class RegblockExporter:
             out_of_hier_signals=scanner.out_of_hier_signals,
             reuse_typedefs=reuse_hwif_typedefs,
         )
-
         self.readback = Readback(
             self,
             retime_read_fanin
         )
+
+        # Validate that there are no unsupported constructs
+        validator = DesignValidator(self)
+        validator.do_validate()
 
         # Build Jinja template context
         context = {

@@ -19,7 +19,7 @@ class TestSynth(SynthTestCase):
         self.run_synth()
 
 
-@pytest.mark.skipif(os.environ.get("STUB_SIMULATOR", False), reason="user skipped")
+@pytest.mark.skipif(os.environ.get("STUB_SIMULATOR", False) or os.environ.get("NO_XSIM", False), reason="user skipped")
 @parameterized_class(TEST_PARAMS)
 class TestVivado(SimTestCase):
     """

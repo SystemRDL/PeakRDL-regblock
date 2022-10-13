@@ -195,11 +195,11 @@ class Dereferencer:
         raise NotImplementedError
 
 
-    def get_access_strobe(self, obj: Union[RegNode, FieldNode]) -> str:
+    def get_access_strobe(self, obj: Union[RegNode, FieldNode], reduce_substrobes: bool=True) -> str:
         """
         Returns the Verilog string that represents the register's access strobe
         """
-        return self.address_decode.get_access_strobe(obj)
+        return self.address_decode.get_access_strobe(obj, reduce_substrobes)
 
     def get_resetsignal(self, obj: Optional[SignalNode]) -> str:
         """

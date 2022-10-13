@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING, Set, List, Optional
+from typing import TYPE_CHECKING, Set, Optional
 from collections import OrderedDict
 
 from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
-from systemrdl.node import SignalNode, AddressableNode
+from systemrdl.node import SignalNode
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, RegNode, FieldNode
@@ -20,9 +20,6 @@ class DesignScanner(RDLListener):
         self.exp = exp
         self.cpuif_data_width = 0
         self.msg = exp.top_node.env.msg
-
-        # Keep track of max accesswidth encountered in a given block
-        self.max_accesswidth_stack = [] # type: List[int]
 
         # Collections of signals that were actually referenced by the design
         self.in_hier_signal_paths = set() # type: Set[str]
@@ -65,73 +62,19 @@ class DesignScanner(RDLListener):
             self.msg.fatal(
                 "Unable to export due to previous errors"
             )
-            raise ValueError
-
-    def enter_Reg(self, node: 'RegNode') -> None:
-        accesswidth = node.get_property('accesswidth')
-
-        self.max_accesswidth_stack[-1] = max(self.max_accesswidth_stack[-1], accesswidth)
-
-        # The CPUIF's bus width is sized according to the largest accesswidth in the design
-        self.cpuif_data_width = max(self.cpuif_data_width, accesswidth)
-
-        # TODO: remove this limitation eventually
-        if accesswidth != self.cpuif_data_width:
-            self.msg.error(
-                "register blocks with non-uniform accesswidth are not supported yet",
-                node.inst.property_src_ref.get('accesswidth', node.inst.inst_src_ref)
-            )
-
-        # TODO: remove this limitation eventually
-        if accesswidth != node.get_property('regwidth'):
-            self.msg.error(
-                "Registers that have an accesswidth different from the register width are not supported yet",
-                node.inst.property_src_ref.get('accesswidth', node.inst.inst_src_ref)
-            )
-
-    def enter_AddressableComponent(self, node: AddressableNode) -> None:
-        self.max_accesswidth_stack.append(0)
-
-    def exit_AddressableComponent(self, node: AddressableNode) -> None:
-        max_block_accesswidth = self.max_accesswidth_stack.pop()
-        if self.max_accesswidth_stack:
-            self.max_accesswidth_stack[-1] = max(self.max_accesswidth_stack[-1], max_block_accesswidth)
-
-        alignment = int(max_block_accesswidth / 8)
-        if (node.raw_address_offset % alignment) != 0:
-            self.msg.error(
-                f"Unaligned registers are not supported. Address offset of instance '{node.inst_name}' must be a multiple of {alignment}",
-                node.inst.inst_src_ref
-            )
-
-        if node.is_array and (node.array_stride % alignment) != 0:
-            self.msg.error(
-                f"Unaligned registers are not supported. Address stride of instance array '{node.inst_name}' must be a multiple of {alignment}",
-                node.inst.inst_src_ref
-            )
 
     def enter_Component(self, node: 'Node') -> Optional[WalkerAction]:
         if node.external and (node != self.exp.top_node):
-            self.msg.error(
-                "Exporter does not support external components",
-                node.inst.inst_src_ref
-            )
             # Do not inspect external components. None of my business
             return WalkerAction.SkipDescendants
         return None
 
-    def enter_Signal(self, node: 'SignalNode') -> None:
-        # If encountering a CPUIF reset that is nested within the register model,
-        # warn that it will be ignored.
-        # Only cpuif resets in the top-level node or above will be honored
-        if node.get_property('cpuif_reset') and (node.parent != self.exp.top_node):
-            self.msg.warning(
-                "Only cpuif_reset signals that are instantiated in the top-level "
-                + "addrmap or above will be honored. Any cpuif_reset signals nested "
-                + "within children of the addrmap being exported will be ignored.",
-                node.inst.inst_src_ref
-            )
+    def enter_Reg(self, node: 'RegNode') -> None:
+        # The CPUIF's bus width is sized according to the largest accesswidth in the design
+        accesswidth = node.get_property('accesswidth')
+        self.cpuif_data_width = max(self.cpuif_data_width, accesswidth)
 
+    def enter_Signal(self, node: 'SignalNode') -> None:
         if node.get_property('field_reset'):
             path = node.get_path()
             self.in_hier_signal_paths.add(path)
@@ -146,25 +89,3 @@ class DesignScanner(RDLListener):
                     self.out_of_hier_signals[path] = value
                 else:
                     self.in_hier_signal_paths.add(path)
-
-
-        # 10.6.1-f: Any field that is software-writable or clear on read shall
-        # not span multiple software accessible sub-words (e.g., a 64-bit
-        # register with a 32-bit access width may not have a writable field with
-        # bits in both the upper and lower half of the register).
-        #
-        # Interpreting this further - this rule applies any time a field is
-        # software-modifiable by any means, including rclr, rset, ruser
-        # TODO: suppress this check for registers that have the appropriate
-        # buffer_writes/buffer_reads UDP set
-        parent_accesswidth = node.parent.get_property('accesswidth')
-        parent_regwidth = node.parent.get_property('regwidth')
-        if ((parent_accesswidth < parent_regwidth)
-                and (node.lsb // parent_accesswidth) != (node.msb // parent_accesswidth)
-                and (node.is_sw_writable or node.get_property('onread') is not None)):
-            # Field spans across sub-words
-            self.msg.error(
-                "Software-modifiable field '%s' shall not span multiple software-accessible subwords."
-                % node.inst_name,
-                node.inst.inst_src_ref
-            )

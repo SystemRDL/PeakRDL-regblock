@@ -31,4 +31,14 @@ addrmap regblock {
     };
     subrf sub2[2] @ 0x2000 += 0x40;
     subreg r3 @ 0x2080;
+
+    reg {
+        field {} f1[19:12] = 0;
+        field {} f2[30:20] = 0;
+    } rw_reg @ 0x3000;
+
+    reg {
+        field {} f1[12:19] = 0;
+        field {} f2[20:30] = 0;
+    } rw_reg_lsb0 @ 0x3004;
 };

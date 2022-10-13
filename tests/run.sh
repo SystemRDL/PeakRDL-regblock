@@ -15,12 +15,17 @@ pip install -r $this_dir/requirements.txt
 
 # Install dut
 cd $this_dir/../
-pip install .
+python $this_dir/../setup.py install
 cd $this_dir
 
 # Run unit tests
 export SKIP_SYNTH_TESTS=1
-pytest --workers auto
+#export STUB_SIMULATOR=1
+export NO_XSIM=1
+pytest --workers auto --cov=peakrdl_regblock
+
+# Generate coverage report
+coverage html -i -d $this_dir/htmlcov
 
 # Run lint
 pylint --rcfile $this_dir/pylint.rc ../src/peakrdl_regblock

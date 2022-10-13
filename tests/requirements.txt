@@ -4,3 +4,5 @@ pytest-parallel
 jinja2-simple-tags
 pylint
 mypy
+pytest-cov
+coverage

@@ -57,37 +57,6 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         offset_parts.append(str(self.current_offset))
         return " + ".join(offset_parts)
 
-    def enter_Reg(self, node: 'RegNode') -> None:
-        # TODO: account for smaller regs that are not aligned to the bus width
-        #   - offset the field bit slice as appropriate
-        #   - do not always increment the current offset
-        if node.has_sw_readable:
-            current_bit = 0
-            rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"
-            # Fields are sorted by ascending low bit
-            for field in node.fields():
-                if field.is_sw_readable:
-                    # insert reserved assignment before if needed
-                    if field.low != current_bit:
-                        self.add_content(f"assign readback_array[{self.current_offset_str}][{field.low-1}:{current_bit}] = '0;")
-
-                    if field.msb < field.lsb:
-                        # Field gets bitswapped since it is in [low:high] orientation
-                        value = f"{{<<{{{self.exp.dereferencer.get_value(field)}}}}}"
-                    else:
-                        value = self.exp.dereferencer.get_value(field)
-
-                    self.add_content(f"assign readback_array[{self.current_offset_str}][{field.high}:{field.low}] = {rd_strb} ? {value} : '0;")
-
-                    current_bit = field.high + 1
-
-            # Insert final reserved assignment if needed
-            bus_width = self.exp.cpuif.data_width
-            if current_bit < bus_width:
-                self.add_content(f"assign readback_array[{self.current_offset_str}][{bus_width-1}:{current_bit}] = '0;")
-
-            self.current_offset += 1
-
     def push_loop(self, dim: int) -> None:
         super().push_loop(dim)
         self.start_offset_stack.append(self.current_offset)
@@ -105,3 +74,173 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
 
         # Advance current scope's offset to account for loop's contents
         self.current_offset = start_offset + n_regs * dim
+
+
+    def enter_Reg(self, node: 'RegNode') -> None:
+        if not node.has_sw_readable:
+            return
+
+        accesswidth = node.get_property('accesswidth')
+        regwidth = node.get_property('regwidth')
+        if accesswidth < regwidth:
+            self.process_wide_reg(node, accesswidth)
+        else:
+            self.process_reg(node)
+
+
+    def process_reg(self, node: 'RegNode') -> None:
+        current_bit = 0
+        rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"
+        # Fields are sorted by ascending low bit
+        for field in node.fields():
+            if not field.is_sw_readable:
+                continue
+
+            # insert reserved assignment before this field if needed
+            if field.low != current_bit:
+                self.add_content(f"assign readback_array[{self.current_offset_str}][{field.low-1}:{current_bit}] = '0;")
+
+            if field.msb < field.lsb:
+                # Field gets bitswapped since it is in [low:high] orientation
+                value = f"{{<<{{{self.exp.dereferencer.get_value(field)}}}}}"
+            else:
+                value = self.exp.dereferencer.get_value(field)
+
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{field.high}:{field.low}] = {rd_strb} ? {value} : '0;")
+
+            current_bit = field.high + 1
+
+        # Insert final reserved assignment if needed
+        bus_width = self.exp.cpuif.data_width
+        if current_bit < bus_width:
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{bus_width-1}:{current_bit}] = '0;")
+
+        self.current_offset += 1
+
+
+    def process_wide_reg(self, node: 'RegNode', accesswidth: int) -> None:
+        bus_width = self.exp.cpuif.data_width
+
+        subword_idx = 0
+        current_bit = 0 # Bit-offset within the wide register
+        access_strb = self.exp.dereferencer.get_access_strobe(node, reduce_substrobes=False)
+        # Fields are sorted by ascending low bit
+        for field in node.fields():
+            if not field.is_sw_readable:
+                continue
+
+            # insert zero assignment before this field if needed
+            if field.low >= accesswidth*(subword_idx+1):
+                # field does not start in this subword
+                if current_bit > accesswidth * subword_idx:
+                    # current subword had content. Assign remainder
+                    low = current_bit % accesswidth
+                    high = bus_width - 1
+                    self.add_content(f"assign readback_array[{self.current_offset_str}][{high}:{low}] = '0;")
+                    self.current_offset += 1
+
+                # Advance to subword that contains the start of the field
+                subword_idx = field.low // accesswidth
+                current_bit = accesswidth * subword_idx
+
+            if current_bit != field.low:
+                # assign zero up to start of this field
+                low = current_bit % accesswidth
+                high = (field.low % accesswidth) - 1
+                self.add_content(f"assign readback_array[{self.current_offset_str}][{high}:{low}] = '0;")
+                current_bit = field.low
+
+
+            # Assign field
+            # loop until the entire field's assignments have been generated
+            field_pos = field.low
+            while current_bit <= field.high:
+                # Assign the field
+                rd_strb = f"({access_strb}[{subword_idx}] && !decoded_req_is_wr)"
+                if (field_pos == field.low) and (field.high < accesswidth*(subword_idx+1)):
+                    # entire field fits into this subword
+                    low = field.low - accesswidth * subword_idx
+                    high = field.high - accesswidth * subword_idx
+
+                    if field.msb < field.lsb:
+                        # Field gets bitswapped since it is in [low:high] orientation
+                        value = f"{{<<{{{self.exp.dereferencer.get_value(field)}}}}}"
+                    else:
+                        value = self.exp.dereferencer.get_value(field)
+
+                    self.add_content(f"assign readback_array[{self.current_offset_str}][{high}:{low}] = {rd_strb} ? {value} : '0;")
+
+                    current_bit = field.high + 1
+
+                    if current_bit == accesswidth*(subword_idx+1):
+                        # Field ends at the subword boundary
+                        subword_idx += 1
+                        self.current_offset += 1
+                elif field.high >= accesswidth*(subword_idx+1):
+                    # only a subset of the field can fit into this subword
+                    # high end gets truncated
+
+                    # assignment slice
+                    r_low = field_pos - accesswidth * subword_idx
+                    r_high = accesswidth - 1
+
+                    # field slice
+                    f_low = field_pos - field.low
+                    f_high = accesswidth * (subword_idx + 1) - 1 - field.low
+
+                    if field.msb < field.lsb:
+                        # Field gets bitswapped since it is in [low:high] orientation
+                        # Mirror the low/high indexes
+                        f_low = field.width - 1 - f_low
+                        f_high = field.width - 1 - f_high
+                        f_low, f_high = f_high, f_low
+
+                        value = f"{{<<{{{self.exp.dereferencer.get_value(field)}[{f_high}:{f_low}]}}}}"
+                    else:
+                        value = self.exp.dereferencer.get_value(field) + f"[{f_high}:{f_low}]"
+
+                    self.add_content(f"assign readback_array[{self.current_offset_str}][{r_high}:{r_low}] = {rd_strb} ? {value} : '0;")
+
+                    # advance to the next subword
+                    subword_idx += 1
+                    current_bit = accesswidth * subword_idx
+                    field_pos = current_bit
+                    self.current_offset += 1
+                else:
+                    # only a subset of the field can fit into this subword
+                    # finish field
+
+                    # assignment slice
+                    r_low = field_pos - accesswidth * subword_idx
+                    r_high = field.high - accesswidth * subword_idx
+
+                    # field slice
+                    f_low = field_pos - field.low
+                    f_high = field.high - field.low
+
+                    if field.msb < field.lsb:
+                        # Field gets bitswapped since it is in [low:high] orientation
+                        # Mirror the low/high indexes
+                        f_low = field.width - 1 - f_low
+                        f_high = field.width - 1 - f_high
+                        f_low, f_high = f_high, f_low
+
+                        value = f"{{<<{{{self.exp.dereferencer.get_value(field)}[{f_high}:{f_low}]}}}}"
+                    else:
+                        value = self.exp.dereferencer.get_value(field) + f"[{f_high}:{f_low}]"
+
+                    self.add_content(f"assign readback_array[{self.current_offset_str}][{r_high}:{r_low}] = {rd_strb} ? {value} : '0;")
+
+                    current_bit = field.high + 1
+                    if current_bit == accesswidth*(subword_idx+1):
+                        # Field ends at the subword boundary
+                        subword_idx += 1
+                        self.current_offset += 1
+
+        # insert zero assignment after the last field if needed
+        if current_bit > accesswidth * subword_idx:
+            # current subword had content. Assign remainder
+            low = current_bit % accesswidth
+            high = bus_width - 1
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{high}:{low}] = '0;")
+            self.current_offset += 1
