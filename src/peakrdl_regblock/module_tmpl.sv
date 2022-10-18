@@ -96,6 +96,13 @@ module {{module_name}} (
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
     assign decoded_wr_biten = cpuif_wr_biten;
+{% if has_writable_msb0_fields %}
+    // bitswap for use by fields with msb0 ordering
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_data_bswap;
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_biten_bswap;
+    assign decoded_wr_data_bswap = {<<{decoded_wr_data}};
+    assign decoded_wr_biten_bswap = {<<{decoded_wr_biten}};
+{%- endif %}
 
     // Writes are always granted with no error response
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;

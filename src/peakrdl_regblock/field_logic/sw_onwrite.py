@@ -40,6 +40,14 @@ class _OnWrite(NextStateConditional):
         high = max(min(high, accesswidth), 0)
         low = max(min(low, accesswidth), 0)
 
+        if field.msb < field.lsb:
+            # slice is for an msb0 field.
+            # mirror it
+            bus_width = self.exp.cpuif.data_width
+            low = bus_width - 1 - low
+            high = bus_width - 1 - high
+            low, high = high, low
+
         return f"[{high}:{low}]"
 
     def _wr_data(self, field: 'FieldNode', subword_idx: int=0) -> str:
@@ -47,7 +55,7 @@ class _OnWrite(NextStateConditional):
 
         if field.msb < field.lsb:
             # Field gets bitswapped since it is in [low:high] orientation
-            value = f"{{<<{{decoded_wr_data{bslice}}}}}"
+            value = f"decoded_wr_data_bswap{bslice}"
         else:
             value = f"decoded_wr_data{bslice}"
         return value
@@ -57,7 +65,7 @@ class _OnWrite(NextStateConditional):
 
         if field.msb < field.lsb:
             # Field gets bitswapped since it is in [low:high] orientation
-            value = f"{{<<{{decoded_wr_biten{bslice}}}}}"
+            value = f"decoded_wr_biten_bswap{bslice}"
         else:
             value = f"decoded_wr_biten{bslice}"
         return value

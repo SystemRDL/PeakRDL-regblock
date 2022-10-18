@@ -25,6 +25,8 @@ class DesignScanner(RDLListener):
         self.in_hier_signal_paths = set() # type: Set[str]
         self.out_of_hier_signals = OrderedDict() # type: OrderedDict[str, SignalNode]
 
+        self.has_writable_msb0_fields = False
+
     def _get_out_of_hier_field_reset(self) -> None:
         current_node = self.exp.top_node.parent
         while current_node is not None:
@@ -80,6 +82,7 @@ class DesignScanner(RDLListener):
             self.in_hier_signal_paths.add(path)
 
     def enter_Field(self, node: 'FieldNode') -> None:
+        # Collect any signals that are referenced by a property
         for prop_name in node.list_properties():
             value = node.get_property(prop_name)
             if isinstance(value, SignalNode):
@@ -89,3 +92,6 @@ class DesignScanner(RDLListener):
                     self.out_of_hier_signals[path] = value
                 else:
                     self.in_hier_signal_paths.add(path)
+
+        if node.is_sw_writable and (node.msb < node.lsb):
+            self.has_writable_msb0_fields = True

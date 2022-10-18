@@ -152,6 +152,7 @@ class RegblockExporter:
         context = {
             "module_name": module_name,
             "user_out_of_hier_signals": scanner.out_of_hier_signals.values(),
+            "has_writable_msb0_fields": scanner.has_writable_msb0_fields,
             "cpuif": self.cpuif,
             "hwif": self.hwif,
             "get_resetsignal": self.dereferencer.get_resetsignal,
