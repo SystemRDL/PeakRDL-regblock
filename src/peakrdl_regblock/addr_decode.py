@@ -120,6 +120,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             s = f"{self.addr_decode.get_access_strobe(node)} = cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)});"
             self.add_content(s)
         else:
+            # Register is wide. Create a substrobe for each subword
             n_subwords = regwidth // accesswidth
             subword_stride = accesswidth // 8
             for i in range(n_subwords):

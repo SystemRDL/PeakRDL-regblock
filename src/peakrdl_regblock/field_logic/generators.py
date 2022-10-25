@@ -85,7 +85,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         super().__init__()
         self.field_logic = field_logic
         self.exp = field_logic.exp
-        self.field_storage_template = self.field_logic.exp.jj_env.get_template(
+        self.field_storage_template = self.exp.jj_env.get_template(
             "field_logic/templates/field_storage.sv"
         )
         self.intr_fields = [] # type: List[FieldNode]

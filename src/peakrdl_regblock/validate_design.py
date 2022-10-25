@@ -77,23 +77,30 @@ class DesignValidator(RDLListener):
 
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        # 10.6.1-f: Any field that is software-writable or clear on read shall
-        # not span multiple software accessible sub-words (e.g., a 64-bit
-        # register with a 32-bit access width may not have a writable field with
-        # bits in both the upper and lower half of the register).
-        #
-        # Interpreting this further - this rule applies any time a field is
-        # software-modifiable by any means, including rclr, rset, ruser
-        # TODO: suppress this check for registers that have the appropriate
-        # buffer_writes/buffer_reads UDP set
         parent_accesswidth = node.parent.get_property('accesswidth')
         parent_regwidth = node.parent.get_property('regwidth')
-        if ((parent_accesswidth < parent_regwidth)
-                and (node.lsb // parent_accesswidth) != (node.msb // parent_accesswidth)
-                and (node.is_sw_writable or node.get_property('onread') is not None)):
-            # Field spans across sub-words
-            self.msg.error(
-                f"Software-modifiable field '{node.inst_name}' shall not span "
-                "multiple software-accessible subwords.",
-                node.inst.inst_src_ref
-            )
+        if (
+            (parent_accesswidth < parent_regwidth)
+            and (node.lsb // parent_accesswidth) != (node.msb // parent_accesswidth)
+        ):
+            # field spans multiple sub-words
+            if node.is_sw_writable and not node.parent.get_property('buffer_writes'):
+                # ... and is writable without the protection of double-buffering
+                # Enforce 10.6.1-f
+                self.msg.error(
+                    f"Software-writable field '{node.inst_name}' shall not span"
+                    " multiple software-accessible subwords. Consider enabling"
+                    " write double-buffering.",
+                    node.inst.inst_src_ref
+                )
+
+            if node.get_property('onread') is not None and not node.parent.get_property('buffer_reads'):
+                # ... is modified by an onread action without the atomicity of read buffering
+                # Enforce 10.6.1-f
+                self.msg.error(
+                    f"The field '{node.inst_name}' spans multiple software-accessible"
+                    " subwords and is modified on-read, making it impossible to"
+                    " access its value correctly. Consider enabling read"
+                    " double-buffering.",
+                    node.inst.inst_src_ref
+                )

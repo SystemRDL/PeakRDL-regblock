@@ -115,3 +115,10 @@ Links
     props/addrmap
     props/signal
     props/rhs_props
+
+.. toctree::
+    :hidden:
+    :caption: Extended Properties
+
+    udps/intro
+    udps/write_buffering

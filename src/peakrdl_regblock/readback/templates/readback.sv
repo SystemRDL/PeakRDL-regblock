@@ -3,7 +3,9 @@
 logic [{{cpuif.data_width-1}}:0] readback_array[{{array_size}}];
 {{array_assignments}}
 
-{% if do_fanin_stage %}
+
+{%- if do_fanin_stage %}
+
 // fanin stage
 logic [{{cpuif.data_width-1}}:0] readback_array_c[{{fanin_array_size}}];
 for(genvar g=0; g<{{fanin_loop_iter}}; g++) begin
@@ -48,6 +50,7 @@ always_comb begin
 end
 
 {%- else %}
+
 // Reduce the array
 always_comb begin
     automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;

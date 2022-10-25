@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-from systemrdl.rdltypes import PropertyReference, PrecedenceType, InterruptType
-from systemrdl.node import Node
+from systemrdl.rdltypes import PrecedenceType, InterruptType
 
 from .bases import AssignmentPrecedence, NextStateConditional
 from . import sw_onread
@@ -186,19 +185,35 @@ class FieldLogic:
         """
         w_modifiable = field.is_sw_writable
         r_modifiable = (field.get_property('onread') is not None)
-        strb = self.exp.dereferencer.get_access_strobe(field)
+        buffer_writes = field.parent.get_property('buffer_writes')
 
         if w_modifiable and not r_modifiable:
             # assert swmod only on sw write
-            return f"{strb} && decoded_req_is_wr"
+            if buffer_writes:
+                # Write strobe arrives from buffer layer instead
+                wstrb = self.exp.write_buffering.get_write_strobe(field)
+                return wstrb
+            else:
+                # Unbuffered. Use decoder strobe directly
+                astrb = self.exp.dereferencer.get_access_strobe(field)
+                return f"{astrb} && decoded_req_is_wr"
 
         if w_modifiable and r_modifiable:
-            # assert swmod on all sw actions
-            return strb
+            # assert swmod on both sw read and write
+            if buffer_writes:
+                astrb = self.exp.dereferencer.get_access_strobe(field)
+                wstrb = self.exp.write_buffering.get_write_strobe(field)
+                rstrb = f"{astrb} && !decoded_req_is_wr"
+                return f"{wstrb} || {rstrb}"
+            else:
+                # Unbuffered. Use decoder strobe directly
+                astrb = self.exp.dereferencer.get_access_strobe(field)
+                return astrb
 
         if not w_modifiable and r_modifiable:
             # assert swmod only on sw read
-            return f"{strb} && !decoded_req_is_wr"
+            astrb = self.exp.dereferencer.get_access_strobe(field)
+            return f"{astrb} && !decoded_req_is_wr"
 
         # Not sw modifiable
         return "1'b0"

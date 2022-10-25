@@ -2,6 +2,10 @@
 branch = True
 #relative_files = True
 
+omit =
+    # to be covered elsewhere
+    */__peakrdl__.py
+
 [paths]
 source =
     ../src/peakrdl_regblock/

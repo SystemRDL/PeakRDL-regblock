@@ -108,6 +108,15 @@ module {{module_name}} (
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
     assign cpuif_wr_err = '0;
 
+{%- if has_buffered_write_regs %}
+    //--------------------------------------------------------------------------
+    // Write double-buffers
+    //--------------------------------------------------------------------------
+    {{write_buffering.get_storage_struct()|indent}}
+
+    {{write_buffering.get_implementation()|indent}}
+{%- endif %}
+
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
@@ -124,7 +133,6 @@ module {{module_name}} (
     logic readback_done;
     logic [{{cpuif.data_width-1}}:0] readback_data;
     {{readback.get_implementation()|indent}}
-
 {% if retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
@@ -141,6 +149,5 @@ module {{module_name}} (
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
-{% endif %}
-
+{%- endif %}
 endmodule

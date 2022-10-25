@@ -1,0 +1,18 @@
+/*
+ * This file defines several property extensions that are understood by the
+ * PeakRDL-Regblock SystemVerilog code generator.
+ *
+ * Compile this file prior to your other SystemRDL sources.
+ *
+ * For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/intro.html
+ */
+
+property buffer_writes {
+    component = reg;
+    type = boolean;
+};
+
+property wbuffer_trigger {
+    component = reg;
+    type = ref;
+};

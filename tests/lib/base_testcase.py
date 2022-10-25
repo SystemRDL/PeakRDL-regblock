@@ -86,8 +86,13 @@ class BaseTestCase(unittest.TestCase):
             rdl_file = glob.glob(os.path.join(this_dir, "*.rdl"))[0]
 
         rdlc = RDLCompiler()
+
+        # Load the UDPs
         for udp in ALL_UDPS:
             rdlc.register_udp(udp)
+        # ... including the definition
+        udp_file = os.path.join(this_dir, "../../hdl-src/regblock_udps.rdl")
+        rdlc.compile_file(udp_file)
 
         rdlc.compile_file(rdl_file)
         root = rdlc.elaborate(cls.rdl_elab_target, "regblock", cls.rdl_elab_params)

@@ -60,7 +60,9 @@ swmod
 |OK|
 
 If true, infers an output signal ``hwif_out..swmod`` that is asserted as the
-field is being modified by software.
+field is being modified by software. This can be due to a software write
+operation, or a software read operation that has clear/set side-effects.
+
 
 .. wavedrom::
 

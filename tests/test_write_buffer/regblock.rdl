@@ -1,0 +1,106 @@
+addrmap top {
+    default regwidth = 16;
+    default accesswidth = 16;
+    default sw=rw;
+    default hw=r;
+    //--------------------------------------------------------------------------
+    // Wide registers
+    //--------------------------------------------------------------------------
+    reg {
+        regwidth = 64;
+        buffer_writes = true;
+        field {} f1[63:0] = 0;
+    } reg1;
+
+    reg {
+        regwidth = 64;
+        buffer_writes = true;
+        field {} f1[0:63] = 0;
+    } reg1_msb0;
+
+    reg {
+        regwidth = 32;
+        buffer_writes = true;
+        field {} f1[19:8] = 0;
+        field {} f2[23:20] = 0;
+    } reg2;
+
+    reg {
+        regwidth = 32;
+        buffer_writes = true;
+        field {} f1[8:19] = 0;
+        field {} f2[20:23] = 0;
+    } reg2_msb0;
+
+    //--------------------------------------------------------------------------
+    // Alternate Triggers
+    //--------------------------------------------------------------------------
+    reg myreg {
+        buffer_writes;
+        field {} f1[15:0] = 0;
+    };
+
+    // Trigger via another register
+    myreg g1_r1;
+    myreg g1_r2;
+    g1_r1->buffer_writes = false;
+    g1_r2->wbuffer_trigger = g1_r1;
+
+    // triger from signal
+    signal {
+        activehigh;
+    } trigger_sig;
+    signal {
+        activelow;
+    } trigger_sig_n;
+    myreg g2_r1;
+    myreg g2_r2;
+    g2_r1->wbuffer_trigger = trigger_sig;
+    g2_r2->wbuffer_trigger = trigger_sig_n;
+
+    // trigger from field
+    myreg g3_r1;
+    reg {
+        field {
+            sw=w; hw=r; singlepulse;
+        } trig = 0;
+    } g3_trig;
+    g3_r1->wbuffer_trigger = g3_trig.trig;
+
+    // trigger from propref
+    myreg g4_r1;
+    reg {
+        field {
+            hw=na;
+        } trig_vec[3:0] = 0;
+    } g4_trig;
+    g4_r1->wbuffer_trigger = g4_trig.trig_vec->anded;
+
+    //--------------------------------------------------------------------------
+    // swmod behavior
+    //--------------------------------------------------------------------------
+    myreg g5_r1;
+    g5_r1->wbuffer_trigger = trigger_sig;
+    reg {
+        field{
+            sw=rw;
+            hw=na;
+            counter;
+        } c[3:0] = 0;
+    } g5_modcount;
+    g5_modcount.c->incr = g5_r1.f1->swmod;
+
+    myreg g6_r1;
+    g6_r1.f1->rclr;
+    g6_r1->wbuffer_trigger = trigger_sig;
+    reg {
+        field{
+            sw=rw;
+            hw=na;
+            counter;
+        } c[3:0] = 0;
+    } g6_modcount;
+    g6_modcount.c->incr = g6_r1.f1->swmod;
+
+
+};

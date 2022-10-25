@@ -10,12 +10,13 @@ from .dereferencer import Dereferencer
 from .readback import Readback
 from .identifier_filter import kw_filter as kwf
 
-from .cpuif import CpuifBase
-from .cpuif.apb4 import APB4_Cpuif
-from .hwif import Hwif
 from .utils import get_always_ff_event
 from .scan_design import DesignScanner
 from .validate_design import DesignValidator
+from .cpuif import CpuifBase
+from .cpuif.apb4 import APB4_Cpuif
+from .hwif import Hwif
+from .write_buffering import WriteBuffering
 
 class RegblockExporter:
     def __init__(self, **kwargs: Any) -> None:
@@ -30,6 +31,7 @@ class RegblockExporter:
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
         self.readback = None # type: Readback
+        self.write_buffering = None # type: WriteBuffering
         self.dereferencer = Dereferencer(self)
         self.min_read_latency = 0
         self.min_write_latency = 0
@@ -143,6 +145,7 @@ class RegblockExporter:
             self,
             retime_read_fanin
         )
+        self.write_buffering = WriteBuffering(self)
 
         # Validate that there are no unsupported constructs
         validator = DesignValidator(self)
@@ -153,8 +156,11 @@ class RegblockExporter:
             "module_name": module_name,
             "user_out_of_hier_signals": scanner.out_of_hier_signals.values(),
             "has_writable_msb0_fields": scanner.has_writable_msb0_fields,
+            "has_buffered_write_regs": scanner.has_buffered_write_regs,
+            "has_buffered_read_regs": scanner.has_buffered_read_regs,
             "cpuif": self.cpuif,
             "hwif": self.hwif,
+            "write_buffering": self.write_buffering,
             "get_resetsignal": self.dereferencer.get_resetsignal,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,

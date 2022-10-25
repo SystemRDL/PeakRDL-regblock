@@ -26,6 +26,8 @@ class DesignScanner(RDLListener):
         self.out_of_hier_signals = OrderedDict() # type: OrderedDict[str, SignalNode]
 
         self.has_writable_msb0_fields = False
+        self.has_buffered_write_regs = False
+        self.has_buffered_read_regs = False
 
     def _get_out_of_hier_field_reset(self) -> None:
         current_node = self.exp.top_node.parent
@@ -69,19 +71,7 @@ class DesignScanner(RDLListener):
         if node.external and (node != self.exp.top_node):
             # Do not inspect external components. None of my business
             return WalkerAction.SkipDescendants
-        return None
 
-    def enter_Reg(self, node: 'RegNode') -> None:
-        # The CPUIF's bus width is sized according to the largest accesswidth in the design
-        accesswidth = node.get_property('accesswidth')
-        self.cpuif_data_width = max(self.cpuif_data_width, accesswidth)
-
-    def enter_Signal(self, node: 'SignalNode') -> None:
-        if node.get_property('field_reset'):
-            path = node.get_path()
-            self.in_hier_signal_paths.add(path)
-
-    def enter_Field(self, node: 'FieldNode') -> None:
         # Collect any signals that are referenced by a property
         for prop_name in node.list_properties():
             value = node.get_property(prop_name)
@@ -93,5 +83,21 @@ class DesignScanner(RDLListener):
                 else:
                     self.in_hier_signal_paths.add(path)
 
+        return None
+
+    def enter_Reg(self, node: 'RegNode') -> None:
+        # The CPUIF's bus width is sized according to the largest accesswidth in the design
+        accesswidth = node.get_property('accesswidth')
+        self.cpuif_data_width = max(self.cpuif_data_width, accesswidth)
+
+        self.has_buffered_write_regs = self.has_buffered_write_regs or node.get_property('buffer_writes')
+        self.has_buffered_read_regs = self.has_buffered_read_regs or node.get_property('buffer_reads')
+
+    def enter_Signal(self, node: 'SignalNode') -> None:
+        if node.get_property('field_reset'):
+            path = node.get_path()
+            self.in_hier_signal_paths.add(path)
+
+    def enter_Field(self, node: 'FieldNode') -> None:
         if node.is_sw_writable and (node.msb < node.lsb):
             self.has_writable_msb0_fields = True

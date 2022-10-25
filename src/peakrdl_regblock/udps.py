@@ -3,7 +3,8 @@ from typing import Any
 from systemrdl.udp import UDPDefinition
 from systemrdl.component import Reg
 from systemrdl.rdltypes.references import RefType, PropertyReference
-from systemrdl.node import Node, RegNode, VectorNode
+from systemrdl.rdltypes import NoValue
+from systemrdl.node import Node, RegNode, VectorNode, SignalNode
 
 
 class xBufferTrigger(UDPDefinition):
@@ -13,7 +14,12 @@ class xBufferTrigger(UDPDefinition):
     def validate(self, node: Node, value: Any) -> None:
         # TODO: Reference shall not cross an internal/external boundary
 
-        if isinstance(value, VectorNode):
+        if value is NoValue:
+            self.msg.error(
+                "Double-buffer trigger property is missing a value assignment",
+                self.get_src_ref(node)
+            )
+        elif isinstance(value, VectorNode):
             # Trigger can reference a vector, but only if it is a single-bit
             if value.width != 1:
                 self.msg.error(
@@ -24,6 +30,14 @@ class xBufferTrigger(UDPDefinition):
                     ),
                     self.get_src_ref(node)
                 )
+
+            if isinstance(value, SignalNode):
+                if not value.get_property('activehigh') and not value.get_property('activelow'):
+                    self.msg.error(
+                        "Trigger was asigned a signal, but it does not specify whether it is activehigh/activelow",
+                        self.get_src_ref(node)
+                    )
+
         elif isinstance(value, PropertyReference) and value.width is not None:
             # Trigger can reference a property, but only if it is a single-bit
             if value.width != 1:
@@ -54,7 +68,6 @@ class BufferWrites(UDPDefinition):
     name = "buffer_writes"
     valid_components = {Reg}
     valid_type = bool
-    default_assignment = True
 
     def validate(self, node: 'Node', value: Any) -> None:
         assert isinstance(node, RegNode)
@@ -64,7 +77,6 @@ class BufferWrites(UDPDefinition):
                     "'buffer_writes' is set to true, but this register does not contain any writable fields.",
                     self.get_src_ref(node)
                 )
-        # TODO: Should I limit the use of other properties on double-buffered registers?
 
     def get_unassigned_default(self, node: 'Node') -> Any:
         return False
@@ -84,7 +96,6 @@ class BufferReads(UDPDefinition):
     name = "buffer_reads"
     valid_components = {Reg}
     valid_type = bool
-    default_assignment = True
 
     def validate(self, node: 'Node', value: Any) -> None:
         assert isinstance(node, RegNode)
@@ -94,8 +105,6 @@ class BufferReads(UDPDefinition):
                     "'buffer_reads' is set to true, but this register does not contain any readable fields.",
                     self.get_src_ref(node)
                 )
-
-        # TODO: Should I limit the use of other properties on double-buffered registers?
 
     def get_unassigned_default(self, node: 'Node') -> Any:
         return False
