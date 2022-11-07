@@ -33,6 +33,10 @@ properties:
 .. literalinclude:: ../../hdl-src/regblock_udps.rdl
     :lines: 20-28
 
+These UDP definitions, along with others supported by PeakRDL-regblock can be
+enabled by compiling the following file along with your design:
+:download:`regblock_udps.rdl <../../hdl-src/regblock_udps.rdl>`.
+
 ``buffer_writes``
     *   Assigned value is a boolean.
     *   If true, enables double-buffering of writes to this register.
@@ -84,7 +88,6 @@ write-buffered.
 
 Wide Atomic Register
 ^^^^^^^^^^^^^^^^^^^^
-
 Without write-buffering, it is impossible to update the state of a 64-bit
 register using a 32-bit CPU interface in a single clock-cycle.
 In this example, it still requires two write-cycles to update the register, but
@@ -108,7 +111,6 @@ same clock cycle. The register is updated atomically.
 
 Atomic Group of Registers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Perhaps you have a group of registers that need their state to be updated
 atomically. Using the ``wbuffer_trigger`` property, you can define which
 register write operation triggers the group to be updated.

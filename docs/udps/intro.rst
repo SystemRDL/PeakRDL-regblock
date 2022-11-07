@@ -24,25 +24,25 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
         - boolean
         - If set, reads from the register are double-buffered.
 
-          See details here: :ref:`read_buffering`.
+          See: :ref:`read_buffering`.
 
     *   - rbuffer_trigger
         - reg
         - reference
         - Defines the buffered read load trigger.
 
-          See details here: :ref:`read_buffering`.
+          See: :ref:`read_buffering`.
 
     *   - buffer_writes
         - reg
         - boolean
         - If set, writes to the register are double-buffered.
 
-          See details here: :ref:`write_buffering`.
+          See: :ref:`write_buffering`.
 
     *   - wbuffer_trigger
         - reg
         - reference
         - Defines the buffered write commit trigger.
 
-          See details here: :ref:`write_buffering`.
+          See: :ref:`write_buffering`.
