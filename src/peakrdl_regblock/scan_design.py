@@ -90,8 +90,8 @@ class DesignScanner(RDLListener):
         accesswidth = node.get_property('accesswidth')
         self.cpuif_data_width = max(self.cpuif_data_width, accesswidth)
 
-        self.has_buffered_write_regs = self.has_buffered_write_regs or node.get_property('buffer_writes')
-        self.has_buffered_read_regs = self.has_buffered_read_regs or node.get_property('buffer_reads')
+        self.has_buffered_write_regs = self.has_buffered_write_regs or bool(node.get_property('buffer_writes'))
+        self.has_buffered_read_regs = self.has_buffered_read_regs or bool(node.get_property('buffer_reads'))
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         if node.get_property('field_reset'):

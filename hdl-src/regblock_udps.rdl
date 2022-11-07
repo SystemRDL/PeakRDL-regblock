@@ -7,6 +7,16 @@
  * For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/intro.html
  */
 
+property buffer_reads {
+    component = reg;
+    type = boolean;
+};
+
+property rbuffer_trigger {
+    component = reg;
+    type = ref;
+};
+
 property buffer_writes {
     component = reg;
     type = boolean;

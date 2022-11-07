@@ -175,8 +175,13 @@ class FieldLogic:
         """
         Asserted when field is software accessed (read)
         """
-        strb = self.exp.dereferencer.get_access_strobe(field)
-        return f"{strb} && !decoded_req_is_wr"
+        buffer_reads = field.parent.get_property('buffer_reads')
+        if buffer_reads:
+            rstrb = self.exp.read_buffering.get_trigger(field.parent)
+            return rstrb
+        else:
+            strb = self.exp.dereferencer.get_access_strobe(field)
+            return f"{strb} && !decoded_req_is_wr"
 
     def get_swmod_identifier(self, field: 'FieldNode') -> str:
         """
@@ -186,6 +191,7 @@ class FieldLogic:
         w_modifiable = field.is_sw_writable
         r_modifiable = (field.get_property('onread') is not None)
         buffer_writes = field.parent.get_property('buffer_writes')
+        buffer_reads = field.parent.get_property('buffer_reads')
 
         if w_modifiable and not r_modifiable:
             # assert swmod only on sw write
@@ -200,10 +206,18 @@ class FieldLogic:
 
         if w_modifiable and r_modifiable:
             # assert swmod on both sw read and write
-            if buffer_writes:
-                astrb = self.exp.dereferencer.get_access_strobe(field)
-                wstrb = self.exp.write_buffering.get_write_strobe(field)
-                rstrb = f"{astrb} && !decoded_req_is_wr"
+            astrb = self.exp.dereferencer.get_access_strobe(field)
+            if buffer_writes or buffer_reads:
+                if buffer_reads:
+                    rstrb = self.exp.read_buffering.get_trigger(field.parent)
+                else:
+                    rstrb = f"{astrb} && !decoded_req_is_wr"
+
+                if buffer_writes:
+                    wstrb = self.exp.write_buffering.get_write_strobe(field)
+                else:
+                    wstrb = f"{astrb} && decoded_req_is_wr"
+
                 return f"{wstrb} || {rstrb}"
             else:
                 # Unbuffered. Use decoder strobe directly
@@ -213,7 +227,11 @@ class FieldLogic:
         if not w_modifiable and r_modifiable:
             # assert swmod only on sw read
             astrb = self.exp.dereferencer.get_access_strobe(field)
-            return f"{astrb} && !decoded_req_is_wr"
+            if buffer_reads:
+                rstrb = self.exp.read_buffering.get_trigger(field.parent)
+            else:
+                rstrb = f"{astrb} && !decoded_req_is_wr"
+            return rstrb
 
         # Not sw modifiable
         return "1'b0"

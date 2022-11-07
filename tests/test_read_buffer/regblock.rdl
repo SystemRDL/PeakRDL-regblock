@@ -1,0 +1,117 @@
+addrmap top {
+    default regwidth = 8;
+    default accesswidth = 8;
+    default sw=r;
+    default hw=r;
+
+    signal {} incr_en;
+    //--------------------------------------------------------------------------
+    // Wide registers
+    //--------------------------------------------------------------------------
+    reg {
+        regwidth = 32;
+        default counter;
+        default incr = incr_en;
+        buffer_reads;
+
+        field {} f1[3] = 0;
+        field {} f2[3] = 0;
+        field {} f3[3] = 0;
+        field {} f4[3] = 0;
+        field {} f5[3] = 0;
+        field {} f6[3] = 0;
+        field {} f7[3] = 0;
+        field {} f8[3] = 0;
+        field {} f9[3] = 0;
+        field {} fa[3] = 0;
+    } reg1;
+
+    reg {
+        regwidth = 32;
+        default counter;
+        default incr = incr_en;
+        buffer_reads;
+
+        field {} f1[28:30] = 0;
+        field {} f2[3] = 0;
+        field {} f3[3] = 0;
+        field {} f4[3] = 0;
+        field {} f5[3] = 0;
+        field {} f6[3] = 0;
+        field {} f7[3] = 0;
+        field {} f8[3] = 0;
+        field {} f9[3] = 0;
+        field {} fa[3] = 0;
+    } reg1_msb0;
+
+
+    reg {
+        regwidth = 32;
+        default counter;
+        default incr = incr_en;
+        default rclr;
+        buffer_reads;
+
+        field {} f1[4:0] = 0;
+        field {} f2[14:10] = 0;
+        field {} f3[26:22] = 0;
+        field {} f4[31:27] = 0;
+    } reg2;
+
+    //--------------------------------------------------------------------------
+    // Alternate Triggers
+    //--------------------------------------------------------------------------
+    reg myreg {
+        buffer_reads;
+        default counter;
+        default incr = incr_en;
+        field {} f1[7:0] = 0;
+    };
+
+    reg myreg_wide {
+        buffer_reads;
+        default counter;
+        default incr = incr_en;
+        regwidth = 16;
+        field {} f1[15:0] = 0xAAAA;
+    };
+
+    // Trigger via another register
+    myreg g1_r1;
+    myreg g1_r2;
+    g1_r2->rbuffer_trigger = g1_r1;
+
+    myreg_wide g2_r1 @ 0x10;
+    myreg_wide g2_r2;
+    g2_r2->rbuffer_trigger = g2_r1;
+
+    // triger from signal
+    signal {
+        activehigh;
+    } trigger_sig;
+    signal {
+        activelow;
+    } trigger_sig_n;
+    reg ro_reg {
+        buffer_reads;
+        field {
+            hw=w;
+        } f1[7:0];
+    };
+    ro_reg g3_r1;
+    ro_reg g3_r2;
+    g3_r1->rbuffer_trigger = trigger_sig;
+    g3_r2->rbuffer_trigger = trigger_sig_n;
+
+    // trigger from field/propref
+    reg {
+        field {
+            sw=w; hw=r; singlepulse;
+        } trig = 0;
+    } g4_trig;
+    myreg g4_r1;
+    myreg g4_r2;
+    g4_r1->rbuffer_trigger = g4_trig.trig;
+    g4_r2->rbuffer_trigger = g4_trig.trig->swmod;
+
+};

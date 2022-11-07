@@ -121,4 +121,5 @@ Links
     :caption: Extended Properties
 
     udps/intro
+    udps/read_buffering
     udps/write_buffering

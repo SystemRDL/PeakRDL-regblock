@@ -8,6 +8,8 @@ the language to be extended using "User Defined Properties" (UDPs). The
 PeakRDL-regblock tool understands several UDPs that are described in this
 section.
 
+To enable these UDPs, compile this RDL file prior to the rest of your design:
+:download:`regblock_udps.rdl <../../hdl-src/regblock_udps.rdl>`.
 
 .. list-table:: Summary of UDPs
     :header-rows: 1
@@ -16,6 +18,20 @@ section.
         - Component
         - Type
         - Description
+
+    *   - buffer_reads
+        - reg
+        - boolean
+        - If set, reads from the register are double-buffered.
+
+          See details here: :ref:`read_buffering`.
+
+    *   - rbuffer_trigger
+        - reg
+        - reference
+        - Defines the buffered read load trigger.
+
+          See details here: :ref:`read_buffering`.
 
     *   - buffer_writes
         - reg

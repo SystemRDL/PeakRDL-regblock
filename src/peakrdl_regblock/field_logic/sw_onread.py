@@ -13,8 +13,14 @@ class _OnRead(NextStateConditional):
         return field.get_property('onread') == self.onreadtype
 
     def get_predicate(self, field: 'FieldNode') -> str:
-        strb = self.exp.dereferencer.get_access_strobe(field)
-        return f"{strb} && !decoded_req_is_wr"
+        if field.parent.get_property('buffer_reads'):
+            # Is buffered read. Use alternate strobe
+            rstrb = self.exp.read_buffering.get_trigger(field.parent)
+            return rstrb
+        else:
+            # is regular register
+            strb = self.exp.dereferencer.get_access_strobe(field)
+            return f"{strb} && !decoded_req_is_wr"
 
 
 class ClearOnRead(_OnRead):

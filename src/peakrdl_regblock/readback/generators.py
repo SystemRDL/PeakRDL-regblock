@@ -1,10 +1,11 @@
 from typing import TYPE_CHECKING, List
 
+from systemrdl.node import RegNode
+
 from ..forloop_generator import RDLForLoopGenerator, LoopBody
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
-    from systemrdl.node import RegNode
 
 class ReadbackLoopBody(LoopBody):
     def __init__(self, dim: int, iterator: str, i_type: str) -> None:
@@ -76,19 +77,31 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         self.current_offset = start_offset + n_regs * dim
 
 
-    def enter_Reg(self, node: 'RegNode') -> None:
+    def enter_Reg(self, node: RegNode) -> None:
         if not node.has_sw_readable:
             return
 
         accesswidth = node.get_property('accesswidth')
         regwidth = node.get_property('regwidth')
-        if accesswidth < regwidth:
+        rbuf = node.get_property('buffer_reads')
+        if rbuf:
+            trigger = node.get_property('rbuffer_trigger')
+            is_own_trigger = (isinstance(trigger, RegNode) and trigger == node)
+            if is_own_trigger:
+                if accesswidth < regwidth:
+                    self.process_buffered_reg_with_bypass(node, regwidth, accesswidth)
+                else:
+                    # bypass cancels out. Behaves like a normal reg
+                    self.process_reg(node)
+            else:
+                self.process_buffered_reg(node, regwidth, accesswidth)
+        elif accesswidth < regwidth:
             self.process_wide_reg(node, accesswidth)
         else:
             self.process_reg(node)
 
 
-    def process_reg(self, node: 'RegNode') -> None:
+    def process_reg(self, node: RegNode) -> None:
         current_bit = 0
         rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"
         # Fields are sorted by ascending low bit
@@ -100,11 +113,10 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
             if field.low != current_bit:
                 self.add_content(f"assign readback_array[{self.current_offset_str}][{field.low-1}:{current_bit}] = '0;")
 
+            value = self.exp.dereferencer.get_value(field)
             if field.msb < field.lsb:
                 # Field gets bitswapped since it is in [low:high] orientation
-                value = f"{{<<{{{self.exp.dereferencer.get_value(field)}}}}}"
-            else:
-                value = self.exp.dereferencer.get_value(field)
+                value = f"{{<<{{{value}}}}}"
 
             self.add_content(f"assign readback_array[{self.current_offset_str}][{field.high}:{field.low}] = {rd_strb} ? {value} : '0;")
 
@@ -118,7 +130,98 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         self.current_offset += 1
 
 
-    def process_wide_reg(self, node: 'RegNode', accesswidth: int) -> None:
+    def process_buffered_reg(self, node: RegNode, regwidth: int, accesswidth: int) -> None:
+        rbuf = self.exp.read_buffering.get_rbuf_data(node)
+
+        if accesswidth < regwidth:
+            # Is wide reg
+            n_subwords = regwidth // accesswidth
+            astrb = self.exp.dereferencer.get_access_strobe(node, reduce_substrobes=False)
+            for i in range(n_subwords):
+                rd_strb = f"({astrb}[{i}] && !decoded_req_is_wr)"
+                bslice = f"[{(i + 1) * accesswidth - 1}:{i*accesswidth}]"
+                self.add_content(f"assign readback_array[{self.current_offset_str}] = {rd_strb} ? {rbuf}{bslice} : '0;")
+                self.current_offset += 1
+
+        else:
+            # Is regular reg
+            rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{regwidth-1}:0] = {rd_strb} ? {rbuf} : '0;")
+
+            bus_width = self.exp.cpuif.data_width
+            if regwidth < bus_width:
+                self.add_content(f"assign readback_array[{self.current_offset_str}][{bus_width-1}:{regwidth}] = '0;")
+
+            self.current_offset += 1
+
+
+    def process_buffered_reg_with_bypass(self, node: RegNode, regwidth: int, accesswidth: int) -> None:
+        """
+        Special case for a buffered register when the register is its own trigger.
+        First sub-word shall bypass the read buffer and assign directly.
+        Subsequent subwords assign from the buffer.
+        Caller guarantees this is a wide reg
+        """
+        astrb = self.exp.dereferencer.get_access_strobe(node, reduce_substrobes=False)
+
+        # Generate assignments for first sub-word
+        bidx = 0
+        rd_strb = f"({astrb}[0] && !decoded_req_is_wr)"
+        for field in node.fields():
+            if not field.is_sw_readable:
+                continue
+
+            if field.low >= accesswidth:
+                # field is not in this subword.
+                break
+
+            if bidx < field.low:
+                # insert padding before
+                self.add_content(f"assign readback_array[{self.current_offset_str}][{field.low - 1}:{bidx}] = '0;")
+
+            if field.high >= accesswidth:
+                # field gets truncated
+                r_low = field.low
+                r_high = accesswidth - 1
+                f_low = 0
+                f_high = accesswidth - 1 - field.low
+
+                if field.msb < field.lsb:
+                    # Field gets bitswapped since it is in [low:high] orientation
+                    # Mirror the low/high indexes
+                    f_low = field.width - 1 - f_low
+                    f_high = field.width - 1 - f_high
+                    f_low, f_high = f_high, f_low
+                    value = f"{{<<{{{self.exp.dereferencer.get_value(field)}[{f_high}:{f_low}]}}}}"
+                else:
+                    value = self.exp.dereferencer.get_value(field) + f"[{f_high}:{f_low}]"
+
+                self.add_content(f"assign readback_array[{self.current_offset_str}][{r_high}:{r_low}] = {rd_strb} ? {value} : '0;")
+                bidx = accesswidth
+            else:
+                # field fits in subword
+                value = self.exp.dereferencer.get_value(field)
+                if field.msb < field.lsb:
+                    # Field gets bitswapped since it is in [low:high] orientation
+                    value = f"{{<<{{{value}}}}}"
+                self.add_content(f"assign readback_array[{self.current_offset_str}][{field.high}:{field.low}] = {rd_strb} ? {value} : '0;")
+                bidx = field.high + 1
+
+        # pad up remainder of subword
+        if bidx < accesswidth:
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{accesswidth-1}:{bidx}] = '0;")
+        self.current_offset += 1
+
+        # Assign remainder of subwords from read buffer
+        n_subwords = regwidth // accesswidth
+        rbuf = self.exp.read_buffering.get_rbuf_data(node)
+        for i in range(1, n_subwords):
+            rd_strb = f"({astrb}[{i}] && !decoded_req_is_wr)"
+            bslice = f"[{(i + 1) * accesswidth - 1}:{i*accesswidth}]"
+            self.add_content(f"assign readback_array[{self.current_offset_str}] = {rd_strb} ? {rbuf}{bslice} : '0;")
+            self.current_offset += 1
+
+    def process_wide_reg(self, node: RegNode, accesswidth: int) -> None:
         bus_width = self.exp.cpuif.data_width
 
         subword_idx = 0
@@ -162,11 +265,10 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                     low = field.low - accesswidth * subword_idx
                     high = field.high - accesswidth * subword_idx
 
+                    value = self.exp.dereferencer.get_value(field)
                     if field.msb < field.lsb:
                         # Field gets bitswapped since it is in [low:high] orientation
-                        value = f"{{<<{{{self.exp.dereferencer.get_value(field)}}}}}"
-                    else:
-                        value = self.exp.dereferencer.get_value(field)
+                        value = f"{{<<{{{value}}}}}"
 
                     self.add_content(f"assign readback_array[{self.current_offset_str}][{high}:{low}] = {rd_strb} ? {value} : '0;")
 
