@@ -97,6 +97,9 @@ class RegblockExporter:
             response path sequentially may not result in any meaningful timing improvement.
 
             Enabling this option will increase read transfer latency by 1 clock cycle.
+        generate_hwif_report: bool
+            If set, generates a hwif report that can help understand the structure
+            of the hwif_in and hwif_out structures.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -109,6 +112,7 @@ class RegblockExporter:
         module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
         package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
+        generate_hwif_report = kwargs.pop("generate_hwif_report", False) # type: bool
 
         # Pipelining options
         retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
@@ -129,6 +133,12 @@ class RegblockExporter:
         scanner = DesignScanner(self)
         scanner.do_scan()
 
+        if generate_hwif_report:
+            path = os.path.join(output_dir, f"{module_name}_hwif.rpt")
+            hwif_report_file = open(path, "w")
+        else:
+            hwif_report_file = None
+
         # Construct exporter components
         self.cpuif = cpuif_cls(
             self,
@@ -142,6 +152,7 @@ class RegblockExporter:
             in_hier_signal_paths=scanner.in_hier_signal_paths,
             out_of_hier_signals=scanner.out_of_hier_signals,
             reuse_typedefs=reuse_hwif_typedefs,
+            hwif_report_file=hwif_report_file,
         )
         self.readback = Readback(
             self,
@@ -184,3 +195,6 @@ class RegblockExporter:
         template = self.jj_env.get_template("module_tmpl.sv")
         stream = template.stream(context)
         stream.dump(module_file_path)
+
+        if hwif_report_file:
+            hwif_report_file.close()

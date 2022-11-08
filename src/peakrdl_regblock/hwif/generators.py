@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, List
 
 from systemrdl.node import FieldNode
 
@@ -9,11 +9,45 @@ if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, RegNode
     from . import Hwif
 
-class InputStructGenerator_Hier(RDLFlatStructGenerator):
-    def __init__(self, hwif: 'Hwif') -> None:
+class HWIFStructGenerator(RDLFlatStructGenerator):
+    def __init__(self, hwif: 'Hwif', hwif_name: str) -> None:
         super().__init__()
         self.hwif = hwif
         self.top_node = hwif.top_node
+
+        self.hwif_report_stack = [hwif_name]
+
+    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None:
+        super().push_struct(type_name, inst_name, array_dimensions)
+
+        if array_dimensions:
+            array_suffix = "".join([f"[0:{dim-1}]" for dim in array_dimensions])
+            segment = inst_name + array_suffix
+        else:
+            segment = inst_name
+        self.hwif_report_stack.append(segment)
+
+    def pop_struct(self) -> None:
+        super().pop_struct()
+        self.hwif_report_stack.pop()
+
+    def add_member(self, name: str, width: int = 1) -> None:
+        super().add_member(name, width)
+
+        if width > 1:
+            suffix = f"[{width-1}:0]"
+        else:
+            suffix = ""
+
+        path = ".".join(self.hwif_report_stack)
+        if self.hwif.hwif_report_file:
+            self.hwif.hwif_report_file.write(f"{path}.{name}{suffix}\n")
+
+#-------------------------------------------------------------------------------
+
+class InputStructGenerator_Hier(HWIFStructGenerator):
+    def __init__(self, hwif: 'Hwif') -> None:
+        super().__init__(hwif, "hwif_in")
 
     def get_typdef_name(self, node:'Node') -> str:
         base = node.get_rel_path(
@@ -72,11 +106,9 @@ class InputStructGenerator_Hier(RDLFlatStructGenerator):
         self.pop_struct()
 
 
-class OutputStructGenerator_Hier(RDLFlatStructGenerator):
+class OutputStructGenerator_Hier(HWIFStructGenerator):
     def __init__(self, hwif: 'Hwif') -> None:
-        super().__init__()
-        self.hwif = hwif
-        self.top_node = hwif.top_node
+        super().__init__(hwif, "hwif_out")
 
     def get_typdef_name(self, node:'Node') -> str:
         base = node.get_rel_path(

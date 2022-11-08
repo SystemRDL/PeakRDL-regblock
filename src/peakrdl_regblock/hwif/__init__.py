@@ -23,7 +23,7 @@ class Hwif:
     def __init__(
         self, exp: 'RegblockExporter', package_name: str,
         in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
-        reuse_typedefs: bool
+        reuse_typedefs: bool, hwif_report_file: int
     ):
         self.exp = exp
         self.package_name = package_name
@@ -33,6 +33,8 @@ class Hwif:
 
         self.in_hier_signal_paths = in_hier_signal_paths
         self.out_of_hier_signals = out_of_hier_signals
+
+        self.hwif_report_file = hwif_report_file
 
         if reuse_typedefs:
             self._gen_in_cls = InputStructGenerator_TypeScope

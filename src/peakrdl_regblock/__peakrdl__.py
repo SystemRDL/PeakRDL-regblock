@@ -71,6 +71,12 @@ class Exporter:
             The 'hier' style uses component's hierarchy as the struct type name. [lexical]
             """
         )
+        arg_group.add_argument(
+            "--hwif-report",
+            action="store_true",
+            default=False,
+            help="Generate a HWIF report file"
+        )
 
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
@@ -84,4 +90,5 @@ class Exporter:
             reuse_hwif_typedefs=(options.type_style == "lexical"),
             retime_read_fanin=options.rt_read_fanin,
             retime_read_response=options.rt_read_response,
+            generate_hwif_report=options.hwif_report,
         )
