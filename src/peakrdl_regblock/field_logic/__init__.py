@@ -173,15 +173,25 @@ class FieldLogic:
 
     def get_swacc_identifier(self, field: 'FieldNode') -> str:
         """
-        Asserted when field is software accessed (read)
+        Asserted when field is software accessed (read or write)
         """
         buffer_reads = field.parent.get_property('buffer_reads')
-        if buffer_reads:
+        buffer_writes = field.parent.get_property('buffer_writes')
+        if buffer_reads and buffer_writes:
             rstrb = self.exp.read_buffering.get_trigger(field.parent)
-            return rstrb
+            wstrb = self.exp.write_buffering.get_write_strobe(field)
+            return f"{rstrb} || {wstrb}"
+        elif buffer_reads and not buffer_writes:
+            strb = self.exp.dereferencer.get_access_strobe(field)
+            rstrb = self.exp.read_buffering.get_trigger(field.parent)
+            return f"{rstrb} || ({strb} && decoded_req_is_wr)"
+        elif not buffer_reads and buffer_writes:
+            strb = self.exp.dereferencer.get_access_strobe(field)
+            wstrb = self.exp.write_buffering.get_write_strobe(field)
+            return f"{wstrb} || ({strb} && !decoded_req_is_wr)"
         else:
             strb = self.exp.dereferencer.get_access_strobe(field)
-            return f"{strb} && !decoded_req_is_wr"
+            return strb
 
     def get_swmod_identifier(self, field: 'FieldNode') -> str:
         """

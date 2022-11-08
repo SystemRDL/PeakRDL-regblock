@@ -42,9 +42,9 @@ swacc
 ^^^^^
 |OK|
 
-If true, infers an output signal ``hwif_out..swacc`` that is asserted on the
-same clock cycle that the field is being sampled during a software read
-operation.
+If true, infers an output signal ``hwif_out..swacc`` that is asserted when
+accessed by software. Specifically, on the same clock cycle that the field is
+being sampled during a software read operation, or as it is being written.
 
 .. wavedrom::
 

@@ -22,8 +22,8 @@ field -> swacc
 ^^^^^^^^^^^^^^
 |EX|
 
-Single-cycle strobe that indicates the field is being sampled during a software
-read operation.
+Single-cycle strobe that indicates the field is being accessed by software
+(read or write).
 
 
 field -> swmod
