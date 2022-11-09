@@ -1,4 +1,6 @@
-pytest
+# hold back: https://github.com/kevlened/pytest-parallel/issues/118
+pytest<7.2
+
 parameterized
 pytest-parallel
 jinja2-simple-tags

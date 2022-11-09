@@ -17,7 +17,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
 
         self.hwif_report_stack = [hwif_name]
 
-    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None:
+    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None: # type: ignore
         super().push_struct(type_name, inst_name, array_dimensions)
 
         if array_dimensions:
@@ -31,7 +31,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().pop_struct()
         self.hwif_report_stack.pop()
 
-    def add_member(self, name: str, width: int = 1) -> None:
+    def add_member(self, name: str, width: int = 1) -> None: # type: ignore # pylint: disable=arguments-differ
         super().add_member(name, width)
 
         if width > 1:

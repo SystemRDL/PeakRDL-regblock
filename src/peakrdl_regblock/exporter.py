@@ -135,7 +135,7 @@ class RegblockExporter:
 
         if generate_hwif_report:
             path = os.path.join(output_dir, f"{module_name}_hwif.rpt")
-            hwif_report_file = open(path, "w")
+            hwif_report_file = open(path, "w", encoding='utf-8') # pylint: disable=consider-using-with
         else:
             hwif_report_file = None
 

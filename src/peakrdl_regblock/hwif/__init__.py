@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Union, List, Set, Dict
+from typing import TYPE_CHECKING, Union, Set, Dict, Optional, TextIO
 
-from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode, RegNode
+from systemrdl.node import AddrmapNode, SignalNode, FieldNode, RegNode
 from systemrdl.rdltypes import PropertyReference
 
 from ..utils import get_indexed_path
@@ -23,7 +23,7 @@ class Hwif:
     def __init__(
         self, exp: 'RegblockExporter', package_name: str,
         in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
-        reuse_typedefs: bool, hwif_report_file: int
+        reuse_typedefs: bool, hwif_report_file: Optional[TextIO]
     ):
         self.exp = exp
         self.package_name = package_name
