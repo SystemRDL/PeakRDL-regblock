@@ -20,7 +20,7 @@ Field
 
 field -> swacc
 ^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Single-cycle strobe that indicates the field is being accessed by software
 (read or write).
@@ -28,7 +28,7 @@ Single-cycle strobe that indicates the field is being accessed by software
 
 field -> swmod
 ^^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Single-cycle strobe that indicates the field is being modified during a software
 access operation.
@@ -43,7 +43,7 @@ Represents the signal that controls the field's swwe/swwel behavior.
 
 field -> anded/ored/xored
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Represents the current and/or/xor reduction of the field's value.
 
@@ -57,7 +57,7 @@ Represents the signal that controls the field's hwclr/hwset behavior.
 
 field -> hwenable/hwmask
 ^^^^^^^^^^^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Represents the signal that controls the field's hwenable/hwmask behavior.
 
@@ -86,7 +86,7 @@ Field Counter Properties
 
 field -> incr
 ^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Represents the signal that controls the field's counter increment control.
 
@@ -121,7 +121,7 @@ exceeded its incrthreshold.
 
 field -> incrvalue
 ^^^^^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Represents the value that was assigned to this property.
 
@@ -133,7 +133,7 @@ Represents the event signal that is asserted when the counter is about to wrap.
 
 field -> decr
 ^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Represents the signal that controls the field's counter decrement control.
 
@@ -167,7 +167,7 @@ exceeded its incrthreshold.
 
 field -> decrvalue
 ^^^^^^^^^^^^^^^^^^
-|EX|
+|OK|
 
 Represents the value that was assigned to this property.
 
@@ -184,19 +184,27 @@ Field Interrupt Properties
 
 field -> enable
 ^^^^^^^^^^^^^^^
-|EX|
+|OK|
+
+Represents the value that was assigned to this property.
 
 field -> mask
 ^^^^^^^^^^^^^
-|EX|
+|OK|
+
+Represents the value that was assigned to this property.
 
 field -> haltenable
 ^^^^^^^^^^^^^^^^^^^
-|EX|
+|OK|
+
+Represents the value that was assigned to this property.
 
 field -> haltmask
 ^^^^^^^^^^^^^^^^^
-|EX|
+|OK|
+
+Represents the value that was assigned to this property.
 
 
 --------------------------------------------------------------------------------

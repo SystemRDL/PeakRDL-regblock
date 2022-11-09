@@ -6,9 +6,7 @@ Register Properties
 
 accesswidth
 -----------
-|NO|
-
-Only ``accesswidth`` that is equal to the ``regwidth`` is supported (default if unset)
+|OK|
 
 regwidth
 --------
