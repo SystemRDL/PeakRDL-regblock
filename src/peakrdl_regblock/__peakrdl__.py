@@ -1,15 +1,15 @@
 from typing import TYPE_CHECKING
 
 from .exporter import RegblockExporter
-from .cpuif import apb3, apb4, axi4lite, passthrough
+from .cpuif import apb3, apb4, axi4lite, passthrough, CpuifBase
 from .udps import ALL_UDPS
+from . import entry_points
 
 if TYPE_CHECKING:
     import argparse
     from systemrdl.node import AddrmapNode
 
 
-# TODO: make this user-extensible
 CPUIF_DICT = {
     "apb3": apb3.APB3_Cpuif,
     "apb3-flat": apb3.APB3_Cpuif_flattened,
@@ -19,6 +19,16 @@ CPUIF_DICT = {
     "axi4-lite-flat": axi4lite.AXI4Lite_Cpuif_flattened,
     "passthrough": passthrough.PassthroughCpuif
 }
+
+# Load any user-plugins
+for ep in entry_points.get_entry_points("peakrdl_regblock.cpuif"): # type: ignore
+    name = ep.name
+    cpuif = ep.load()
+    if name in CPUIF_DICT:
+        raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it already exists")
+    if not issubclass(cpuif, CpuifBase):
+        raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it not a CpuifBase class")
+    CPUIF_DICT[name] = cpuif
 
 
 class Exporter:

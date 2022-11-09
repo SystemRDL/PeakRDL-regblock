@@ -76,3 +76,39 @@ you can define your own.
 
 3. Use your new CPUIF definition when exporting.
 4. If you think the CPUIF protocol is something others might find useful, let me know and I can add it to PeakRDL!
+
+
+Entry point for the PeakRDL command line tool
+---------------------------------------------
+To make your custom CPUIF class visible to the `PeakRDL command-line tool <https://peakrdl.readthedocs.io>`_,
+provide an entry point linkage in your package's ``setup.py``. This advertises
+your custom CPUIF class to the PeakRDL-regblock tool as a plugin that should be
+loaded, and made available as a command-line option in PeakRDL.
+
+
+.. code-block:: python
+    :emphasize-lines: 7-11
+
+    import setuptools
+
+    setuptools.setup(
+        name="my_package",
+        packages=["my_package"],
+        # ...
+        entry_points = {
+            "peakrdl_regblock.cpuif": [
+                'my-cpuif = my_package.__peakrdl_regblock__:MyCPUIF'
+            ]
+        }
+    )
+
+
+*   ``my_package``: The name of your installable Python module
+*   ``peakrdl-regblock.cpuif``: This is the namespace that PeakRDL-regblock will
+    search. Any cpuif plugins you create must be enclosed in this namespace in
+    order to be discovered.
+*   ``my_package.__peakrdl_regblock__:MyCPUIF``: This is the import path that
+    points to your CPUIF class definition.
+*   ``my-cpuif``: The lefthand side of the assignment is your cpuif's name. This
+    text is what the end-user uses in the command line interface to select your
+    CPUIF implementation.
