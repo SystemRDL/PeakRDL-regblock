@@ -224,20 +224,33 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 f"assign {output_identifier} = {value};"
             )
 
+        # Software access strobes
         if node.get_property('swmod'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swmod")
             value = self.field_logic.get_swmod_identifier(node)
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
-
         if node.get_property('swacc'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swacc")
             value = self.field_logic.get_swacc_identifier(node)
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
+        if node.get_property('rd_swacc'):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "rd_swacc")
+            value = self.field_logic.get_rd_swacc_identifier(node)
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
+        if node.get_property('wr_swacc'):
+            output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "wr_swacc")
+            value = self.field_logic.get_wr_swacc_identifier(node)
+            self.add_content(
+                f"assign {output_identifier} = {value};"
+            )
 
+        # Counter thresholds
         if node.get_property('incrthreshold') is not False: # (explicitly not False. Not 0)
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "incrthreshold")
             value = self.field_logic.get_field_combo_identifier(node, 'incrthreshold')
@@ -251,6 +264,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 f"assign {output_identifier} = {value};"
             )
 
+        # Counter events
         if node.get_property('overflow'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "overflow")
             value = self.field_logic.get_field_combo_identifier(node, 'overflow')

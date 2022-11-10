@@ -118,12 +118,3 @@ class RBufferTrigger(xBufferTrigger):
         if node.get_property('buffer_reads'):
             return node
         return None
-
-
-
-ALL_UDPS = [
-    BufferWrites,
-    WBufferTrigger,
-    BufferReads,
-    RBufferTrigger,
-]

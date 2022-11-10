@@ -46,3 +46,17 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
         - Defines the buffered write commit trigger.
 
           See: :ref:`write_buffering`.
+
+    *   - rd_swacc
+        - field
+        - boolean
+        - Enables an output strobe that is asserted on sw reads.
+
+          See: :ref:`extended_swacc`.
+
+    *   - wr_swacc
+        - field
+        - boolean
+        - Enables an output strobe that is asserted on sw writes.
+
+          See: :ref:`extended_swacc`.

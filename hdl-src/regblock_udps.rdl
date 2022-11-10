@@ -26,3 +26,13 @@ property wbuffer_trigger {
     component = reg;
     type = ref;
 };
+
+property rd_swacc {
+    component = field;
+    type = boolean;
+};
+
+property wr_swacc {
+    component = field;
+    type = boolean;
+};

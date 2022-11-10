@@ -190,6 +190,7 @@ class Hwif:
             assert prop in {
                 "anded", "ored", "xored", "swmod", "swacc",
                 "incrthreshold", "decrthreshold", "overflow", "underflow",
+                "rd_swacc", "wr_swacc",
             }
         elif isinstance(node, RegNode):
             assert prop in {

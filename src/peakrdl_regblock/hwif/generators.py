@@ -128,7 +128,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             self.add_member("value", node.width)
 
         # Generate output bit signals enabled via property
-        for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow"]:
+        for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow", "rd_swacc", "wr_swacc"]:
             if node.get_property(prop_name):
                 self.add_member(prop_name)
 

@@ -161,6 +161,10 @@ class Dereferencer:
             return self.field_logic.get_swacc_identifier(field)
         if prop_name == "swmod":
             return self.field_logic.get_swmod_identifier(field)
+        if prop_name == "rd_swacc":
+            return self.field_logic.get_rd_swacc_identifier(field)
+        if prop_name == "wr_swacc":
+            return self.field_logic.get_wr_swacc_identifier(field)
 
 
         # translate aliases
