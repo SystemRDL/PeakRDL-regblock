@@ -34,6 +34,5 @@ The following are exempt and are free to use with no restrictions:
     IP, whatever.
 *   Any code snippets in this documentation can be freely copy/pasted. These are
     examples that are intended for this purpose.
-*   The UDP definition SystemRDL file distributed in this documentation, and
-    located in the repository.
-*   Any example snippets within this documentation.
+*   All reference files that are downloadable from this documentation, which are
+    also available in the `hdl-src folder in the repository <https://github.com/SystemRDL/PeakRDL-regblock/tree/main/hdl-src>`_
