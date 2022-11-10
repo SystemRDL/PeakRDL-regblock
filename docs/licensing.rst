@@ -1,7 +1,7 @@
 Licensing
 =========
 
-Distribution of the PeakRDL-regblock code generator tool shall adhere to the
+Re-distribution of the PeakRDL-regblock code generator tool shall adhere to the
 terms outlined by the GNU GPL v3 license. For a copy of the license, see:
 https://github.com/SystemRDL/PeakRDL-regblock/blob/main/LICENSE
 
