@@ -94,6 +94,7 @@ Links
     hwif
     api
     limitations
+    licensing
 
 .. toctree::
     :hidden:
