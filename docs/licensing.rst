@@ -17,7 +17,7 @@ this project's philosophy.
 What is covered by the GPL v3 license?
 --------------------------------------
 The GPL license is intended for the code generator itself. This includes all
-Python sources, Jinja demplate files, as well as testcase infrastructure not
+Python sources, Jinja template files, as well as testcase infrastructure not
 explicitly mentioned in the exemptions below.
 
 
