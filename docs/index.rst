@@ -33,7 +33,14 @@ Install from `PyPi`_ using pip
 
 Quick Start
 -----------
+The easiest way is to use the `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_:
 
+.. code-block:: bash
+
+    peakrdl regblock atxmega_spi.rdl -o regblock/ --cpuif apb3-flat
+
+
+Otherwise if you want, there is a Python API.
 Below is a simple example that demonstrates how to generate a SystemVerilog
 implementation from SystemRDL source.
 
