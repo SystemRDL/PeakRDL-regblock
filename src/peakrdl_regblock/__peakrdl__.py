@@ -21,7 +21,7 @@ CPUIF_DICT = {
 }
 
 # Load any user-plugins
-for ep in entry_points.get_entry_points("peakrdl_regblock.cpuif"): # type: ignore
+for ep, dist in entry_points.get_entry_points("peakrdl_regblock.cpuif"):
     name = ep.name
     cpuif = ep.load()
     if name in CPUIF_DICT:
