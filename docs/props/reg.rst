@@ -6,10 +6,9 @@ Register Properties
 
 accesswidth
 -----------
-|OK|
+Control the software access width. The register block's CPUIF bus width is
+determined by the maximum accesswidth encountered.
 
 regwidth
 --------
-|OK|
-
 Control the bit-width of the register.
