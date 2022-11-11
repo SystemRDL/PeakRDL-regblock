@@ -116,7 +116,7 @@ Links
 
 .. toctree::
     :hidden:
-    :caption: Property Support
+    :caption: SystemRDL Properties
 
     props/field
     props/reg
