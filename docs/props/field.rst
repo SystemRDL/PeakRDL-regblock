@@ -9,19 +9,16 @@ Software Access Properties
 
 onread/onwrite
 ^^^^^^^^^^^^^^
-|OK|
 
 All onread/onwrite actions are supported (except for ruser/wuser)
 
 rclr/rset
 ^^^^^^^^^
-|OK|
 
 See ``onread``. These are effectively aliases of the onread property.
 
 singlepulse
 ^^^^^^^^^^^
-|OK|
 
 If set, field will get cleared back to zero after being written.
 
