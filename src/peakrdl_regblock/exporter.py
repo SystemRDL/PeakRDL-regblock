@@ -137,7 +137,7 @@ class RegblockExporter:
         addr_width = self.top_node.size.bit_length()
         if user_addr_width is not None:
             if user_addr_width < addr_width:
-                msg.fatal(f"User-specified address width shall be greater than {addr_width}.")
+                msg.fatal(f"User-specified address width shall be greater than or equal to {addr_width}.")
             addr_width = user_addr_width
 
         # Scan the design for pre-export information
