@@ -88,6 +88,15 @@ class Exporter:
             help="Generate a HWIF report file"
         )
 
+        arg_group.add_argument(
+            "--addr-width",
+            type=int,
+            default=None,
+            help="""Override the CPU interface's address width. By default,
+            address width is sized to the contents of the regblock.
+            """
+        )
+
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         x = RegblockExporter()
@@ -101,4 +110,5 @@ class Exporter:
             retime_read_fanin=options.rt_read_fanin,
             retime_read_response=options.rt_read_response,
             generate_hwif_report=options.hwif_report,
+            address_width=options.addr_width,
         )

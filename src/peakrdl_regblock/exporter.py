@@ -1,5 +1,5 @@
 import os
-from typing import Union, Any, Type
+from typing import Union, Any, Type, Optional
 
 import jinja2 as jj
 from systemrdl.node import AddrmapNode, RootNode
@@ -98,14 +98,18 @@ class RegblockExporter:
 
             Enabling this option will increase read transfer latency by 1 clock cycle.
         generate_hwif_report: bool
-            If set, generates a hwif report that can help understand the structure
-            of the hwif_in and hwif_out structures.
+            If set, generates a hwif report that can help designers understand
+            the contents of the ``hwif_in`` and ``hwif_out`` structures.
+        address_width: int
+            Override the CPU interface's address width. By default, address width
+            is sized to the contents of the regblock.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
             self.top_node = node.top
         else:
             self.top_node = node
+        msg = self.top_node.env.msg
 
 
         cpuif_cls = kwargs.pop("cpuif_cls", None) or APB4_Cpuif # type: Type[CpuifBase]
@@ -113,6 +117,7 @@ class RegblockExporter:
         package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
         generate_hwif_report = kwargs.pop("generate_hwif_report", False) # type: bool
+        user_addr_width = kwargs.pop("address_width", None) # type: Optional[int]
 
         # Pipelining options
         retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
@@ -129,6 +134,12 @@ class RegblockExporter:
         if retime_read_response:
             self.min_read_latency += 1
 
+        addr_width = self.top_node.size.bit_length()
+        if user_addr_width is not None:
+            if user_addr_width < addr_width:
+                msg.fatal(f"User-specified address width shall be greater than {addr_width}.")
+            addr_width = user_addr_width
+
         # Scan the design for pre-export information
         scanner = DesignScanner(self)
         scanner.do_scan()
@@ -144,7 +155,7 @@ class RegblockExporter:
             self,
             cpuif_reset=self.top_node.cpuif_reset,
             data_width=scanner.cpuif_data_width,
-            addr_width=self.top_node.size.bit_length()
+            addr_width=addr_width
         )
         self.hwif = Hwif(
             self,
