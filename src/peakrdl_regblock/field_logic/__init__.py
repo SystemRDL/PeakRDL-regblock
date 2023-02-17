@@ -223,7 +223,7 @@ class FieldLogic:
         set or clear side effect).
         """
         w_modifiable = field.is_sw_writable
-        r_modifiable = (field.get_property('onread') is not None)
+        r_modifiable = field.get_property('onread') is not None
         buffer_writes = field.parent.get_property('buffer_writes')
         buffer_reads = field.parent.get_property('buffer_reads')
 
@@ -383,7 +383,7 @@ class FieldLogic:
         The returned list is sorted in priority order - the conditional with highest
         precedence is first in the list.
         """
-        sw_precedence = (field.get_property('precedence') == PrecedenceType.sw)
+        sw_precedence = field.get_property('precedence') == PrecedenceType.sw
         result = []
 
         if sw_precedence:
