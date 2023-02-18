@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from peakrdl.plugins.exporter import ExporterSubcommandPlugin #pylint: disable=import-error
+
 from .exporter import RegblockExporter
 from .cpuif import apb3, apb4, axi4lite, passthrough, CpuifBase
 from .udps import ALL_UDPS
@@ -31,7 +33,7 @@ for ep, dist in entry_points.get_entry_points("peakrdl_regblock.cpuif"):
     CPUIF_DICT[name] = cpuif
 
 
-class Exporter:
+class Exporter(ExporterSubcommandPlugin):
     short_desc = "Generate a SystemVerilog control/status register (CSR) block"
 
     udp_definitions = ALL_UDPS
