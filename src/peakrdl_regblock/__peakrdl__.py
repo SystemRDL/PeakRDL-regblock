@@ -1,6 +1,8 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Type
+import functools
 
 from peakrdl.plugins.exporter import ExporterSubcommandPlugin #pylint: disable=import-error
+from peakrdl.config import schema #pylint: disable=import-error
 
 from .exporter import RegblockExporter
 from .cpuif import apb3, apb4, axi4lite, passthrough, CpuifBase
@@ -12,36 +14,56 @@ if TYPE_CHECKING:
     from systemrdl.node import AddrmapNode
 
 
-CPUIF_DICT = {
-    "apb3": apb3.APB3_Cpuif,
-    "apb3-flat": apb3.APB3_Cpuif_flattened,
-    "apb4": apb4.APB4_Cpuif,
-    "apb4-flat": apb4.APB4_Cpuif_flattened,
-    "axi4-lite": axi4lite.AXI4Lite_Cpuif,
-    "axi4-lite-flat": axi4lite.AXI4Lite_Cpuif_flattened,
-    "passthrough": passthrough.PassthroughCpuif
-}
-
-# Load any user-plugins
-for ep, dist in entry_points.get_entry_points("peakrdl_regblock.cpuif"):
-    name = ep.name
-    cpuif = ep.load()
-    if name in CPUIF_DICT:
-        raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it already exists")
-    if not issubclass(cpuif, CpuifBase):
-        raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it not a CpuifBase class")
-    CPUIF_DICT[name] = cpuif
-
-
 class Exporter(ExporterSubcommandPlugin):
     short_desc = "Generate a SystemVerilog control/status register (CSR) block"
 
     udp_definitions = ALL_UDPS
 
+    cfg_schema = {
+        "cpuifs": {"*": schema.PythonObjectImport()}
+    }
+
+    @functools.lru_cache()
+    def get_cpuifs(self) -> Dict[str, Type[CpuifBase]]:
+
+        # All built-in CPUIFs
+        cpuifs = {
+            "apb3": apb3.APB3_Cpuif,
+            "apb3-flat": apb3.APB3_Cpuif_flattened,
+            "apb4": apb4.APB4_Cpuif,
+            "apb4-flat": apb4.APB4_Cpuif_flattened,
+            "axi4-lite": axi4lite.AXI4Lite_Cpuif,
+            "axi4-lite-flat": axi4lite.AXI4Lite_Cpuif_flattened,
+            "passthrough": passthrough.PassthroughCpuif
+        }
+
+        # Load any cpuifs specified via entry points
+        for ep, dist in entry_points.get_entry_points("peakrdl_regblock.cpuif"):
+            name = ep.name
+            cpuif = ep.load()
+            if name in cpuifs:
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it already exists")
+            if not issubclass(cpuif, CpuifBase):
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it not a CpuifBase class")
+            cpuifs[name] = cpuif
+
+        # Load any CPUIFs via config import
+        for name, cpuif in self.cfg['cpuifs'].items():
+            if name in cpuifs:
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it already exists")
+            if not issubclass(cpuif, CpuifBase):
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it not a CpuifBase class")
+            cpuifs[name] = cpuif
+
+        return cpuifs
+
+
     def add_exporter_arguments(self, arg_group: 'argparse.ArgumentParser') -> None:
+        cpuifs = self.get_cpuifs()
+
         arg_group.add_argument(
             "--cpuif",
-            choices=CPUIF_DICT.keys(),
+            choices=cpuifs.keys(),
             default="apb3",
             help="Select the CPU interface protocol to use [apb3]"
         )
@@ -101,11 +123,13 @@ class Exporter(ExporterSubcommandPlugin):
 
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
+        cpuifs = self.get_cpuifs()
+
         x = RegblockExporter()
         x.export(
             top_node,
             options.output,
-            cpuif_cls=CPUIF_DICT[options.cpuif],
+            cpuif_cls=cpuifs[options.cpuif],
             module_name=options.module_name,
             package_name=options.package_name,
             reuse_hwif_typedefs=(options.type_style == "lexical"),
