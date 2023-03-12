@@ -100,6 +100,7 @@ Links
     architecture
     hwif
     api
+    configuring
     limitations
     licensing
 
