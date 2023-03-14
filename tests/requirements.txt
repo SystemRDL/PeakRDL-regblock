@@ -7,4 +7,4 @@ jinja2-simple-tags
 pylint
 mypy
 pytest-cov
-coverage
+coveralls>=3.0.0
