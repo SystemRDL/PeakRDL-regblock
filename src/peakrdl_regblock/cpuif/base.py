@@ -29,6 +29,9 @@ class CpuifBase:
     def port_declaration(self) -> str:
         raise NotImplementedError()
 
+    @property
+    def parameter_declaration(self) -> Optional[str]:
+        return None
 
     def _get_template_path_class_dir(self) -> str:
         """
