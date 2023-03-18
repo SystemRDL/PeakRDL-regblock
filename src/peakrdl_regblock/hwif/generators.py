@@ -186,7 +186,7 @@ class EnumGenerator:
     Generator for user defined enums
     """
 
-    def get_enums(self, in_hier_enums: set['UserEnum']) -> str:
+    def get_enums(self, in_hier_enums: set['UserEnum']) -> Optional[str]:
         if not in_hier_enums:
             return None
 
@@ -205,7 +205,7 @@ class EnumGenerator:
         else:
             return base_name
 
-    def enum_typedef(self, user_enum_set: 'userEnum', seperator : str = '__') -> str:
+    def enum_typedef(self, user_enum_set: 'UserEnum', seperator : str = '__') -> str:
         lines = ['typedef enum {']
 
         user_enum: 'UserEnum'
