@@ -48,8 +48,8 @@ addrmap top {
         count->decr = decrement;
         count->hwclr = clear;
         count->hwset = set;
-        count->incrvalue = step;
         count->decrvalue = step;
+        count->incrvalue = count->decrvalue;
     } saturate_via_const @ 0x4;
 
 
@@ -72,7 +72,7 @@ addrmap top {
         count->hwclr = clear;
         count->hwset = set;
         count->incrvalue = step;
-        count->decrvalue = step;
+        count->decrvalue = count->incrvalue;
     } saturate_via_ref @ 0x8;
 
     reg {

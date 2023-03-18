@@ -10,8 +10,10 @@ import pytest
 from systemrdl import RDLCompiler
 
 from peakrdl_regblock import RegblockExporter
+from peakrdl_regblock.udps import ALL_UDPS
+
 from .cpuifs.base import CpuifTestMode
-from .cpuifs.apb3 import APB3
+from .cpuifs.apb4 import APB4
 
 
 class BaseTestCase(unittest.TestCase):
@@ -28,11 +30,12 @@ class BaseTestCase(unittest.TestCase):
     rdl_elab_params = {}
 
     #: Define what CPUIF to use for this testcase
-    cpuif = APB3() # type: CpuifTestMode
+    cpuif = APB4() # type: CpuifTestMode
 
     # Other exporter args:
     retime_read_fanin = False
     retime_read_response = False
+    reuse_hwif_typedefs = True
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -83,6 +86,14 @@ class BaseTestCase(unittest.TestCase):
             rdl_file = glob.glob(os.path.join(this_dir, "*.rdl"))[0]
 
         rdlc = RDLCompiler()
+
+        # Load the UDPs
+        for udp in ALL_UDPS:
+            rdlc.register_udp(udp)
+        # ... including the definition
+        udp_file = os.path.join(this_dir, "../../hdl-src/regblock_udps.rdl")
+        rdlc.compile_file(udp_file)
+
         rdlc.compile_file(rdl_file)
         root = rdlc.elaborate(cls.rdl_elab_target, "regblock", cls.rdl_elab_params)
 
@@ -94,6 +105,7 @@ class BaseTestCase(unittest.TestCase):
             cpuif_cls=cls.cpuif.cpuif_cls,
             retime_read_fanin=cls.retime_read_fanin,
             retime_read_response=cls.retime_read_response,
+            reuse_hwif_typedefs=cls.reuse_hwif_typedefs
         )
 
     @classmethod

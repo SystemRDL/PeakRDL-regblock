@@ -61,4 +61,23 @@
     assert(cb.hwif_out.r2.a.value == 'h0);
     assert(cb.hwif_out.r2.b.value == 'h0);
     assert(cb.hwif_out.r2.c.value == 'h0);
+
+    // rw_reg
+    cpuif.assert_read('h3000, 0);
+    cpuif.write('h3000, 'h4DEAB000);
+    @cb;
+    assert(cb.hwif_out.rw_reg.f1.value == 8'hAB);
+    assert(cb.hwif_out.rw_reg.f2.value == 11'h4DE);
+    cpuif.assert_read('h3000, 'h4DEAB000);
+
+    // rw_reg_lsb0
+    `ifndef XSIM
+        // Xilinx simulator has poor support for streaming operators. Skip
+        cpuif.assert_read('h3004, 0);
+        cpuif.write('h3004, 'h4DEAB000);
+        @cb;
+        assert({<<{cb.hwif_out.rw_reg_lsb0.f1.value}} == 8'hAB);
+        assert({<<{cb.hwif_out.rw_reg_lsb0.f2.value}} == 11'h4DE);
+        cpuif.assert_read('h3004, 'h4DEAB000);
+    `endif
 {% endblock %}

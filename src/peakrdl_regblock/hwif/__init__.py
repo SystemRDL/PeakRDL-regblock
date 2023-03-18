@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Union, List, Set, Dict
+from typing import TYPE_CHECKING, Union, Set, Dict, Optional, TextIO
 
-from systemrdl.node import AddrmapNode, Node, SignalNode, FieldNode, AddressableNode, RegNode
+from systemrdl.node import AddrmapNode, SignalNode, FieldNode, RegNode
 from systemrdl.rdltypes import PropertyReference, UserEnum
 
 from ..utils import get_indexed_path
@@ -25,7 +25,7 @@ class Hwif:
         self, exp: 'RegblockExporter', package_name: str,
         in_hier_enums: Set[UserEnum],
         in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
-        reuse_typedefs: bool
+        reuse_typedefs: bool, hwif_report_file: Optional[TextIO]
     ):
         self.exp = exp
         self.package_name = package_name
@@ -35,7 +35,10 @@ class Hwif:
 
         self.in_hier_signal_paths = in_hier_signal_paths
         self.out_of_hier_signals = out_of_hier_signals
+
         self.in_hier_enums = in_hier_enums
+
+        self.hwif_report_file = hwif_report_file
 
         if reuse_typedefs:
             self._gen_in_cls = InputStructGenerator_TypeScope
@@ -198,6 +201,7 @@ class Hwif:
             assert prop in {
                 "anded", "ored", "xored", "swmod", "swacc",
                 "incrthreshold", "decrthreshold", "overflow", "underflow",
+                "rd_swacc", "wr_swacc",
             }
         elif isinstance(node, RegNode):
             assert prop in {

@@ -50,8 +50,8 @@ addrmap top {
         updown2->decr = do_count_down;
         updown3->incr = do_count_up;
         updown3->decr = do_count_down;
-        updown4->incr = do_count_up;
-        updown4->decr = do_count_down;
+        updown4->incr = updown3->incr;
+        updown4->decr = updown3->decr;
     } simple @ 0x0;
 
 

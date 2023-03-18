@@ -12,6 +12,9 @@ commands to be visible via the PATH environment variable.
 * Go to the *Individual Files* tab.
 * Download Questa files. (Don't forget part 2!)
 * Install
+* Create an account on https://licensing.intel.com
+    * press "Enroll" to register
+    * After you confirm your email, go back to this page and press "Enroll" again to finish enrollment
 * Go to https://licensing.intel.com/psg/s/sales-signup-evaluationlicenses
 * Generate a free *Starter Edition* license file for Questa
     * Easiest to use a *fixed* license using your NIC ID (MAC address of your network card via `ifconfig`)

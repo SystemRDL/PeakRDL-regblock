@@ -161,6 +161,10 @@ class Dereferencer:
             return self.field_logic.get_swacc_identifier(field)
         if prop_name == "swmod":
             return self.field_logic.get_swmod_identifier(field)
+        if prop_name == "rd_swacc":
+            return self.field_logic.get_rd_swacc_identifier(field)
+        if prop_name == "wr_swacc":
+            return self.field_logic.get_wr_swacc_identifier(field)
 
 
         # translate aliases
@@ -195,11 +199,11 @@ class Dereferencer:
         raise NotImplementedError
 
 
-    def get_access_strobe(self, obj: Union[RegNode, FieldNode]) -> str:
+    def get_access_strobe(self, obj: Union[RegNode, FieldNode], reduce_substrobes: bool=True) -> str:
         """
         Returns the Verilog string that represents the register's access strobe
         """
-        return self.address_decode.get_access_strobe(obj)
+        return self.address_decode.get_access_strobe(obj, reduce_substrobes)
 
     def get_resetsignal(self, obj: Optional[SignalNode]) -> str:
         """

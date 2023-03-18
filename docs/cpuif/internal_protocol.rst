@@ -34,6 +34,10 @@ cpuif_wr_data
     Data to be written for the write transfer. This signal is ignored for read
     transfers.
 
+cpuif_wr_biten
+    Active-high bit-level write-enable strobes.
+    Only asserted bit positions will change the register value during a write transfer.
+
 cpuif_req_stall_rd
     If asserted, and the next pending request is a read operation, then the
     transfer will not be accepted until this signal is deasserted.

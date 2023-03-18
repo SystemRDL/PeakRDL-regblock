@@ -20,31 +20,23 @@ Field
 
 field -> swacc
 ^^^^^^^^^^^^^^
-|EX|
-
-Single-cycle strobe that indicates the field is being sampled during a software
-read operation.
+Single-cycle strobe that indicates the field is being accessed by software
+(read or write).
 
 
 field -> swmod
 ^^^^^^^^^^^^^^^
-|EX|
-
 Single-cycle strobe that indicates the field is being modified during a software
 access operation.
 
 
 field -> swwe/swwel
 ^^^^^^^^^^^^^^^^^^^
-|OK|
-
 Represents the signal that controls the field's swwe/swwel behavior.
 
 
 field -> anded/ored/xored
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the current and/or/xor reduction of the field's value.
 
 
@@ -57,8 +49,6 @@ Represents the signal that controls the field's hwclr/hwset behavior.
 
 field -> hwenable/hwmask
 ^^^^^^^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the signal that controls the field's hwenable/hwmask behavior.
 
 field -> we/wel
@@ -86,9 +76,8 @@ Field Counter Properties
 
 field -> incr
 ^^^^^^^^^^^^^
-|EX|
-
 Represents the signal that controls the field's counter increment control.
+
 
 field -> incrsaturate/saturate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,20 +110,14 @@ exceeded its incrthreshold.
 
 field -> incrvalue
 ^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the value that was assigned to this property.
 
 field -> overflow
 ^^^^^^^^^^^^^^^^^
-|OK|
-
 Represents the event signal that is asserted when the counter is about to wrap.
 
 field -> decr
 ^^^^^^^^^^^^^
-|EX|
-
 Represents the signal that controls the field's counter decrement control.
 
 field -> decrsaturate
@@ -167,14 +150,10 @@ exceeded its incrthreshold.
 
 field -> decrvalue
 ^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the value that was assigned to this property.
 
 field -> underflow
 ^^^^^^^^^^^^^^^^^^
-|OK|
-
 Represents the event signal that is asserted when the counter is about to wrap.
 
 --------------------------------------------------------------------------------
@@ -184,19 +163,19 @@ Field Interrupt Properties
 
 field -> enable
 ^^^^^^^^^^^^^^^
-|EX|
+Represents the value that was assigned to this property.
 
 field -> mask
 ^^^^^^^^^^^^^
-|EX|
+Represents the value that was assigned to this property.
 
 field -> haltenable
 ^^^^^^^^^^^^^^^^^^^
-|EX|
+Represents the value that was assigned to this property.
 
 field -> haltmask
 ^^^^^^^^^^^^^^^^^
-|EX|
+Represents the value that was assigned to this property.
 
 
 --------------------------------------------------------------------------------
@@ -206,12 +185,8 @@ Register
 
 reg -> intr
 ^^^^^^^^^^^
-|OK|
-
 References the register's ``hwif_out..intr`` signal.
 
 reg -> halt
 ^^^^^^^^^^^
-|OK|
-
 References the register's ``hwif_out..halt`` signal.

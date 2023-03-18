@@ -1,5 +1,5 @@
 import os
-from typing import Union, Any, Type
+from typing import Union, Any, Type, Optional
 
 import jinja2 as jj
 from systemrdl.node import AddrmapNode, RootNode
@@ -10,11 +10,14 @@ from .dereferencer import Dereferencer
 from .readback import Readback
 from .identifier_filter import kw_filter as kwf
 
-from .cpuif import CpuifBase
-from .cpuif.apb3 import APB3_Cpuif
-from .hwif import Hwif
 from .utils import get_always_ff_event
 from .scan_design import DesignScanner
+from .validate_design import DesignValidator
+from .cpuif import CpuifBase
+from .cpuif.apb4 import APB4_Cpuif
+from .hwif import Hwif
+from .write_buffering import WriteBuffering
+from .read_buffering import ReadBuffering
 
 class RegblockExporter:
     def __init__(self, **kwargs: Any) -> None:
@@ -29,6 +32,8 @@ class RegblockExporter:
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
         self.readback = None # type: Readback
+        self.write_buffering = WriteBuffering(self)
+        self.read_buffering = ReadBuffering(self)
         self.dereferencer = Dereferencer(self)
         self.min_read_latency = 0
         self.min_write_latency = 0
@@ -57,7 +62,7 @@ class RegblockExporter:
             Output includes two files: a module definition and package definition.
         cpuif_cls: :class:`peakrdl_regblock.cpuif.CpuifBase`
             Specify the class type that implements the CPU interface of your choice.
-            Defaults to AMBA APB3.
+            Defaults to AMBA APB4.
         module_name: str
             Override the SystemVerilog module name. By default, the module name
             is the top-level node's name.
@@ -92,18 +97,27 @@ class RegblockExporter:
             response path sequentially may not result in any meaningful timing improvement.
 
             Enabling this option will increase read transfer latency by 1 clock cycle.
+        generate_hwif_report: bool
+            If set, generates a hwif report that can help designers understand
+            the contents of the ``hwif_in`` and ``hwif_out`` structures.
+        address_width: int
+            Override the CPU interface's address width. By default, address width
+            is sized to the contents of the regblock.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
             self.top_node = node.top
         else:
             self.top_node = node
+        msg = self.top_node.env.msg
 
 
-        cpuif_cls = kwargs.pop("cpuif_cls", None) or APB3_Cpuif # type: Type[CpuifBase]
+        cpuif_cls = kwargs.pop("cpuif_cls", None) or APB4_Cpuif # type: Type[CpuifBase]
         module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
         package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
         reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
+        generate_hwif_report = kwargs.pop("generate_hwif_report", False) # type: bool
+        user_addr_width = kwargs.pop("address_width", None) # type: Optional[int]
 
         # Pipelining options
         retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
@@ -120,18 +134,29 @@ class RegblockExporter:
         if retime_read_response:
             self.min_read_latency += 1
 
-        # Scan the design for any unsupported features
-        # Also collect pre-export information
+        addr_width = self.top_node.size.bit_length()
+        if user_addr_width is not None:
+            if user_addr_width < addr_width:
+                msg.fatal(f"User-specified address width shall be greater than or equal to {addr_width}.")
+            addr_width = user_addr_width
+
+        # Scan the design for pre-export information
         scanner = DesignScanner(self)
         scanner.do_scan()
 
+        if generate_hwif_report:
+            path = os.path.join(output_dir, f"{module_name}_hwif.rpt")
+            hwif_report_file = open(path, "w", encoding='utf-8') # pylint: disable=consider-using-with
+        else:
+            hwif_report_file = None
+
+        # Construct exporter components
         self.cpuif = cpuif_cls(
             self,
             cpuif_reset=self.top_node.cpuif_reset,
             data_width=scanner.cpuif_data_width,
-            addr_width=self.top_node.size.bit_length()
+            addr_width=addr_width
         )
-
         self.hwif = Hwif(
             self,
             package_name=package_name,
@@ -139,19 +164,28 @@ class RegblockExporter:
             out_of_hier_signals=scanner.out_of_hier_signals,
             in_hier_enums=scanner.in_hier_enums,
             reuse_typedefs=reuse_hwif_typedefs,
+            hwif_report_file=hwif_report_file,
         )
-
         self.readback = Readback(
             self,
             retime_read_fanin
         )
 
+        # Validate that there are no unsupported constructs
+        validator = DesignValidator(self)
+        validator.do_validate()
+
         # Build Jinja template context
         context = {
             "module_name": module_name,
             "user_out_of_hier_signals": scanner.out_of_hier_signals.values(),
+            "has_writable_msb0_fields": scanner.has_writable_msb0_fields,
+            "has_buffered_write_regs": scanner.has_buffered_write_regs,
+            "has_buffered_read_regs": scanner.has_buffered_read_regs,
             "cpuif": self.cpuif,
             "hwif": self.hwif,
+            "write_buffering": self.write_buffering,
+            "read_buffering": self.read_buffering,
             "get_resetsignal": self.dereferencer.get_resetsignal,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
@@ -173,3 +207,6 @@ class RegblockExporter:
         template = self.jj_env.get_template("module_tmpl.sv")
         stream = template.stream(context)
         stream.dump(module_file_path)
+
+        if hwif_report_file:
+            hwif_report_file.close()

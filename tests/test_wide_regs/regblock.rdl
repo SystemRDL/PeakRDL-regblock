@@ -1,0 +1,93 @@
+addrmap top {
+
+    reg {
+        regwidth = 64;
+        accesswidth = 16;
+        default sw=rw;
+        default hw=r;
+
+        field {} f1[7:0] = 0;
+        field {} f2[14:12] = 0;
+        field {} f3[36:36] = 0;
+        field {} f4[47:40] = 0;
+    } rw_reg1;
+
+    reg {
+        regwidth = 64;
+        accesswidth = 16;
+        default sw=rw;
+        default hw=r;
+
+        field {} f1[19:16] = 0;
+        field {} f2[63:48] = 0;
+    } rw_reg2;
+
+    reg {
+        regwidth = 64;
+        accesswidth = 16;
+        default sw=rw;
+        default hw=r;
+
+        field {} f1[0:7] = 0;
+        field {} f2[12:14] = 0;
+        field {} f3[36:36] = 0;
+        field {} f4[40:47] = 0;
+    } rw_reg1_lsb0;
+
+    reg {
+        regwidth = 64;
+        accesswidth = 16;
+        default sw=rw;
+        default hw=r;
+
+        field {} f1[16:19] = 0;
+        field {} f2[48:63] = 0;
+    } rw_reg2_lsb0;
+
+    reg {
+        regwidth = 32;
+        accesswidth = 16;
+        default sw=r;
+        default hw=w;
+
+        field {
+            sw=w; hw=r;
+        } f0[3:3] = 0;
+        field {} f1[19:12];
+        field {} f2[30:20];
+    } r_reg;
+
+    reg {
+        regwidth = 32;
+        accesswidth = 16;
+        default sw=r;
+        default hw=w;
+
+        field {} f1[12:19];
+        field {} f2[20:30];
+    } r_reg_lsb0;
+
+    reg {
+        regwidth = 64;
+        accesswidth = 16;
+        default sw=r;
+        default hw=w;
+
+        field {} f1[31:12];
+        field {} f2[49:48];
+    } r_reg2;
+
+    reg {
+        regwidth=16;
+        field {
+            sw=r; hw=na;
+            counter;
+        } f1_cnt[7:0] = 0;
+        field {
+            sw=r; hw=na;
+            counter;
+        } f2_cnt[15:8] = 0;
+    } counter_reg;
+    counter_reg.f1_cnt->incr = r_reg2.f1->swacc;
+    counter_reg.f2_cnt->incr = r_reg2.f2->swacc;
+};

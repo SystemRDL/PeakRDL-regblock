@@ -26,6 +26,7 @@ module {{module_name}} (
     logic cpuif_req_is_wr;
     logic [{{cpuif.addr_width-1}}:0] cpuif_addr;
     logic [{{cpuif.data_width-1}}:0] cpuif_wr_data;
+    logic [{{cpuif.data_width-1}}:0] cpuif_wr_biten;
     logic cpuif_req_stall_wr;
     logic cpuif_req_stall_rd;
 
@@ -84,6 +85,7 @@ module {{module_name}} (
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [{{cpuif.data_width-1}}:0] decoded_wr_data;
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_biten;
 
     always_comb begin
         {{address_decode.get_implementation()|indent(8)}}
@@ -93,11 +95,28 @@ module {{module_name}} (
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
+    assign decoded_wr_biten = cpuif_wr_biten;
+{% if has_writable_msb0_fields %}
+    // bitswap for use by fields with msb0 ordering
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_data_bswap;
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_biten_bswap;
+    assign decoded_wr_data_bswap = {<<{decoded_wr_data}};
+    assign decoded_wr_biten_bswap = {<<{decoded_wr_biten}};
+{%- endif %}
 
     // Writes are always granted with no error response
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
     assign cpuif_wr_err = '0;
 
+{%- if has_buffered_write_regs %}
+
+    //--------------------------------------------------------------------------
+    // Write double-buffers
+    //--------------------------------------------------------------------------
+    {{write_buffering.get_storage_struct()|indent}}
+
+    {{write_buffering.get_implementation()|indent}}
+{%- endif %}
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
@@ -107,6 +126,15 @@ module {{module_name}} (
 
     {{field_logic.get_implementation()|indent}}
 
+{%- if has_buffered_read_regs %}
+
+    //--------------------------------------------------------------------------
+    // Read double-buffers
+    //--------------------------------------------------------------------------
+    {{read_buffering.get_storage_struct()|indent}}
+
+    {{read_buffering.get_implementation()|indent}}
+{%- endif %}
     //--------------------------------------------------------------------------
     // Readback
     //--------------------------------------------------------------------------
@@ -114,7 +142,6 @@ module {{module_name}} (
     logic readback_done;
     logic [{{cpuif.data_width-1}}:0] readback_data;
     {{readback.get_implementation()|indent}}
-
 {% if retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
@@ -131,6 +158,5 @@ module {{module_name}} (
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
-{% endif %}
-
+{%- endif %}
 endmodule

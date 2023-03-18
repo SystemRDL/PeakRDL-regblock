@@ -11,10 +11,6 @@ class AXI4Lite_Cpuif(CpuifBase):
         return "s_axil." + name.upper()
 
     @property
-    def data_width_bytes(self) -> int:
-        return self.data_width // 8
-
-    @property
     def regblock_latency(self) -> int:
         return max(self.exp.min_read_latency, self.exp.min_write_latency)
 
@@ -49,7 +45,7 @@ class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
             "output logic " + self.signal("wready"),
             "input wire " + self.signal("wvalid"),
             f"input wire [{self.data_width-1}:0] " + self.signal("wdata"),
-            f"input wire [{self.data_width//8-1}:0]" + self.signal("wstrb"),
+            f"input wire [{self.data_width_bytes-1}:0]" + self.signal("wstrb"),
 
             "input wire " + self.signal("bready"),
             "output logic " + self.signal("bvalid"),

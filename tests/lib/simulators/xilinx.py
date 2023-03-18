@@ -7,8 +7,10 @@ from . import Simulator
 class Xilinx(Simulator):
     """
     Don't bother using the Xilinx simulator... Its buggy and extraordinarily slow.
-    As observed in v2021.1, clocking block assignments do not seem to actually simulate
-    correctly - assignment statements get ignored or the values get mangled.
+    As observed in v2021.1:
+        - clocking block assignments do not seem to actually simulate correctly.
+          assignment statements get ignored or the values get mangled.
+        - Streaming operators have all sorts of limitations.
 
     Keeping this here in case someday it works better...
     """
@@ -16,6 +18,7 @@ class Xilinx(Simulator):
         cmd = [
             "xvlog", "--sv",
             "--include", os.path.join(os.path.dirname(__file__), ".."),
+            "--define", "XSIM",
         ]
         cmd.extend(self.tb_files)
         subprocess.run(cmd, check=True)

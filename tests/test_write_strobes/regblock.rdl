@@ -1,0 +1,54 @@
+addrmap top {
+
+    reg {
+        field {
+            sw=rw; hw=na;
+            onwrite = woset;
+        } f1[3:0] = 0x0;
+
+        field {
+            sw=rw; hw=na;
+            onwrite = woclr;
+        } f2[7:4] = 0xF;
+
+        field {
+            sw=rw; hw=na;
+            onwrite = wot;
+        } f3[11:8] = 0x0;
+    } r1;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+            onwrite = wzs;
+        } f1[3:0] = 0x0;
+
+        field {
+            sw=rw; hw=na;
+            onwrite = wzc;
+        } f2[7:4] = 0xF;
+
+        field {
+            sw=rw; hw=na;
+            onwrite = wzt;
+        } f3[11:8] = 0x0;
+    } r2;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+            onwrite = wclr;
+        } f1[7:0] = 0xF0;
+
+        field {
+            sw=rw; hw=na;
+            onwrite = wset;
+        } f2[15:8] = 0x0F;
+    } r3;
+
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f3[7:0] = 0x00;
+    } r4;
+};

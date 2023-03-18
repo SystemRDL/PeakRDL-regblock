@@ -5,10 +5,10 @@ from peakrdl_regblock.cpuif.axi4lite import AXI4Lite_Cpuif, AXI4Lite_Cpuif_flatt
 class AXI4Lite(CpuifTestMode):
     cpuif_cls = AXI4Lite_Cpuif
     rtl_files = [
-        "axi4lite_intf.sv",
+        "../../../../hdl-src/axi4lite_intf.sv",
     ]
     tb_files = [
-        "axi4lite_intf.sv",
+        "../../../../hdl-src/axi4lite_intf.sv",
         "axi4lite_intf_driver.sv",
     ]
     tb_template = "tb_inst.sv"
