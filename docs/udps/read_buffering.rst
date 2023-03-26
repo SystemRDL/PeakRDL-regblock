@@ -34,7 +34,7 @@ enabled by compiling the following file along with your design:
 ``buffer_reads``
     *   Assigned value is a boolean.
     *   If true, enables double-buffering of software reads of this register.
-    *   The read buffer will load the register's field values when it's trigger
+    *   The read buffer will load the register's field values when its trigger
         event is asserted.
     *   Unless specified otherwise, the buffer trigger occurs when the lowest
         address of the buffered register is read.

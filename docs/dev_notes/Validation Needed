@@ -78,7 +78,7 @@ X Illegal property references:
         next
             is this ever illegal?
 
-X If a node ispresent=true, and any of it's properties are a reference,
+X If a node ispresent=true, and any of its properties are a reference,
     then those references' ispresent shall also be true
     This is an explicit clause in the spec: 5.3.1-i
 

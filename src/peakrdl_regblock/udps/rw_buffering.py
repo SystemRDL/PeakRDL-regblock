@@ -23,7 +23,7 @@ class xBufferTrigger(UDPDefinition):
             # Trigger can reference a vector, but only if it is a single-bit
             if value.width != 1:
                 self.msg.error(
-                    "%s '%s' references %s '%s' but it's width is not 1"
+                    "%s '%s' references %s '%s' but its width is not 1"
                     % (
                         type(node.inst).__name__.lower(), node.inst_name,
                         type(value.inst).__name__.lower(), value.inst_name
@@ -42,7 +42,7 @@ class xBufferTrigger(UDPDefinition):
             # Trigger can reference a property, but only if it is a single-bit
             if value.width != 1:
                 self.msg.error(
-                    "%s '%s' references property '%s->%s' but it's width is not 1"
+                    "%s '%s' references property '%s->%s' but its width is not 1"
                     % (
                         type(node.inst).__name__.lower(), node.inst_name,
                         value.node.inst_name, value.name,
