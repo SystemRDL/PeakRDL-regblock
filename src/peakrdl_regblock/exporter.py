@@ -197,6 +197,7 @@ class RegblockExporter:
         }
 
         # Write out design
+        os.makedirs(output_dir, exist_ok=True)
         package_file_path = os.path.join(output_dir, package_name + ".sv")
         template = self.jj_env.get_template("package_tmpl.sv")
         stream = template.stream(context)
