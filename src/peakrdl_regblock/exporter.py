@@ -153,7 +153,6 @@ class RegblockExporter:
         # Construct exporter components
         self.cpuif = cpuif_cls(
             self,
-            cpuif_reset=self.top_node.cpuif_reset,
             data_width=scanner.cpuif_data_width,
             addr_width=addr_width
         )
