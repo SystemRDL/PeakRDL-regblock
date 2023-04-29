@@ -14,8 +14,8 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
             {{wbuf_prefix}}.data{{segment.bslice}} <= decoded_wr_data_bswap;
             {{wbuf_prefix}}.biten{{segment.bslice}} <= decoded_wr_biten_bswap;
             {%- else %}
-            {{wbuf_prefix}}.data{{segment.bslice}} <= decoded_wr_data;
-            {{wbuf_prefix}}.biten{{segment.bslice}} <= decoded_wr_biten;
+            {{wbuf_prefix}}.data{{segment.bslice}} <= ({{wbuf_prefix}}.data{{segment.bslice}} & ~decoded_wr_biten{{segment.bslice}}) | (decoded_wr_data{{segment.bslice}} & decoded_wr_biten{{segment.bslice}});
+            {{wbuf_prefix}}.biten{{segment.bslice}} <= decoded_wr_biten | {{wbuf_prefix}}.biten{{segment.bslice}};
             {%- endif %}
         end
         {%- endfor %}
