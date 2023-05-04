@@ -8,7 +8,7 @@ read and write operations - it is asserted on *all* software accesses.
 Similarly, the spec defines ``swmod`` which gets asserted on software writes,
 but can also get asserted if the field has on-read side-effects.
 
-What if you just wanted a plan and simple strobe that is asserted when software
+What if you just wanted a plain and simple strobe that is asserted when software
 reads or writes a field? The ``rd_swacc`` and ``wr_swacc`` UDPs provide this
 functionality.
 

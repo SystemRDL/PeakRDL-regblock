@@ -20,8 +20,19 @@ if TYPE_CHECKING:
     from ..exporter import RegblockExporter
 
 class FieldLogic:
-    def __init__(self, exp:'RegblockExporter'):
+    def __init__(
+        self,
+        exp:'RegblockExporter',
+        retime_external_reg: bool,
+        retime_external_regfile: bool,
+        retime_external_mem: bool,
+        retime_external_addrmap: bool,
+    ):
         self.exp = exp
+        self.retime_external_reg = retime_external_reg
+        self.retime_external_regfile = retime_external_regfile
+        self.retime_external_mem = retime_external_mem
+        self.retime_external_addrmap = retime_external_addrmap
 
         self._hw_conditionals = {} # type: Dict[int, List[NextStateConditional]]
         self._sw_conditionals = {} # type: Dict[int, List[NextStateConditional]]

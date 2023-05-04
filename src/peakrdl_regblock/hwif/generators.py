@@ -1,12 +1,13 @@
 from typing import TYPE_CHECKING, Optional, List, Type
 
-from systemrdl.node import FieldNode
+from systemrdl.node import FieldNode, RegNode, AddrmapNode, MemNode
+from systemrdl.walker import WalkerAction
 
 from ..struct_generator import RDLFlatStructGenerator
 from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, SignalNode, RegNode
+    from systemrdl.node import Node, SignalNode, AddressableNode, RegfileNode
     from . import Hwif
     from systemrdl.rdltypes import UserEnum
 
@@ -65,6 +66,43 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         if path in self.hwif.in_hier_signal_paths:
             self.add_member(kwf(node.inst_name), node.width)
 
+    def _add_external_block_members(self, node: 'AddressableNode') -> None:
+        self.add_member("rd_ack")
+        self.add_member("rd_data", self.hwif.data_width)
+        self.add_member("wr_ack")
+
+    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+        super().enter_Addrmap(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Regfile(self, node: 'RegfileNode') -> None:
+        super().enter_Regfile(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
+        super().enter_Mem(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
+        super().enter_Reg(node)
+        if node.external:
+            width = min(self.hwif.data_width, node.get_property('regwidth'))
+            self.add_member("rd_ack")
+            self.add_member("rd_data", width)
+            self.add_member("wr_ack")
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
+
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
@@ -120,6 +158,47 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
         )
         return f'{base}__out_t'
 
+    def _add_external_block_members(self, node: 'AddressableNode') -> None:
+        self.add_member("req")
+        self.add_member("addr", (node.size - 1).bit_length())
+        self.add_member("req_is_wr")
+        self.add_member("wr_data", self.hwif.data_width)
+        self.add_member("wr_biten", self.hwif.data_width)
+
+    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+        super().enter_Addrmap(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Regfile(self, node: 'RegfileNode') -> None:
+        super().enter_Regfile(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
+        super().enter_Mem(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
+        super().enter_Reg(node)
+        if node.external:
+            width = min(self.hwif.data_width, node.get_property('regwidth'))
+            n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
+            self.add_member("req", n_subwords)
+            self.add_member("req_is_wr")
+            self.add_member("wr_data", width)
+            self.add_member("wr_biten", width)
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
+
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
@@ -162,6 +241,10 @@ class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
         else:
             extra_suffix = ""
 
+        if node.external:
+            # Node generates alternate external signals
+            extra_suffix += "__external"
+
         return f'{scope_path}__{node.type_name}{extra_suffix}__in_t'
 
 class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
@@ -176,6 +259,10 @@ class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
             extra_suffix = get_field_type_name_suffix(node)
         else:
             extra_suffix = ""
+
+        if node.external:
+            # Node generates alternate external signals
+            extra_suffix += "__external"
 
         return f'{scope_path}__{node.type_name}{extra_suffix}__out_t'
 

@@ -13,6 +13,7 @@ class Simulator:
     def tb_files(self) -> List[str]:
         files = []
         files.extend(self.testcase_cls.cpuif.get_sim_files())
+        files.extend(self.testcase_cls.get_extra_tb_files())
         files.append("regblock_pkg.sv")
         files.append("regblock.sv")
         files.append("tb.sv")

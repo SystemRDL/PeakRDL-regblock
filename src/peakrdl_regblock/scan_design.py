@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Set, Optional, Type, List
 from collections import OrderedDict
 
 from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
-from systemrdl.node import SignalNode
+from systemrdl.node import SignalNode, RegNode
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, RegNode, FieldNode
+    from systemrdl.node import Node, FieldNode, AddressableNode
     from .exporter import RegblockExporter
     from systemrdl.rdltypes import UserEnum
 
@@ -29,6 +29,9 @@ class DesignScanner(RDLListener):
         self.has_writable_msb0_fields = False
         self.has_buffered_write_regs = False
         self.has_buffered_read_regs = False
+
+        self.has_external_block = False
+        self.has_external_addressable = False
 
         # Track any referenced enums
         self.user_enums = [] # type: List[Type[UserEnum]]
@@ -91,7 +94,13 @@ class DesignScanner(RDLListener):
                 if value not in self.user_enums:
                     self.user_enums.append(value)
 
-        return None
+        return WalkerAction.Continue
+
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> None:
+        if node.external and node != self.exp.top_node:
+            self.has_external_addressable = True
+            if not isinstance(node, RegNode):
+                self.has_external_block = True
 
     def enter_Reg(self, node: 'RegNode') -> None:
         # The CPUIF's bus width is sized according to the largest accesswidth in the design

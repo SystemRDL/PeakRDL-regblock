@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Dict, Type
 import functools
+import sys
 
 from peakrdl.plugins.exporter import ExporterSubcommandPlugin #pylint: disable=import-error
 from peakrdl.config import schema #pylint: disable=import-error
@@ -95,6 +96,10 @@ class Exporter(ExporterSubcommandPlugin):
             help="Enable additional retiming stage between readback fan-in and cpu interface"
         )
         arg_group.add_argument(
+            "--rt-external",
+            help="Retime outputs to external components. Specify a comma-separated list of: reg,regfile,mem,addrmap,all"
+        )
+        arg_group.add_argument(
             "--type-style",
             dest="type_style",
             choices=['lexical', 'hier'],
@@ -125,6 +130,29 @@ class Exporter(ExporterSubcommandPlugin):
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         cpuifs = self.get_cpuifs()
 
+        retime_external_reg = False
+        retime_external_regfile = False
+        retime_external_mem = False
+        retime_external_addrmap = False
+        if options.rt_external:
+            for key in options.rt_external.split(","):
+                key = key.strip().lower()
+                if key == "reg":
+                    retime_external_reg = True
+                elif key == "regfile":
+                    retime_external_regfile = True
+                elif key == "mem":
+                    retime_external_mem = True
+                elif key == "addrmap":
+                    retime_external_addrmap = True
+                elif key == "all":
+                    retime_external_reg = True
+                    retime_external_regfile = True
+                    retime_external_mem = True
+                    retime_external_addrmap = True
+                else:
+                    print("error: invalid option for --rt-external: '%s'" % key, file=sys.stderr)
+
         x = RegblockExporter()
         x.export(
             top_node,
@@ -135,6 +163,10 @@ class Exporter(ExporterSubcommandPlugin):
             reuse_hwif_typedefs=(options.type_style == "lexical"),
             retime_read_fanin=options.rt_read_fanin,
             retime_read_response=options.rt_read_response,
+            retime_external_reg=retime_external_reg,
+            retime_external_regfile=retime_external_regfile,
+            retime_external_mem=retime_external_mem,
+            retime_external_addrmap=retime_external_addrmap,
             generate_hwif_report=options.hwif_report,
             address_width=options.addr_width,
         )

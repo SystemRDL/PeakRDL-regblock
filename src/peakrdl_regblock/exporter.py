@@ -18,6 +18,7 @@ from .cpuif.apb4 import APB4_Cpuif
 from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
+from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
 
 class RegblockExporter:
     def __init__(self, **kwargs: Any) -> None:
@@ -29,12 +30,12 @@ class RegblockExporter:
         self.top_node = None # type: AddrmapNode
         self.hwif = None # type: Hwif
         self.cpuif = None # type: CpuifBase
-        self.address_decode = AddressDecode(self)
-        self.field_logic = FieldLogic(self)
+        self.address_decode = None # type: AddressDecode
+        self.field_logic = None # type: FieldLogic
         self.readback = None # type: Readback
-        self.write_buffering = WriteBuffering(self)
-        self.read_buffering = ReadBuffering(self)
-        self.dereferencer = Dereferencer(self)
+        self.write_buffering = None # type: WriteBuffering
+        self.read_buffering = None # type: ReadBuffering
+        self.dereferencer = None # type: Dereferencer
         self.min_read_latency = 0
         self.min_write_latency = 0
 
@@ -97,6 +98,14 @@ class RegblockExporter:
             response path sequentially may not result in any meaningful timing improvement.
 
             Enabling this option will increase read transfer latency by 1 clock cycle.
+        retime_external_reg: bool
+            Retime outputs to external ``reg`` components.
+        retime_external_regfile: bool
+            Retime outputs to external ``regfile`` components.
+        retime_external_mem: bool
+            Retime outputs to external ``mem`` components.
+        retime_external_addrmap: bool
+            Retime outputs to external ``addrmap`` components.
         generate_hwif_report: bool
             If set, generates a hwif report that can help designers understand
             the contents of the ``hwif_in`` and ``hwif_out`` structures.
@@ -121,7 +130,11 @@ class RegblockExporter:
 
         # Pipelining options
         retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
-        retime_read_response = kwargs.pop("retime_read_response", True) # type: bool
+        retime_read_response = kwargs.pop("retime_read_response", False) # type: bool
+        retime_external_reg = kwargs.pop("retime_external_reg", False) # type: bool
+        retime_external_regfile = kwargs.pop("retime_external_regfile", False) # type: bool
+        retime_external_mem = kwargs.pop("retime_external_mem", False) # type: bool
+        retime_external_addrmap = kwargs.pop("retime_external_addrmap", False) # type: bool
 
         # Check for stray kwargs
         if kwargs:
@@ -164,11 +177,26 @@ class RegblockExporter:
             user_enums=scanner.user_enums,
             reuse_typedefs=reuse_hwif_typedefs,
             hwif_report_file=hwif_report_file,
+            data_width=scanner.cpuif_data_width,
         )
         self.readback = Readback(
             self,
-            retime_read_fanin
+            retime_read_fanin,
+            scanner.has_external_addressable
         )
+        self.address_decode = AddressDecode(self)
+        self.field_logic = FieldLogic(
+            self,
+            retime_external_reg=retime_external_reg,
+            retime_external_regfile=retime_external_regfile,
+            retime_external_mem=retime_external_mem,
+            retime_external_addrmap=retime_external_addrmap,
+        )
+        self.write_buffering = WriteBuffering(self)
+        self.read_buffering = ReadBuffering(self)
+        self.dereferencer = Dereferencer(self)
+        ext_write_acks = ExternalWriteAckGenerator(self)
+        ext_read_acks = ExternalReadAckGenerator(self)
 
         # Validate that there are no unsupported constructs
         validator = DesignValidator(self)
@@ -181,6 +209,8 @@ class RegblockExporter:
             "has_writable_msb0_fields": scanner.has_writable_msb0_fields,
             "has_buffered_write_regs": scanner.has_buffered_write_regs,
             "has_buffered_read_regs": scanner.has_buffered_read_regs,
+            "has_external_addressable": scanner.has_external_addressable,
+            "has_external_block": scanner.has_external_block,
             "cpuif": self.cpuif,
             "hwif": self.hwif,
             "write_buffering": self.write_buffering,
@@ -189,8 +219,11 @@ class RegblockExporter:
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
             "readback": self.readback,
+            "ext_write_acks": ext_write_acks,
+            "ext_read_acks": ext_read_acks,
             "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.dereferencer, resetsignal),
             "retime_read_response": retime_read_response,
+            "retime_read_fanin": retime_read_fanin,
             "min_read_latency": self.min_read_latency,
             "min_write_latency": self.min_write_latency,
             "kwf": kwf,

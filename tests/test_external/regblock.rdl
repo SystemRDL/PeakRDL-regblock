@@ -1,0 +1,29 @@
+addrmap top {
+    reg my_reg {
+        field {sw=rw; hw=r;} whatever[32] = 0;
+    };
+    reg my_wide_reg {
+        regwidth = 64;
+        accesswidth = 32;
+        field {sw=rw; hw=r;} whatever = 0;
+    };
+
+    external my_reg ext_reg @ 0x00;
+    my_reg int_reg @ 0x04;
+    external my_wide_reg wide_ext_reg @ 0x10;
+    external my_reg ext_reg_array[32] @ 0x100 += 4;
+
+
+    external regfile {
+        my_reg placeholder @ 8*4-4;
+    } rf @ 0x1000;
+
+    addrmap {
+        my_reg placeholder @ 8*4-4;
+    } am @ 0x2000;
+
+    external mem {
+        memwidth = 32;
+        mementries = 8;
+    } mm @ 0x3000;
+};

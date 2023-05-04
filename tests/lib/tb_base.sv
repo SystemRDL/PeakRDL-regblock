@@ -30,11 +30,11 @@ module tb;
     default clocking cb @(posedge clk);
         default input #1step output #1;
         output rst;
-{%- if exporter.hwif.has_input_struct %}
+{%- if exporter.hwif.has_input_struct and cls.clocking_hwif_in %}
         output hwif_in;
 {%- endif %}
 
-{%- if exporter.hwif.has_output_struct %}
+{%- if exporter.hwif.has_output_struct and cls.clocking_hwif_out %}
         input hwif_out;
 {%- endif %}
 
@@ -68,12 +68,15 @@ module tb;
 {%- endif %}
     {% sv_line_anchor %}
 
+{%- block dut_support %}
+{%- endblock %}
+
     //--------------------------------------------------------------------------
     // Test Sequence
     //--------------------------------------------------------------------------
     initial begin
         cb.rst <= '1;
-    {%- if exporter.hwif.has_input_struct %}
+    {%- if exporter.hwif.has_input_struct and cls.init_hwif_in %}
         cb.hwif_in <= '{default: '0};
     {%- endif %}
 

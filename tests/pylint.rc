@@ -492,7 +492,7 @@ valid-metaclass-classmethod-first-arg=cls
 ignored-parents=
 
 # Maximum number of arguments for function / method.
-max-args=8
+max-args=16
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=7

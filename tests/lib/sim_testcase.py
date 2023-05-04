@@ -22,6 +22,25 @@ class SimTestCase(BaseTestCase):
 
     tb_template_file = "tb_template.sv"
 
+    # Paths are relative to the testcase dir
+    extra_tb_files = [] # type: List[str]
+
+    # Whether to initialize the hwif_in struct at test startup
+    init_hwif_in = True
+
+    # Control whether to include in clocking block
+    clocking_hwif_in = True
+    clocking_hwif_out = True
+
+
+    @classmethod
+    def get_extra_tb_files(cls) -> List[str]:
+        paths = []
+        for path in cls.extra_tb_files:
+            path = os.path.join(cls.get_testcase_dir(), path)
+            paths.append(path)
+        return paths
+
     @classmethod
     def _generate_tb(cls):
         """

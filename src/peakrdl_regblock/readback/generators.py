@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, List
 
-from systemrdl.node import RegNode
+from systemrdl.node import RegNode, AddressableNode
+from systemrdl.walker import WalkerAction
 
 from ..forloop_generator import RDLForLoopGenerator, LoopBody
 
@@ -77,9 +78,26 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         self.current_offset = start_offset + n_regs * dim
 
 
-    def enter_Reg(self, node: RegNode) -> None:
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> WalkerAction:
+        super().enter_AddressableComponent(node)
+
+        if node.external and not isinstance(node, RegNode):
+            # External block
+            strb = self.exp.hwif.get_external_rd_ack(node)
+            data = self.exp.hwif.get_external_rd_data(node)
+            self.add_content(f"assign readback_array[{self.current_offset_str}] = {strb} ? {data} : '0;")
+            self.current_offset += 1
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
+
+    def enter_Reg(self, node: RegNode) -> WalkerAction:
+        if node.external:
+            self.process_external_reg(node)
+            return WalkerAction.SkipDescendants
+
         if not node.has_sw_readable:
-            return
+            return WalkerAction.SkipDescendants
 
         accesswidth = node.get_property('accesswidth')
         regwidth = node.get_property('regwidth')
@@ -100,6 +118,19 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         else:
             self.process_reg(node)
 
+        return WalkerAction.SkipDescendants
+
+    def process_external_reg(self, node: RegNode) -> None:
+        strb = self.exp.hwif.get_external_rd_ack(node)
+        data = self.exp.hwif.get_external_rd_data(node)
+        regwidth = node.get_property('regwidth')
+        if regwidth < self.exp.cpuif.data_width:
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{self.exp.cpuif.data_width-1}:{regwidth}] = '0;")
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{regwidth-1}:0] = {strb} ? {data} : '0;")
+        else:
+            self.add_content(f"assign readback_array[{self.current_offset_str}] = {strb} ? {data} : '0;")
+
+        self.current_offset += 1
 
     def process_reg(self, node: RegNode) -> None:
         current_bit = 0

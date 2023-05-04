@@ -9,9 +9,10 @@ if TYPE_CHECKING:
     from systemrdl.node import AddrmapNode
 
 class Readback:
-    def __init__(self, exp:'RegblockExporter', do_fanin_stage: bool):
+    def __init__(self, exp:'RegblockExporter', do_fanin_stage: bool, has_external_addressable: bool):
         self.exp = exp
         self.do_fanin_stage = do_fanin_stage
+        self.has_external_addressable = has_external_addressable
 
     @property
     def top_node(self) -> 'AddrmapNode':
@@ -33,6 +34,7 @@ class Readback:
             "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
             "cpuif": self.exp.cpuif,
             "do_fanin_stage": self.do_fanin_stage,
+            "has_external_addressable": self.has_external_addressable,
         }
 
         if self.do_fanin_stage:

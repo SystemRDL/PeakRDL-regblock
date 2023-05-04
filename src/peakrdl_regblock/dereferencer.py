@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Union, Optional
-from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode
+from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
 
 if TYPE_CHECKING:
@@ -204,6 +204,12 @@ class Dereferencer:
         Returns the Verilog string that represents the register's access strobe
         """
         return self.address_decode.get_access_strobe(obj, reduce_substrobes)
+
+    def get_external_block_access_strobe(self, obj: 'AddressableNode') -> str:
+        """
+        Returns the Verilog string that represents the external block's access strobe
+        """
+        return self.address_decode.get_external_block_access_strobe(obj)
 
     def get_resetsignal(self, obj: Optional[SignalNode]) -> str:
         """

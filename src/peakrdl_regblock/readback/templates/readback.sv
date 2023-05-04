@@ -35,7 +35,11 @@ always_ff @(posedge clk) begin
         readback_done_r <= '0;
     end else begin
         readback_array_r <= readback_array_c;
+        {%- if has_external_addressable %}
+        readback_done_r <= decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
+        {%- else %}
         readback_done_r <= decoded_req & ~decoded_req_is_wr;
+        {%- endif %}
     end
 end
 
@@ -54,7 +58,11 @@ end
 // Reduce the array
 always_comb begin
     automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
+    {%- if has_external_addressable %}
+    readback_done = decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
+    {%- else %}
     readback_done = decoded_req & ~decoded_req_is_wr;
+    {%- endif %}
     readback_err = '0;
     readback_data_var = '0;
     for(int i=0; i<{{array_size}}; i++) readback_data_var |= readback_array[i];

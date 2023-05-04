@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Union, Set, Dict, Optional, TextIO, Type, List
 
-from systemrdl.node import AddrmapNode, SignalNode, FieldNode, RegNode
+from systemrdl.node import AddrmapNode, SignalNode, FieldNode, RegNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference, UserEnum
 
 from ..utils import get_indexed_path
@@ -25,7 +25,8 @@ class Hwif:
         self, exp: 'RegblockExporter', package_name: str,
         user_enums: List[Type[UserEnum]],
         in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
-        reuse_typedefs: bool, hwif_report_file: Optional[TextIO]
+        reuse_typedefs: bool, hwif_report_file: Optional[TextIO],
+        data_width: int
     ):
         self.exp = exp
         self.package_name = package_name
@@ -38,6 +39,8 @@ class Hwif:
         self.user_enums = user_enums
 
         self.hwif_report_file = hwif_report_file
+
+        self.data_width = data_width
 
         if reuse_typedefs:
             self._gen_in_cls = InputStructGenerator_TypeScope
@@ -162,6 +165,26 @@ class Hwif:
 
         raise RuntimeError(f"Unhandled reference to: {obj}")
 
+    def get_external_rd_data(self, node: AddressableNode) -> str:
+        """
+        Returns the identifier string for an external component's rd_data signal
+        """
+        path = get_indexed_path(self.top_node, node)
+        return "hwif_in." + path + ".rd_data"
+
+    def get_external_rd_ack(self, node: AddressableNode) -> str:
+        """
+        Returns the identifier string for an external component's rd_ack signal
+        """
+        path = get_indexed_path(self.top_node, node)
+        return "hwif_in." + path + ".rd_ack"
+
+    def get_external_wr_ack(self, node: AddressableNode) -> str:
+        """
+        Returns the identifier string for an external component's wr_ack signal
+        """
+        path = get_indexed_path(self.top_node, node)
+        return "hwif_in." + path + ".wr_ack"
 
     def get_implied_prop_input_identifier(self, field: FieldNode, prop: str) -> str:
         assert prop in {

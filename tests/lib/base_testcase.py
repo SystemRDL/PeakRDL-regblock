@@ -36,6 +36,7 @@ class BaseTestCase(unittest.TestCase):
     retime_read_fanin = False
     retime_read_response = False
     reuse_hwif_typedefs = True
+    retime_external = False
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -105,7 +106,11 @@ class BaseTestCase(unittest.TestCase):
             cpuif_cls=cls.cpuif.cpuif_cls,
             retime_read_fanin=cls.retime_read_fanin,
             retime_read_response=cls.retime_read_response,
-            reuse_hwif_typedefs=cls.reuse_hwif_typedefs
+            reuse_hwif_typedefs=cls.reuse_hwif_typedefs,
+            retime_external_reg=cls.retime_external,
+            retime_external_regfile=cls.retime_external,
+            retime_external_mem=cls.retime_external,
+            retime_external_addrmap=cls.retime_external,
         )
 
     @classmethod

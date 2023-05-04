@@ -31,15 +31,17 @@ Install from `PyPi`_ using pip
 
 
 
-Quick Start
------------
+Quick Start - PeakRDL
+---------------------
 The easiest way is to use the `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_:
 
 .. code-block:: bash
 
-    peakrdl regblock atxmega_spi.rdl -o regblock/ --cpuif apb3-flat
+    peakrdl regblock atxmega_spi.rdl -o regblock/ --cpuif axi4-lite
 
 
+Quick Start - API
+-----------------
 Otherwise if you want, there is a Python API.
 Below is a simple example that demonstrates how to generate a SystemVerilog
 implementation from SystemRDL source.
@@ -49,7 +51,7 @@ implementation from SystemRDL source.
 
     from systemrdl import RDLCompiler, RDLCompileError
     from peakrdl_regblock import RegblockExporter
-    from peakrdl_regblock.cpuif.apb3 import APB3_Cpuif
+    from peakrdl_regblock.cpuif.axi4lite import AXI4Lite_Cpuif
     from peakrdl_regblock.udps import ALL_UDPS
 
     input_files = [
@@ -78,7 +80,7 @@ implementation from SystemRDL source.
     exporter = RegblockExporter()
     exporter.export(
         root, "path/to/output_dir",
-        cpuif_cls=APB3_Cpuif
+        cpuif_cls=AXI4Lite_Cpuif
     )
 
 
@@ -99,8 +101,8 @@ Links
     self
     architecture
     hwif
-    api
     configuring
+    api
     limitations
     licensing
 
@@ -124,6 +126,12 @@ Links
     props/addrmap
     props/signal
     props/rhs_props
+
+.. toctree::
+    :hidden:
+    :caption: Other SystemRDL Features
+
+    rdl_features/external
 
 .. toctree::
     :hidden:
