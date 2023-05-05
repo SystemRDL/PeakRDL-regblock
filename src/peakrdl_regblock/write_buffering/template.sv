@@ -7,6 +7,11 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
         {{wbuf_prefix}}.trigger_q <= '0;
         {%- endif %}
     end else begin
+        if({{wbuf.get_trigger(node)}}) begin
+            {{wbuf_prefix}}.pending <= '0;
+            {{wbuf_prefix}}.data <= '0;
+            {{wbuf_prefix}}.biten <= '0;
+        end
         {%- for segment in segments %}
         if({{segment.strobe}} && decoded_req_is_wr) begin
             {{wbuf_prefix}}.pending <= '1;
@@ -22,10 +27,5 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
         {% if is_own_trigger %}
         {{wbuf_prefix}}.trigger_q <= {{wbuf.get_raw_trigger(node)}};
         {%- endif %}
-        if({{wbuf.get_trigger(node)}}) begin
-            {{wbuf_prefix}}.pending <= '0;
-            {{wbuf_prefix}}.data <= '0;
-            {{wbuf_prefix}}.biten <= '0;
-        end
     end
 end
