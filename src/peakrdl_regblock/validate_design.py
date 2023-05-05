@@ -4,6 +4,8 @@ from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
 from systemrdl.rdltypes import PropertyReference
 from systemrdl.node import Node
 
+from .utils import ref_is_internal
+
 if TYPE_CHECKING:
     from systemrdl.node import RegNode, FieldNode, SignalNode, AddressableNode
     from .exporter import RegblockExporter
@@ -36,15 +38,12 @@ class DesignValidator(RDLListener):
         # Check if any property references reach across the internal/external boundary
         for prop_name in node.list_properties():
             value = node.get_property(prop_name)
-            if isinstance(value, PropertyReference):
-                if not self._is_internal(value.node):
-                    self.msg.error(
-                        "Property is assigned a reference that points to a component not internal to the regblock being exported.",
-                        value.src_ref
-                    )
-            elif isinstance(value, Node):
-                if not self._is_internal(value):
-                    src_ref = node.inst.property_src_ref.get(prop_name, node.inst.inst_src_ref)
+            if isinstance(value, (PropertyReference, Node)):
+                if not ref_is_internal(self.exp.top_node, value):
+                    if isinstance(value, PropertyReference):
+                        src_ref = value.src_ref
+                    else:
+                        src_ref = node.inst.property_src_ref.get(prop_name, node.inst.inst_src_ref)
                     self.msg.error(
                         "Property is assigned a reference that points to a component not internal to the regblock being exported.",
                         src_ref
@@ -127,26 +126,3 @@ class DesignValidator(RDLListener):
                     "For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/read_buffering.html",
                     node.inst.inst_src_ref
                 )
-
-    def _is_internal(self, node: Node) -> bool:
-        """
-        Recurse parents to see if at any point, the referenced component is
-        enclosed in an external component.
-        """
-        current_node = node
-
-        while current_node is not None:
-            if current_node == self.exp.top_node:
-                # reached top node without finding any external components
-                # is internal!
-                return True
-
-            if current_node.external:
-                # not internal!
-                return False
-
-            current_node = current_node.parent
-
-        # A root signal was referenced, which dodged the top addrmap
-        # This is considerd internal for this exporter
-        return True

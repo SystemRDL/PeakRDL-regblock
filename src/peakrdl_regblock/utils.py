@@ -1,14 +1,16 @@
 import re
-from typing import TYPE_CHECKING, Match
+from typing import TYPE_CHECKING, Match, Union
+
+from systemrdl.rdltypes.references import PropertyReference
+from systemrdl.node import Node, SignalNode, AddrmapNode
 
 from .identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, SignalNode
     from typing import Optional
     from .dereferencer import Dereferencer
 
-def get_indexed_path(top_node: 'Node', target_node: 'Node') -> str:
+def get_indexed_path(top_node: Node, target_node: Node) -> str:
     """
     TODO: Add words about indexing and why i'm doing this. Copy from logbook
     """
@@ -49,3 +51,30 @@ def is_pow2(x: int) -> bool:
 
 def roundup_pow2(x: int) -> int:
     return 1<<(x-1).bit_length()
+
+def ref_is_internal(top_node: AddrmapNode, ref: Union[Node, PropertyReference]) -> bool:
+    """
+    Determine whether the reference is internal to the top node.
+
+    For the sake of this exporter, root signals are treated as internal.
+    """
+    if isinstance(ref, Node):
+        current_node = ref
+    elif isinstance(ref, PropertyReference):
+        current_node = ref.node
+
+    while current_node is not None:
+        if current_node == top_node:
+            # reached top node without finding any external components
+            # is internal!
+            return True
+
+        if current_node.external:
+            # not internal!
+            return False
+
+        current_node = current_node.parent
+
+    # A root signal was referenced, which dodged the top addrmap
+    # This is considerd internal for this exporter
+    return True
