@@ -94,7 +94,6 @@ Links
 - `SystemRDL Specification <http://accellera.org/downloads/standards/systemrdl>`_
 
 
-
 .. toctree::
     :hidden:
 
