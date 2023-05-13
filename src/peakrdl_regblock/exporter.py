@@ -10,7 +10,6 @@ from .dereferencer import Dereferencer
 from .readback import Readback
 from .identifier_filter import kw_filter as kwf
 
-from .utils import get_always_ff_event
 from .scan_design import DesignScanner
 from .validate_design import DesignValidator
 from .cpuif import CpuifBase
@@ -221,7 +220,7 @@ class RegblockExporter:
             "readback": self.readback,
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.dereferencer, resetsignal),
+            "get_always_ff_event": self.dereferencer.get_always_ff_event,
             "retime_read_response": retime_read_response,
             "retime_read_fanin": retime_read_fanin,
             "min_read_latency": self.min_read_latency,

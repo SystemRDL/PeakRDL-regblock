@@ -211,7 +211,7 @@ class Dereferencer:
         """
         return self.address_decode.get_external_block_access_strobe(obj)
 
-    def get_resetsignal(self, obj: Optional[SignalNode]) -> str:
+    def get_resetsignal(self, obj: Optional[SignalNode] = None) -> str:
         """
         Returns a normalized active-high reset signal
         """
@@ -224,3 +224,12 @@ class Dereferencer:
 
         # default reset signal
         return "rst"
+
+    def get_always_ff_event(self, resetsignal: Optional[SignalNode] = None) -> str:
+        if resetsignal is None:
+            return "@(posedge clk)"
+        if resetsignal.get_property('async') and resetsignal.get_property('activehigh'):
+            return f"@(posedge clk or posedge {self.get_value(resetsignal)})"
+        elif resetsignal.get_property('async') and not resetsignal.get_property('activehigh'):
+            return f"@(posedge clk or negedge {self.get_value(resetsignal)})"
+        return "@(posedge clk)"

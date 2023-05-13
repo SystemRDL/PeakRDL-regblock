@@ -1,14 +1,10 @@
 import re
-from typing import TYPE_CHECKING, Match, Union
+from typing import Match, Union
 
 from systemrdl.rdltypes.references import PropertyReference
-from systemrdl.node import Node, SignalNode, AddrmapNode
+from systemrdl.node import Node, AddrmapNode
 
 from .identifier_filter import kw_filter as kwf
-
-if TYPE_CHECKING:
-    from typing import Optional
-    from .dereferencer import Dereferencer
 
 def get_indexed_path(top_node: Node, target_node: Node) -> str:
     """
@@ -32,16 +28,6 @@ def get_indexed_path(top_node: Node, target_node: Node) -> str:
     path = re.sub(r'\w+', kw_filter_repl, path)
 
     return path
-
-
-def get_always_ff_event(dereferencer: 'Dereferencer', resetsignal: 'Optional[SignalNode]') -> str:
-    if resetsignal is None:
-        return "@(posedge clk)"
-    if resetsignal.get_property('async') and resetsignal.get_property('activehigh'):
-        return f"@(posedge clk or posedge {dereferencer.get_value(resetsignal)})"
-    elif resetsignal.get_property('async') and not resetsignal.get_property('activehigh'):
-        return f"@(posedge clk or negedge {dereferencer.get_value(resetsignal)})"
-    return "@(posedge clk)"
 
 def clog2(n: int) -> int:
     return (n-1).bit_length()

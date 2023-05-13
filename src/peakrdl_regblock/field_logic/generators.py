@@ -7,7 +7,7 @@ from systemrdl.node import RegNode, RegfileNode, MemNode, AddrmapNode
 
 from ..struct_generator import RDLStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
-from ..utils import get_always_ff_event, get_indexed_path
+from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
@@ -228,7 +228,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
             'resetsignal': resetsignal,
-            'get_always_ff_event': lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             'get_value': self.exp.dereferencer.get_value,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,
             'get_input_identifier': self.exp.hwif.get_input_identifier,
@@ -335,7 +335,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "strb": strb,
             "bslice": bslice,
             "retime": self.field_logic.retime_external_reg,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "resetsignal": self.exp.top_node.cpuif_reset,
         }
@@ -359,7 +359,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "strb": strb,
             "addr_width": addr_width,
             "retime": retime,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "resetsignal": self.exp.top_node.cpuif_reset,
         }

@@ -4,7 +4,7 @@ import os
 
 import jinja2 as jj
 
-from ..utils import get_always_ff_event, clog2, is_pow2, roundup_pow2
+from ..utils import clog2, is_pow2, roundup_pow2
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -51,7 +51,7 @@ class CpuifBase:
 
         context = {
             "cpuif": self,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            "get_always_ff_event": self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "clog2": clog2,
             "is_pow2": is_pow2,

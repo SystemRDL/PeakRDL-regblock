@@ -7,11 +7,11 @@ Testcases require an installation of the Questa simulator, and for `vlog` & `vsi
 commands to be visible via the PATH environment variable.
 
 *Questa - Intel FPGA Starter Edition* can be downloaded for free from Intel:
-* Go to https://www.intel.com/content/www/us/en/collections/products/fpga/software/downloads.html?edition=pro&s=Newest
-* Select latest version of *Intel Quartus Prime Pro*
-* Go to the *Individual Files* tab.
+* Go to https://www.intel.com/content/www/us/en/collections/products/fpga/software/downloads.html?edition=pro&q=questa&s=Relevancy
+* Select latest version of Questa
 * Download Questa files. (Don't forget part 2!)
 * Install
+    * Be sure to choose "Starter Edition" for the free version.
 * Create an account on https://licensing.intel.com
     * press "Enroll" to register
     * After you confirm your email, go back to this page and press "Enroll" again to finish enrollment
@@ -19,6 +19,9 @@ commands to be visible via the PATH environment variable.
 * Generate a free *Starter Edition* license file for Questa
     * Easiest to use a *fixed* license using your NIC ID (MAC address of your network card via `ifconfig`)
 * Download the license file and point the `LM_LICENSE_FILE` environment variable to the folder which contains it.
+* (optional) Delete Intel libraries to save some disk space
+    * Delete `<install_dir>/questa_fse/intel`
+    * Edit `<install_dir>/questa_fse/modelsim.ini` and remove lines that reference the `intel` libraries
 
 
 ## Vivado (optional)

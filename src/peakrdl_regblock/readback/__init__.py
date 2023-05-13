@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 import math
 
 from .generators import ReadbackAssignmentGenerator
-from ..utils import get_always_ff_event
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -31,7 +30,7 @@ class Readback:
         context = {
             "array_assignments" : array_assignments,
             "array_size" : array_size,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "cpuif": self.exp.cpuif,
             "do_fanin_stage": self.do_fanin_stage,
             "has_external_addressable": self.has_external_addressable,
