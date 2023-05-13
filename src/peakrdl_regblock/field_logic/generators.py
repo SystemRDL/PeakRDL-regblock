@@ -101,6 +101,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         super().__init__()
         self.field_logic = field_logic
         self.exp = field_logic.exp
+        self.ds = self.exp.ds
         self.field_storage_template = self.exp.jj_env.get_template(
             "field_logic/templates/field_storage.sv"
         )
@@ -321,7 +322,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
 
 
     def assign_external_reg_outputs(self, node: 'RegNode') -> None:
-        prefix = "hwif_out." + get_indexed_path(self.exp.top_node, node)
+        prefix = "hwif_out." + get_indexed_path(self.exp.ds.top_node, node)
         strb = self.exp.dereferencer.get_access_strobe(node)
 
         width = min(self.exp.cpuif.data_width, node.get_property('regwidth'))
@@ -334,25 +335,25 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "prefix": prefix,
             "strb": strb,
             "bslice": bslice,
-            "retime": self.field_logic.retime_external_reg,
+            "retime": self.ds.retime_external_reg,
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
-            "resetsignal": self.exp.top_node.cpuif_reset,
+            "resetsignal": self.exp.ds.top_node.cpuif_reset,
         }
         self.add_content(self.external_reg_template.render(context))
 
     def assign_external_block_outputs(self, node: 'AddressableNode') -> None:
-        prefix = "hwif_out." + get_indexed_path(self.exp.top_node, node)
+        prefix = "hwif_out." + get_indexed_path(self.exp.ds.top_node, node)
         strb = self.exp.dereferencer.get_external_block_access_strobe(node)
         addr_width = node.size.bit_length()
 
         retime = False
         if isinstance(node, RegfileNode):
-            retime = self.field_logic.retime_external_regfile
+            retime = self.ds.retime_external_regfile
         elif isinstance(node, MemNode):
-            retime = self.field_logic.retime_external_mem
+            retime = self.ds.retime_external_mem
         elif isinstance(node, AddrmapNode):
-            retime = self.field_logic.retime_external_addrmap
+            retime = self.ds.retime_external_addrmap
 
         context = {
             "prefix": prefix,
@@ -361,6 +362,6 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "retime": retime,
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
-            "resetsignal": self.exp.top_node.cpuif_reset,
+            "resetsignal": self.exp.ds.top_node.cpuif_reset,
         }
         self.add_content(self.external_block_template.render(context))

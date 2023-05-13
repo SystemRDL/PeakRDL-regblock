@@ -19,20 +19,24 @@ class DesignValidator(RDLListener):
     """
     def __init__(self, exp:'RegblockExporter') -> None:
         self.exp = exp
-        self.msg = exp.top_node.env.msg
+        self.msg = self.top_node.env.msg
 
         self._contains_external_block_stack = [] # type: List[bool]
         self.contains_external_block = False
 
+    @property
+    def top_node(self) -> 'AddrmapNode':
+        return self.exp.ds.top_node
+
     def do_validate(self) -> None:
-        RDLWalker().walk(self.exp.top_node, self)
+        RDLWalker().walk(self.top_node, self)
         if self.msg.had_error:
             self.msg.fatal(
                 "Unable to export due to previous errors"
             )
 
     def enter_Component(self, node: 'Node') -> Optional[WalkerAction]:
-        if node.external and (node != self.exp.top_node):
+        if node.external and (node != self.top_node):
             # Do not inspect external components. None of my business
             return WalkerAction.SkipDescendants
 
@@ -40,7 +44,7 @@ class DesignValidator(RDLListener):
         for prop_name in node.list_properties():
             value = node.get_property(prop_name)
             if isinstance(value, (PropertyReference, Node)):
-                if not ref_is_internal(self.exp.top_node, value):
+                if not ref_is_internal(self.top_node, value):
                     if isinstance(value, PropertyReference):
                         src_ref = value.src_ref
                     else:
@@ -55,7 +59,7 @@ class DesignValidator(RDLListener):
         # If encountering a CPUIF reset that is nested within the register model,
         # warn that it will be ignored.
         # Only cpuif resets in the top-level node or above will be honored
-        if node.get_property('cpuif_reset') and (node.parent != self.exp.top_node):
+        if node.get_property('cpuif_reset') and (node.parent != self.top_node):
             self.msg.warning(
                 "Only cpuif_reset signals that are instantiated in the top-level "
                 "addrmap or above will be honored. Any cpuif_reset signals nested "
@@ -81,7 +85,7 @@ class DesignValidator(RDLListener):
 
         if not isinstance(node, RegNode):
             # Entering a block-like node
-            if node == self.exp.top_node:
+            if node == self.top_node:
                 # Ignore top addrmap's external property when entering
                 self._contains_external_block_stack.append(False)
             else:

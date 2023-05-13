@@ -16,7 +16,7 @@ class WriteBuffering:
 
     @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
 
     def get_storage_struct(self) -> str:

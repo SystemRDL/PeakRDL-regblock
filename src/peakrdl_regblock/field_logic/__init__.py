@@ -17,22 +17,11 @@ from .generators import CombinationalStructGenerator, FieldStorageStructGenerato
 if TYPE_CHECKING:
     from typing import Dict, List
     from systemrdl.node import AddrmapNode, FieldNode
-    from ..exporter import RegblockExporter
+    from ..exporter import RegblockExporter, DesignState
 
 class FieldLogic:
-    def __init__(
-        self,
-        exp:'RegblockExporter',
-        retime_external_reg: bool,
-        retime_external_regfile: bool,
-        retime_external_mem: bool,
-        retime_external_addrmap: bool,
-    ):
+    def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
-        self.retime_external_reg = retime_external_reg
-        self.retime_external_regfile = retime_external_regfile
-        self.retime_external_mem = retime_external_mem
-        self.retime_external_addrmap = retime_external_addrmap
 
         self._hw_conditionals = {} # type: Dict[int, List[NextStateConditional]]
         self._sw_conditionals = {} # type: Dict[int, List[NextStateConditional]]
@@ -40,8 +29,12 @@ class FieldLogic:
         self.init_conditionals()
 
     @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
+
+    @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
     def get_storage_struct(self) -> str:
         struct_gen = FieldStorageStructGenerator(self)

@@ -4,18 +4,21 @@ import math
 from .generators import ReadbackAssignmentGenerator
 
 if TYPE_CHECKING:
-    from ..exporter import RegblockExporter
+    from ..exporter import RegblockExporter, DesignState
     from systemrdl.node import AddrmapNode
 
 class Readback:
-    def __init__(self, exp:'RegblockExporter', do_fanin_stage: bool, has_external_addressable: bool):
+    def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
-        self.do_fanin_stage = do_fanin_stage
-        self.has_external_addressable = has_external_addressable
+        self.do_fanin_stage = self.ds.retime_read_fanin
+
+    @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
 
     @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
     def get_implementation(self) -> str:
         gen = ReadbackAssignmentGenerator(self.exp)
@@ -33,7 +36,7 @@ class Readback:
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "cpuif": self.exp.cpuif,
             "do_fanin_stage": self.do_fanin_stage,
-            "has_external_addressable": self.has_external_addressable,
+            "ds": self.ds,
         }
 
         if self.do_fanin_stage:

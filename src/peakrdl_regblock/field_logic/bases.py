@@ -77,7 +77,7 @@ class NextStateConditional:
         raise NotImplementedError
 
     def get_field_path(self, field:'FieldNode') -> str:
-        return get_indexed_path(self.exp.top_node, field)
+        return get_indexed_path(self.exp.ds.top_node, field)
 
     def get_predicate(self, field: 'FieldNode') -> str:
         """

@@ -14,11 +14,17 @@ class CpuifBase:
     # Path is relative to the location of the class that assigns this variable
     template_path = ""
 
-    def __init__(self, exp:'RegblockExporter', data_width:int=32, addr_width:int=32):
+    def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
-        self.reset = exp.top_node.cpuif_reset
-        self.data_width = data_width
-        self.addr_width = addr_width
+        self.reset = exp.ds.top_node.cpuif_reset
+
+    @property
+    def addr_width(self) -> int:
+        return self.exp.ds.addr_width
+
+    @property
+    def data_width(self) -> int:
+        return self.exp.ds.cpuif_data_width
 
     @property
     def data_width_bytes(self) -> int:

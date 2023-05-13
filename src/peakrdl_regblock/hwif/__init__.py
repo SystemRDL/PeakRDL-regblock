@@ -11,7 +11,7 @@ from .generators import InputStructGenerator_TypeScope, OutputStructGenerator_Ty
 from .generators import EnumGenerator
 
 if TYPE_CHECKING:
-    from ..exporter import RegblockExporter
+    from ..exporter import RegblockExporter, DesignState
 
 class Hwif:
     """
@@ -22,27 +22,17 @@ class Hwif:
     """
 
     def __init__(
-        self, exp: 'RegblockExporter', package_name: str,
-        user_enums: List[Type[UserEnum]],
-        in_hier_signal_paths: Set[str], out_of_hier_signals: Dict[str, SignalNode],
-        reuse_typedefs: bool, hwif_report_file: Optional[TextIO],
-        data_width: int
+        self, exp: 'RegblockExporter',
+        hwif_report_file: Optional[TextIO]
     ):
         self.exp = exp
-        self.package_name = package_name
 
         self.has_input_struct = False
         self.has_output_struct = False
 
-        self.in_hier_signal_paths = in_hier_signal_paths
-        self.out_of_hier_signals = out_of_hier_signals
-        self.user_enums = user_enums
-
         self.hwif_report_file = hwif_report_file
 
-        self.data_width = data_width
-
-        if reuse_typedefs:
+        if self.ds.reuse_hwif_typedefs:
             self._gen_in_cls = InputStructGenerator_TypeScope
             self._gen_out_cls = OutputStructGenerator_TypeScope
         else:
@@ -50,8 +40,12 @@ class Hwif:
             self._gen_out_cls = OutputStructGenerator_Hier
 
     @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
+
+    @property
     def top_node(self) -> AddrmapNode:
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
 
     def get_package_contents(self) -> str:
@@ -83,9 +77,7 @@ class Hwif:
             self.has_output_struct = False
 
         gen_enum = EnumGenerator()
-        enums = gen_enum.get_enums(
-            self.user_enums
-        )
+        enums = gen_enum.get_enums(self.ds.user_enums)
         if enums is not None:
             lines.append(enums)
 
@@ -105,10 +97,10 @@ class Hwif:
         lines = []
         if self.has_input_struct:
             type_name = f"{self.top_node.inst_name}__in_t"
-            lines.append(f"input {self.package_name}::{type_name} hwif_in")
+            lines.append(f"input {self.ds.package_name}::{type_name} hwif_in")
         if self.has_output_struct:
             type_name = f"{self.top_node.inst_name}__out_t"
-            lines.append(f"output {self.package_name}::{type_name} hwif_out")
+            lines.append(f"output {self.ds.package_name}::{type_name} hwif_out")
 
         return ",\n".join(lines)
 
@@ -156,7 +148,7 @@ class Hwif:
             path = get_indexed_path(self.top_node, obj)
             return "hwif_in." + path + ".next"
         elif isinstance(obj, SignalNode):
-            if obj.get_path() in self.out_of_hier_signals:
+            if obj.get_path() in self.ds.out_of_hier_signals:
                 return kwf(obj.inst_name)
             path = get_indexed_path(self.top_node, obj)
             return "hwif_in." + path

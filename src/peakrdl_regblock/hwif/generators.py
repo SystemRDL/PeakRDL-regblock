@@ -63,12 +63,12 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
     def enter_Signal(self, node: 'SignalNode') -> None:
         # only emit the signal if design scanner detected it is actually being used
         path = node.get_path()
-        if path in self.hwif.in_hier_signal_paths:
+        if path in self.hwif.ds.in_hier_signal_paths:
             self.add_member(kwf(node.inst_name), node.width)
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("rd_ack")
-        self.add_member("rd_data", self.hwif.data_width)
+        self.add_member("rd_data", self.hwif.ds.cpuif_data_width)
         self.add_member("wr_ack")
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> None:
@@ -95,7 +95,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
     def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
         super().enter_Reg(node)
         if node.external:
-            width = min(self.hwif.data_width, node.get_property('regwidth'))
+            width = min(self.hwif.ds.cpuif_data_width, node.get_property('regwidth'))
             self.add_member("rd_ack")
             self.add_member("rd_data", width)
             self.add_member("wr_ack")
@@ -162,8 +162,8 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
         self.add_member("req")
         self.add_member("addr", (node.size - 1).bit_length())
         self.add_member("req_is_wr")
-        self.add_member("wr_data", self.hwif.data_width)
-        self.add_member("wr_biten", self.hwif.data_width)
+        self.add_member("wr_data", self.hwif.ds.cpuif_data_width)
+        self.add_member("wr_biten", self.hwif.ds.cpuif_data_width)
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> None:
         super().enter_Addrmap(node)
@@ -189,7 +189,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
     def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
         super().enter_Reg(node)
         if node.external:
-            width = min(self.hwif.data_width, node.get_property('regwidth'))
+            width = min(self.hwif.ds.cpuif_data_width, node.get_property('regwidth'))
             n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
             self.add_member("req", n_subwords)
             self.add_member("req_is_wr")

@@ -1,5 +1,6 @@
 import os
-from typing import Union, Any, Type, Optional
+from typing import TYPE_CHECKING, Union, Any, Type, Optional, Set, List
+from collections import OrderedDict
 
 import jinja2 as jj
 from systemrdl.node import AddrmapNode, RootNode
@@ -19,14 +20,16 @@ from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
 
+if TYPE_CHECKING:
+    from systemrdl.node import SignalNode
+    from systemrdl.rdltypes import UserEnum
+
 class RegblockExporter:
     def __init__(self, **kwargs: Any) -> None:
         # Check for stray kwargs
         if kwargs:
             raise TypeError(f"got an unexpected keyword argument '{list(kwargs.keys())[0]}'")
 
-
-        self.top_node = None # type: AddrmapNode
         self.hwif = None # type: Hwif
         self.cpuif = None # type: CpuifBase
         self.address_decode = None # type: AddressDecode
@@ -35,8 +38,7 @@ class RegblockExporter:
         self.write_buffering = None # type: WriteBuffering
         self.read_buffering = None # type: ReadBuffering
         self.dereferencer = None # type: Dereferencer
-        self.min_read_latency = 0
-        self.min_write_latency = 0
+        self.ds = None # type: DesignState
 
         loader = jj.ChoiceLoader([
             jj.FileSystemLoader(os.path.dirname(__file__)),
@@ -114,83 +116,37 @@ class RegblockExporter:
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
-            self.top_node = node.top
+            top_node = node.top
         else:
-            self.top_node = node
-        msg = self.top_node.env.msg
+            top_node = node
 
+        self.ds = DesignState(top_node, kwargs)
 
         cpuif_cls = kwargs.pop("cpuif_cls", None) or APB4_Cpuif # type: Type[CpuifBase]
-        module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
-        package_name = kwargs.pop("package_name", None) or (module_name + "_pkg") # type: str
-        reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
         generate_hwif_report = kwargs.pop("generate_hwif_report", False) # type: bool
-        user_addr_width = kwargs.pop("address_width", None) # type: Optional[int]
-
-        # Pipelining options
-        retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
-        retime_read_response = kwargs.pop("retime_read_response", False) # type: bool
-        retime_external_reg = kwargs.pop("retime_external_reg", False) # type: bool
-        retime_external_regfile = kwargs.pop("retime_external_regfile", False) # type: bool
-        retime_external_mem = kwargs.pop("retime_external_mem", False) # type: bool
-        retime_external_addrmap = kwargs.pop("retime_external_addrmap", False) # type: bool
 
         # Check for stray kwargs
         if kwargs:
             raise TypeError(f"got an unexpected keyword argument '{list(kwargs.keys())[0]}'")
 
-        self.min_read_latency = 0
-        self.min_write_latency = 0
-        if retime_read_fanin:
-            self.min_read_latency += 1
-        if retime_read_response:
-            self.min_read_latency += 1
-
-        addr_width = self.top_node.size.bit_length()
-        if user_addr_width is not None:
-            if user_addr_width < addr_width:
-                msg.fatal(f"User-specified address width shall be greater than or equal to {addr_width}.")
-            addr_width = user_addr_width
-
         # Scan the design for pre-export information
-        scanner = DesignScanner(self)
-        scanner.do_scan()
+        DesignScanner(self).do_scan()
 
         if generate_hwif_report:
-            path = os.path.join(output_dir, f"{module_name}_hwif.rpt")
+            path = os.path.join(output_dir, f"{self.ds.module_name}_hwif.rpt")
             hwif_report_file = open(path, "w", encoding='utf-8') # pylint: disable=consider-using-with
         else:
             hwif_report_file = None
 
         # Construct exporter components
-        self.cpuif = cpuif_cls(
-            self,
-            data_width=scanner.cpuif_data_width,
-            addr_width=addr_width
-        )
+        self.cpuif = cpuif_cls(self)
         self.hwif = Hwif(
             self,
-            package_name=package_name,
-            in_hier_signal_paths=scanner.in_hier_signal_paths,
-            out_of_hier_signals=scanner.out_of_hier_signals,
-            user_enums=scanner.user_enums,
-            reuse_typedefs=reuse_hwif_typedefs,
             hwif_report_file=hwif_report_file,
-            data_width=scanner.cpuif_data_width,
         )
-        self.readback = Readback(
-            self,
-            retime_read_fanin,
-            scanner.has_external_addressable
-        )
+        self.readback = Readback(self)
         self.address_decode = AddressDecode(self)
-        self.field_logic = FieldLogic(
-            self,
-            retime_external_reg=retime_external_reg,
-            retime_external_regfile=retime_external_regfile,
-            retime_external_mem=retime_external_mem,
-            retime_external_addrmap=retime_external_addrmap,
-        )
+        self.field_logic = FieldLogic(self)
         self.write_buffering = WriteBuffering(self)
         self.read_buffering = ReadBuffering(self)
         self.dereferencer = Dereferencer(self)
@@ -198,18 +154,10 @@ class RegblockExporter:
         ext_read_acks = ExternalReadAckGenerator(self)
 
         # Validate that there are no unsupported constructs
-        validator = DesignValidator(self)
-        validator.do_validate()
+        DesignValidator(self).do_validate()
 
         # Build Jinja template context
         context = {
-            "module_name": module_name,
-            "user_out_of_hier_signals": scanner.out_of_hier_signals.values(),
-            "has_writable_msb0_fields": scanner.has_writable_msb0_fields,
-            "has_buffered_write_regs": scanner.has_buffered_write_regs,
-            "has_buffered_read_regs": scanner.has_buffered_read_regs,
-            "has_external_addressable": scanner.has_external_addressable,
-            "has_external_block": scanner.has_external_block,
             "cpuif": self.cpuif,
             "hwif": self.hwif,
             "write_buffering": self.write_buffering,
@@ -221,24 +169,82 @@ class RegblockExporter:
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
-            "retime_read_response": retime_read_response,
-            "retime_read_fanin": retime_read_fanin,
-            "min_read_latency": self.min_read_latency,
-            "min_write_latency": self.min_write_latency,
+            "ds": self.ds,
             "kwf": kwf,
         }
 
         # Write out design
         os.makedirs(output_dir, exist_ok=True)
-        package_file_path = os.path.join(output_dir, package_name + ".sv")
+        package_file_path = os.path.join(output_dir, self.ds.package_name + ".sv")
         template = self.jj_env.get_template("package_tmpl.sv")
         stream = template.stream(context)
         stream.dump(package_file_path)
 
-        module_file_path = os.path.join(output_dir, module_name + ".sv")
+        module_file_path = os.path.join(output_dir, self.ds.module_name + ".sv")
         template = self.jj_env.get_template("module_tmpl.sv")
         stream = template.stream(context)
         stream.dump(module_file_path)
 
         if hwif_report_file:
             hwif_report_file.close()
+
+
+class DesignState:
+    """
+    Dumping ground for all sorts of variables that are relevant to a particular
+    design.
+    """
+
+    def __init__(self, top_node: AddrmapNode, kwargs: Any) -> None:
+        self.top_node = top_node
+        msg = top_node.env.msg
+
+        #------------------------
+        # Extract compiler args
+        #------------------------
+        self.reuse_hwif_typedefs = kwargs.pop("reuse_hwif_typedefs", True) # type: bool
+        self.module_name = kwargs.pop("module_name", None) or kwf(self.top_node.inst_name) # type: str
+        self.package_name = kwargs.pop("package_name", None) or (self.module_name + "_pkg") # type: str
+        user_addr_width = kwargs.pop("address_width", None) # type: Optional[int]
+
+
+        # Pipelining options
+        self.retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
+        self.retime_read_response = kwargs.pop("retime_read_response", False) # type: bool
+        self.retime_external_reg = kwargs.pop("retime_external_reg", False) # type: bool
+        self.retime_external_regfile = kwargs.pop("retime_external_regfile", False) # type: bool
+        self.retime_external_mem = kwargs.pop("retime_external_mem", False) # type: bool
+        self.retime_external_addrmap = kwargs.pop("retime_external_addrmap", False) # type: bool
+
+        #------------------------
+        # Info about the design
+        #------------------------
+        self.min_read_latency = 0
+        self.min_write_latency = 0
+        self.cpuif_data_width = 0
+
+        # Collections of signals that were actually referenced by the design
+        self.in_hier_signal_paths = set() # type: Set[str]
+        self.out_of_hier_signals = OrderedDict() # type: OrderedDict[str, SignalNode]
+
+        self.has_writable_msb0_fields = False
+        self.has_buffered_write_regs = False
+        self.has_buffered_read_regs = False
+
+        self.has_external_block = False
+        self.has_external_addressable = False
+
+        # Track any referenced enums
+        self.user_enums = [] # type: List[Type[UserEnum]]
+
+        #------------------------
+        if self.retime_read_fanin:
+            self.min_read_latency += 1
+        if self.retime_read_response:
+            self.min_read_latency += 1
+
+        self.addr_width = self.top_node.size.bit_length()
+        if user_addr_width is not None:
+            if user_addr_width < self.addr_width:
+                msg.fatal(f"User-specified address width shall be greater than or equal to {self.addr_width}.")
+            self.addr_width = user_addr_width

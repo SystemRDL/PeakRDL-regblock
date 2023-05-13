@@ -15,7 +15,7 @@ class ExternalWriteAckGenerator(RDLForLoopGenerator):
         self.exp = exp
 
     def get_implementation(self) -> str:
-        content = self.get_content(self.exp.top_node)
+        content = self.get_content(self.exp.ds.top_node)
         if content is None:
             return ""
         return content
@@ -36,7 +36,7 @@ class ExternalReadAckGenerator(RDLForLoopGenerator):
         self.exp = exp
 
     def get_implementation(self) -> str:
-        content = self.get_content(self.exp.top_node)
+        content = self.get_content(self.exp.ds.top_node)
         if content is None:
             return ""
         return content
