@@ -6,7 +6,7 @@ from ..lib.cpuifs.apb4 import APB4
 from ..lib.cpuifs.axi4lite import AXI4Lite
 from ..lib.cpuifs.passthrough import Passthrough
 
-TEST_PARAMS = get_permutations({
+@parameterized_class(get_permutations({
     "cpuif": [
         APB4(),
         AXI4Lite(),
@@ -15,9 +15,7 @@ TEST_PARAMS = get_permutations({
     "retime_read_fanin": [True, False],
     "retime_read_response": [True, False],
     "retime_external": [True, False],
-})
-
-@parameterized_class(TEST_PARAMS)
+}))
 class Test(SimTestCase):
     extra_tb_files = [
         "../lib/external_reg.sv",

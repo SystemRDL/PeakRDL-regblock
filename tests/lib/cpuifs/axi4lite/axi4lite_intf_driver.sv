@@ -101,7 +101,7 @@ interface axi4lite_intf_driver #(
     semaphore txn_ar_mutex = new(1);
     semaphore txn_r_mutex = new(1);
 
-    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
+    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1);
         bit w_before_aw;
         w_before_aw = $urandom_range(1,0);
 
@@ -125,7 +125,7 @@ interface axi4lite_intf_driver #(
                 if(!w_before_aw) repeat($urandom_range(2,0)) @cb;
                 cb.WVALID <= '1;
                 cb.WDATA <= data;
-                cb.WSTRB <= '1; // TODO: Support byte strobes
+                cb.WSTRB <= strb;
                 @(cb);
                 while(cb.WREADY !== 1'b1) @(cb);
                 cb.WVALID <= '0;

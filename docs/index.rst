@@ -112,6 +112,7 @@ Links
     cpuif/introduction
     cpuif/apb
     cpuif/axi4lite
+    cpuif/avalon
     cpuif/passthrough
     cpuif/internal_protocol
     cpuif/customizing
