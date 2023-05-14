@@ -3,7 +3,7 @@ from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode, Addressa
 from systemrdl.rdltypes import PropertyReference
 
 if TYPE_CHECKING:
-    from .exporter import RegblockExporter
+    from .exporter import RegblockExporter, DesignState
     from .hwif import Hwif
     from .field_logic import FieldLogic
     from .addr_decode import AddressDecode
@@ -27,6 +27,10 @@ class Dereferencer:
     @property
     def field_logic(self) -> 'FieldLogic':
         return self.exp.field_logic
+
+    @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
 
     @property
     def top_node(self) -> AddrmapNode:
@@ -211,6 +215,16 @@ class Dereferencer:
         """
         return self.address_decode.get_external_block_access_strobe(obj)
 
+    @property
+    def default_resetsignal_name(self) -> str:
+        s = "rst"
+        if self.ds.default_reset_async:
+            s = f"a{s}"
+        if self.ds.default_reset_activelow:
+            s = f"{s}_n"
+        return s
+
+
     def get_resetsignal(self, obj: Optional[SignalNode] = None) -> str:
         """
         Returns a normalized active-high reset signal
@@ -222,13 +236,23 @@ class Dereferencer:
             else:
                 return f"~{s}"
 
-        # default reset signal
-        return "rst"
+        # No explicit reset signal specified. Fall back to default reset signal
+        s = self.default_resetsignal_name
+        if self.ds.default_reset_activelow:
+            s = f"~{s}"
+        return s
 
     def get_always_ff_event(self, resetsignal: Optional[SignalNode] = None) -> str:
         if resetsignal is None:
-            return "@(posedge clk)"
-        if resetsignal.get_property('async') and resetsignal.get_property('activehigh'):
+            # No explicit reset signal specified. Fall back to default reset signal
+            if self.ds.default_reset_async:
+                if self.ds.default_reset_activelow:
+                    return f"@(posedge clk or negedge {self.default_resetsignal_name})"
+                else:
+                    return f"@(posedge clk or posedge {self.default_resetsignal_name})"
+            else:
+                return "@(posedge clk)"
+        elif resetsignal.get_property('async') and resetsignal.get_property('activehigh'):
             return f"@(posedge clk or posedge {self.get_value(resetsignal)})"
         elif resetsignal.get_property('async') and not resetsignal.get_property('activehigh'):
             return f"@(posedge clk or negedge {self.get_value(resetsignal)})"

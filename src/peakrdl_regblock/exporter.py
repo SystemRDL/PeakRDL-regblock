@@ -113,6 +113,10 @@ class RegblockExporter:
         address_width: int
             Override the CPU interface's address width. By default, address width
             is sized to the contents of the regblock.
+        default_reset_activelow: bool
+            If overriden to True, default reset is active-low instead of active-high.
+        default_reset_async: bool
+            If overriden to True, default reset is asynchronous instead of synchronous.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -140,10 +144,7 @@ class RegblockExporter:
 
         # Construct exporter components
         self.cpuif = cpuif_cls(self)
-        self.hwif = Hwif(
-            self,
-            hwif_report_file=hwif_report_file,
-        )
+        self.hwif = Hwif(self, hwif_report_file=hwif_report_file)
         self.readback = Readback(self)
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
@@ -163,6 +164,7 @@ class RegblockExporter:
             "write_buffering": self.write_buffering,
             "read_buffering": self.read_buffering,
             "get_resetsignal": self.dereferencer.get_resetsignal,
+            "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
             "readback": self.readback,
@@ -207,7 +209,6 @@ class DesignState:
         self.package_name = kwargs.pop("package_name", None) or (self.module_name + "_pkg") # type: str
         user_addr_width = kwargs.pop("address_width", None) # type: Optional[int]
 
-
         # Pipelining options
         self.retime_read_fanin = kwargs.pop("retime_read_fanin", False) # type: bool
         self.retime_read_response = kwargs.pop("retime_read_response", False) # type: bool
@@ -215,6 +216,10 @@ class DesignState:
         self.retime_external_regfile = kwargs.pop("retime_external_regfile", False) # type: bool
         self.retime_external_mem = kwargs.pop("retime_external_mem", False) # type: bool
         self.retime_external_addrmap = kwargs.pop("retime_external_addrmap", False) # type: bool
+
+        # Default reset type
+        self.default_reset_activelow = kwargs.pop("default_reset_activelow", False) # type: bool
+        self.default_reset_async = kwargs.pop("default_reset_async", False) # type: bool
 
         #------------------------
         # Info about the design

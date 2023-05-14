@@ -34,6 +34,7 @@ class Readback:
             "array_assignments" : array_assignments,
             "array_size" : array_size,
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
+            'get_resetsignal': self.exp.dereferencer.get_resetsignal,
             "cpuif": self.exp.cpuif,
             "do_fanin_stage": self.do_fanin_stage,
             "ds": self.ds,

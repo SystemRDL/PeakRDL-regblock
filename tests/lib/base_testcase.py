@@ -37,6 +37,8 @@ class BaseTestCase(unittest.TestCase):
     retime_read_response = False
     reuse_hwif_typedefs = True
     retime_external = False
+    default_reset_activelow = False
+    default_reset_async = False
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -111,6 +113,8 @@ class BaseTestCase(unittest.TestCase):
             retime_external_regfile=cls.retime_external,
             retime_external_mem=cls.retime_external,
             retime_external_addrmap=cls.retime_external,
+            default_reset_activelow=cls.default_reset_activelow,
+            default_reset_async=cls.default_reset_async,
         )
 
     @classmethod

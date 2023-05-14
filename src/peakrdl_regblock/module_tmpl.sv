@@ -3,7 +3,7 @@
 
 module {{ds.module_name}} (
         input wire clk,
-        input wire rst,
+        input wire {{default_resetsignal_name}},
 
         {%- for signal in ds.out_of_hier_signals.values() %}
         {%- if signal.width == 1 %}

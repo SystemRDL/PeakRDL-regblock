@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Type
+from typing import TYPE_CHECKING, Dict, Type, List, Any
 import functools
 import sys
 
@@ -15,13 +15,32 @@ if TYPE_CHECKING:
     from systemrdl.node import AddrmapNode
 
 
+class Choice(schema.String):
+    """
+    Schema that matches against a specific set of allowed strings
+
+    Base PeakRDL does not have this schema yet. Polyfill here for now until it
+    is added and widely available.
+    """
+    def __init__(self, choices: List[str]) -> None:
+        super().__init__()
+        self.choices = choices
+
+    def extract(self, data: Any, path: str, err_ctx: str) -> Any:
+        s = super().extract(data, path, err_ctx)
+        if s not in self.choices:
+            raise schema.SchemaException(f"{err_ctx}: Value '{s}' is not a valid choice. Must be one of: {','.join(self.choices)}")
+        return s
+
+
 class Exporter(ExporterSubcommandPlugin):
     short_desc = "Generate a SystemVerilog control/status register (CSR) block"
 
     udp_definitions = ALL_UDPS
 
     cfg_schema = {
-        "cpuifs": {"*": schema.PythonObjectImport()}
+        "cpuifs": {"*": schema.PythonObjectImport()},
+        "default_reset": Choice(["rst", "rst_n", "arst", "arst_n"]),
     }
 
     @functools.lru_cache()
@@ -84,6 +103,34 @@ class Exporter(ExporterSubcommandPlugin):
         )
 
         arg_group.add_argument(
+            "--type-style",
+            dest="type_style",
+            choices=['lexical', 'hier'],
+            default="lexical",
+            help="""Choose how HWIF struct type names are generated.
+            The 'lexical' style will use RDL lexical scope & type names where
+            possible and attempt to re-use equivalent type definitions.
+            The 'hier' style uses component's hierarchy as the struct type name. [lexical]
+            """
+        )
+
+        arg_group.add_argument(
+            "--hwif-report",
+            action="store_true",
+            default=False,
+            help="Generate a HWIF report file"
+        )
+
+        arg_group.add_argument(
+            "--addr-width",
+            type=int,
+            default=None,
+            help="""Override the CPU interface's address width. By default,
+            address width is sized to the contents of the regblock.
+            """
+        )
+
+        arg_group.add_argument(
             "--rt-read-fanin",
             action="store_true",
             default=False,
@@ -99,31 +146,14 @@ class Exporter(ExporterSubcommandPlugin):
             "--rt-external",
             help="Retime outputs to external components. Specify a comma-separated list of: reg,regfile,mem,addrmap,all"
         )
-        arg_group.add_argument(
-            "--type-style",
-            dest="type_style",
-            choices=['lexical', 'hier'],
-            default="lexical",
-            help="""Choose how HWIF struct type names are generated.
-            The 'lexical' style will use RDL lexical scope & type names where
-            possible and attempt to re-use equivalent type definitions.
-            The 'hier' style uses component's hierarchy as the struct type name. [lexical]
-            """
-        )
-        arg_group.add_argument(
-            "--hwif-report",
-            action="store_true",
-            default=False,
-            help="Generate a HWIF report file"
-        )
 
         arg_group.add_argument(
-            "--addr-width",
-            type=int,
+            "--default-reset",
+            choices=["rst", "rst_n", "arst", "arst_n"],
             default=None,
-            help="""Override the CPU interface's address width. By default,
-            address width is sized to the contents of the regblock.
-            """
+            help="""Choose the default style of reset signal if not explicitly
+            specified by the SystemRDL design. If unspecified, the default reset
+            is active-high and synchronous [rst]"""
         )
 
 
@@ -153,6 +183,24 @@ class Exporter(ExporterSubcommandPlugin):
                 else:
                     print("error: invalid option for --rt-external: '%s'" % key, file=sys.stderr)
 
+        # Get default reset. Favor command-line over cfg. Fall back to 'rst'
+        default_rst = options.default_reset or self.cfg['default_reset'] or "rst"
+        if default_rst == "rst":
+            default_reset_activelow = False
+            default_reset_async = False
+        elif default_rst == "rst_n":
+            default_reset_activelow = True
+            default_reset_async = False
+        elif default_rst == "arst":
+            default_reset_activelow = False
+            default_reset_async = True
+        elif default_rst == "arst_n":
+            default_reset_activelow = True
+            default_reset_async = True
+        else:
+            raise RuntimeError
+
+
         x = RegblockExporter()
         x.export(
             top_node,
@@ -169,4 +217,6 @@ class Exporter(ExporterSubcommandPlugin):
             retime_external_addrmap=retime_external_addrmap,
             generate_hwif_report=options.hwif_report,
             address_width=options.addr_width,
+            default_reset_activelow=default_reset_activelow,
+            default_reset_async=default_reset_async,
         )

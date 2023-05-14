@@ -10,6 +10,11 @@ module tb;
         clk = ~clk;
     end
 
+    logic rst_n, arst, arst_n;
+    assign rst_n = ~rst;
+    assign arst = rst;
+    assign arst_n = ~rst;
+
     //--------------------------------------------------------------------------
     // DUT Signal declarations
     //--------------------------------------------------------------------------

@@ -29,8 +29,8 @@ end
 
 logic [{{cpuif.data_width-1}}:0] readback_array_r[{{fanin_array_size}}];
 logic readback_done_r;
-always_ff @(posedge clk) begin
-    if(rst) begin
+always_ff {{get_always_ff_event(cpuif.reset)}} begin
+    if({{get_resetsignal(cpuif.reset)}}) begin
         for(int i=0; i<{{fanin_array_size}}; i++) readback_array_r[i] <= '0;
         readback_done_r <= '0;
     end else begin

@@ -20,3 +20,17 @@ All regblock-specific options are defined under the ``[regblock]`` TOML heading.
 
         [regblock]
         cpuifs.my-cpuif-name = "my_cpuif_module:MyCPUInterfaceClass"
+
+
+.. data:: default_reset
+
+    Choose the default style of reset signal if not explicitly
+    specified by the SystemRDL design. If unspecified, the default reset
+    is active-high and synchronous.
+
+    Choice of:
+
+        * ``rst`` (default)
+        * ``rst_n``
+        * ``arst``
+        * ``arst_n``
