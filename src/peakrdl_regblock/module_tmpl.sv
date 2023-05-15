@@ -226,7 +226,7 @@ module {{ds.module_name}} (
     logic readback_err;
     logic readback_done;
     logic [{{cpuif.data_width-1}}:0] readback_data;
-    {{readback.get_implementation()|indent}}
+    {{readback_implementation|indent}}
 {% if ds.retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin

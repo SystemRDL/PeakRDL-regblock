@@ -157,6 +157,12 @@ class RegblockExporter:
         # Validate that there are no unsupported constructs
         DesignValidator(self).do_validate()
 
+        # Compute readback implementation early.
+        # Readback has the capability to disable retiming if the fanin is tiny.
+        # This affects the rest of the design's implementation, and must be known
+        # before any other templates are rendered
+        readback_implementation = self.readback.get_implementation()
+
         # Build Jinja template context
         context = {
             "cpuif": self.cpuif,
@@ -167,7 +173,7 @@ class RegblockExporter:
             "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
-            "readback": self.readback,
+            "readback_implementation": readback_implementation,
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
@@ -224,8 +230,6 @@ class DesignState:
         #------------------------
         # Info about the design
         #------------------------
-        self.min_read_latency = 0
-        self.min_write_latency = 0
         self.cpuif_data_width = 0
 
         # Collections of signals that were actually referenced by the design
@@ -243,13 +247,23 @@ class DesignState:
         self.user_enums = [] # type: List[Type[UserEnum]]
 
         #------------------------
-        if self.retime_read_fanin:
-            self.min_read_latency += 1
-        if self.retime_read_response:
-            self.min_read_latency += 1
 
         self.addr_width = self.top_node.size.bit_length()
         if user_addr_width is not None:
             if user_addr_width < self.addr_width:
                 msg.fatal(f"User-specified address width shall be greater than or equal to {self.addr_width}.")
             self.addr_width = user_addr_width
+
+    @property
+    def min_read_latency(self) -> int:
+        n = 0
+        if self.retime_read_fanin:
+            n += 1
+        if self.retime_read_response:
+            n += 1
+        return n
+
+    @property
+    def min_write_latency(self) -> int:
+        n = 0
+        return n

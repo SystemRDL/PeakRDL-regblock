@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 class Readback:
     def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
-        self.do_fanin_stage = self.ds.retime_read_fanin
 
     @property
     def ds(self) -> 'DesignState':
@@ -28,7 +27,7 @@ class Readback:
         # Enabling the fanin stage doesnt make sense if readback fanin is
         # small. This also avoids pesky corner cases
         if array_size < 4:
-            self.do_fanin_stage = False
+            self.ds.retime_read_fanin = False
 
         context = {
             "array_assignments" : array_assignments,
@@ -36,11 +35,10 @@ class Readback:
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,
             "cpuif": self.exp.cpuif,
-            "do_fanin_stage": self.do_fanin_stage,
             "ds": self.ds,
         }
 
-        if self.do_fanin_stage:
+        if self.ds.retime_read_fanin:
             # If adding a fanin pipeline stage, goal is to try to
             # split the fanin path in the middle so that fanin into the stage
             # and the following are roughly balanced.

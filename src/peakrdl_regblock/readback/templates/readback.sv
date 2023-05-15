@@ -4,7 +4,7 @@ logic [{{cpuif.data_width-1}}:0] readback_array[{{array_size}}];
 {{array_assignments}}
 
 
-{%- if do_fanin_stage %}
+{%- if ds.retime_read_fanin %}
 
 // fanin stage
 logic [{{cpuif.data_width-1}}:0] readback_array_c[{{fanin_array_size}}];
