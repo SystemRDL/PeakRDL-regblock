@@ -106,3 +106,14 @@ class DesignScanner(RDLListener):
     def enter_Field(self, node: 'FieldNode') -> None:
         if node.is_sw_writable and (node.msb < node.lsb):
             self.ds.has_writable_msb0_fields = True
+
+        if node.get_property('paritycheck') and node.implements_storage:
+            self.ds.has_paritycheck = True
+
+            if node.get_property('reset') is None:
+                self.msg.warning(
+                    f"Field '{node.inst_name}' includes parity check logic, but "
+                    "its reset value was not defined. Will result in an undefined "
+                    "value on the module's 'parity_error' output.",
+                    self.top_node.inst.property_src_ref.get('paritycheck', self.top_node.inst.inst_src_ref)
+                )

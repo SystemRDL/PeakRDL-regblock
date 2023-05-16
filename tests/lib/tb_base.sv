@@ -26,6 +26,11 @@ module tb;
     regblock_pkg::regblock__out_t hwif_out;
 {%- endif %}
 
+{%- if exporter.ds.has_paritycheck %}
+    logic parity_error;
+{%- endif %}
+
+
 {%- block declarations %}
 {%- endblock %}
 
@@ -41,6 +46,10 @@ module tb;
 
 {%- if exporter.hwif.has_output_struct and cls.clocking_hwif_out %}
         input hwif_out;
+{%- endif %}
+
+{%- if exporter.ds.has_paritycheck %}
+        input parity_error;
 {%- endif %}
 
 {%- filter indent %}
@@ -68,6 +77,9 @@ module tb;
             ##1;
             tmp = {>>{hwif_out}}; // Workaround for Xilinx's xsim - assign to tmp variable
             if(!rst) assert(!$isunknown(tmp)) else $error("hwif_out has X's!");
+            {%- if exporter.ds.has_paritycheck %}
+            if(!rst) assert(!$isunknown(parity_error)) else $error("parity_error has X's!");
+            {%- endif %}
         end
     end
 {%- endif %}

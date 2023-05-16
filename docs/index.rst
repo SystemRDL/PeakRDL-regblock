@@ -15,7 +15,7 @@ your hardware design.
 .. warning::
 
     The PeakRDL-regblock SV generator is still in pre-production (v0.x version numbers).
-    During this time, I may decide to refactor things which could break compatibility.
+    During this time, I may decide to refactor things which could affect compatibility.
 
 
 Installing

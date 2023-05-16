@@ -10,6 +10,7 @@
 **/*.log
 **/*.pb
 **/.Xil
+**/.coverage.*
 
 build/
 dist/

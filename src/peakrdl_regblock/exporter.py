@@ -19,6 +19,7 @@ from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
+from .parity import ParityErrorReduceGenerator
 
 if TYPE_CHECKING:
     from systemrdl.node import SignalNode
@@ -153,6 +154,7 @@ class RegblockExporter:
         self.dereferencer = Dereferencer(self)
         ext_write_acks = ExternalWriteAckGenerator(self)
         ext_read_acks = ExternalReadAckGenerator(self)
+        parity = ParityErrorReduceGenerator(self)
 
         # Validate that there are no unsupported constructs
         DesignValidator(self).do_validate()
@@ -176,6 +178,7 @@ class RegblockExporter:
             "readback_implementation": readback_implementation,
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
+            "parity": parity,
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
             "ds": self.ds,
             "kwf": kwf,
@@ -242,6 +245,8 @@ class DesignState:
 
         self.has_external_block = False
         self.has_external_addressable = False
+
+        self.has_paritycheck = False
 
         # Track any referenced enums
         self.user_enums = [] # type: List[Type[UserEnum]]

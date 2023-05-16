@@ -274,6 +274,19 @@ class FieldLogic:
         # Not sw modifiable
         return "1'b0"
 
+    def get_parity_identifier(self, field: 'FieldNode') -> str:
+        """
+        Returns the identifier for the stored 'golden' parity value of the field
+        """
+        path = get_indexed_path(self.top_node, field)
+        return f"field_storage.{path}.parity"
+
+    def get_parity_error_identifier(self, field: 'FieldNode') -> str:
+        """
+        Returns the identifier for whether the field currently has a parity error
+        """
+        path = get_indexed_path(self.top_node, field)
+        return f"field_combo.{path}.parity_error"
 
     def has_next_q(self, field: 'FieldNode') -> bool:
         """

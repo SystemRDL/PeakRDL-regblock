@@ -53,6 +53,8 @@ class CombinationalStructGenerator(RDLStructGenerator):
             self.add_up_counter_members(node)
         if node.is_down_counter:
             self.add_down_counter_members(node)
+        if node.get_property('paritycheck'):
+            self.add_member("parity_error")
         self.pop_struct()
 
     def add_up_counter_members(self, node: 'FieldNode') -> None:
@@ -88,6 +90,8 @@ class FieldStorageStructGenerator(RDLStructGenerator):
 
         if node.implements_storage:
             self.add_member("value", node.width)
+            if node.get_property('paritycheck'):
+                self.add_member("parity")
 
         if self.field_logic.has_next_q(node):
             self.add_member("next_q", node.width)
@@ -233,6 +237,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'get_value': self.exp.dereferencer.get_value,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,
             'get_input_identifier': self.exp.hwif.get_input_identifier,
+            'ds': self.ds,
         }
         self.add_content(self.field_storage_template.render(context))
 

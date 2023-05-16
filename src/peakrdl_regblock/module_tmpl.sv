@@ -13,6 +13,11 @@ module {{ds.module_name}} (
         {%- endif %}
         {%- endfor %}
 
+        {%- if ds.has_paritycheck %}
+
+        output logic parity_error,
+        {%- endif %}
+
         {{cpuif.port_declaration|indent(8)}}
         {%- if hwif.has_input_struct or hwif.has_output_struct %},{% endif %}
 
@@ -167,6 +172,22 @@ module {{ds.module_name}} (
     {{field_logic.get_storage_struct()|indent}}
 
     {{field_logic.get_implementation()|indent}}
+
+{%- if ds.has_paritycheck %}
+
+    //--------------------------------------------------------------------------
+    // Parity Error
+    //--------------------------------------------------------------------------
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            parity_error <= '0;
+        end else begin
+            automatic logic err = '0;
+            {{parity.get_implementation()|indent(12)}}
+            parity_error <= err;
+        end
+    end
+{%- endif %}
 
 {%- if ds.has_buffered_read_regs %}
 

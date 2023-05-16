@@ -460,7 +460,15 @@ If assigned, replaces the inferred ``hwif_in..next`` input with an explicit refe
 
 paritycheck
 ^^^^^^^^^^^
-|NO|
+If set, enables parity checking for this field.
+
+Adds a ``parity_error`` output signal to the module.
+
+.. note::
+
+    If this field does not implement storage, the ``partycheck`` property is ignored.
+
+
 
 precedence
 ^^^^^^^^^^
