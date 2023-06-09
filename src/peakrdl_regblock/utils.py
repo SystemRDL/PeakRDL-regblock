@@ -64,3 +64,11 @@ def ref_is_internal(top_node: AddrmapNode, ref: Union[Node, PropertyReference]) 
     # A root signal was referenced, which dodged the top addrmap
     # This is considerd internal for this exporter
     return True
+
+def get_sv_int(n: int) -> str:
+    if n.bit_length() <= 32:
+        return f"'h{n:x}"
+    else:
+        # SV standard only enforces that unsized literals shall be at least 32-bits
+        # To support larger literals, they need to be sized explicitly
+        return f"{n.bit_length()}'h{n:x}"

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Union, List, Optional
 from systemrdl.node import FieldNode, RegNode
 from systemrdl.walker import WalkerAction
 
-from .utils import get_indexed_path
+from .utils import get_indexed_path, get_sv_int
 from .struct_generator import RDLStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
@@ -137,7 +137,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         super().__init__()
 
         # List of address strides for each dimension
-        self._array_stride_stack = [] # type: List[List[int]]
+        self._array_stride_stack = [] # type: List[int]
 
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
@@ -157,7 +157,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             # Is an external block
             addr_str = self._get_address_str(node)
             strb = self.addr_decode.get_external_block_access_strobe(node)
-            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + 'h{(node.size - 1):x})"
+            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {get_sv_int(node.size - 1)})"
             self.add_content(f"{strb} = {rhs};")
             self.add_content(f"is_external |= {rhs};")
             return WalkerAction.SkipDescendants
@@ -166,9 +166,9 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
 
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
-        a = f"'h{(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset):x}"
+        a = get_sv_int(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset)
         for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*'h{stride:x}"
+            a += f" + i{i}*{get_sv_int(stride)}"
         return a
 
 

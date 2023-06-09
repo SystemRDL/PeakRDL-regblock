@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING, Union, Optional
 from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
 
+from .utils import get_sv_int
+
 if TYPE_CHECKING:
     from .exporter import RegblockExporter, DesignState
     from .hwif import Hwif
@@ -48,7 +50,7 @@ class Dereferencer:
         """
         if isinstance(obj, int):
             # Is a simple scalar value
-            return f"'h{obj:x}"
+            return get_sv_int(obj)
 
         if isinstance(obj, FieldNode):
             if obj.implements_storage:
