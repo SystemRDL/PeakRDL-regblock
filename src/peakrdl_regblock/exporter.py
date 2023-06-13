@@ -253,7 +253,7 @@ class DesignState:
 
         #------------------------
 
-        self.addr_width = self.top_node.size.bit_length()
+        self.addr_width = (self.top_node.size - 1).bit_length()
         if user_addr_width is not None:
             if user_addr_width < self.addr_width:
                 msg.fatal(f"User-specified address width shall be greater than or equal to {self.addr_width}.")
