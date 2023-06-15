@@ -1,5 +1,5 @@
 import re
-from typing import Match, Union
+from typing import Match, Union, Optional
 
 from systemrdl.rdltypes.references import PropertyReference
 from systemrdl.node import Node, AddrmapNode
@@ -65,10 +65,13 @@ def ref_is_internal(top_node: AddrmapNode, ref: Union[Node, PropertyReference]) 
     # This is considerd internal for this exporter
     return True
 
-def get_sv_int(n: int) -> str:
-    if n.bit_length() <= 32:
-        return f"'h{n:x}"
-    else:
+def get_sv_int(n: int, width: Optional[int]=None) -> str:
+    if width is not None:
+        # Explicit width
+        return f"{width}'h{n:x}"
+    elif n.bit_length() > 32:
         # SV standard only enforces that unsized literals shall be at least 32-bits
         # To support larger literals, they need to be sized explicitly
         return f"{n.bit_length()}'h{n:x}"
+    else:
+        return f"'h{n:x}"

@@ -10,7 +10,7 @@ from .field_logic import FieldLogic
 from .dereferencer import Dereferencer
 from .readback import Readback
 from .identifier_filter import kw_filter as kwf
-
+from .utils import clog2
 from .scan_design import DesignScanner
 from .validate_design import DesignValidator
 from .cpuif import CpuifBase
@@ -134,9 +134,6 @@ class RegblockExporter:
         if kwargs:
             raise TypeError(f"got an unexpected keyword argument '{list(kwargs.keys())[0]}'")
 
-        # Scan the design for pre-export information
-        DesignScanner(self).do_scan()
-
         if generate_hwif_report:
             path = os.path.join(output_dir, f"{self.ds.module_name}_hwif.rpt")
             hwif_report_file = open(path, "w", encoding='utf-8') # pylint: disable=consider-using-with
@@ -251,9 +248,13 @@ class DesignState:
         # Track any referenced enums
         self.user_enums = [] # type: List[Type[UserEnum]]
 
-        #------------------------
+        # Scan the design to fill in above variables
+        DesignScanner(self).do_scan()
 
-        self.addr_width = (self.top_node.size - 1).bit_length()
+        #------------------------
+        # Min address width encloses the total size AND at least 1 useful address bit
+        self.addr_width = max(clog2(self.top_node.size), clog2(self.cpuif_data_width//8) + 1)
+
         if user_addr_width is not None:
             if user_addr_width < self.addr_width:
                 msg.fatal(f"User-specified address width shall be greater than or equal to {self.addr_width}.")

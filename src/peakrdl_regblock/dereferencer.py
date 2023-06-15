@@ -38,7 +38,7 @@ class Dereferencer:
     def top_node(self) -> AddrmapNode:
         return self.exp.ds.top_node
 
-    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference]) -> str:
+    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> str:
         """
         Returns the Verilog string that represents the readable value associated
         with the object.
@@ -47,10 +47,12 @@ class Dereferencer:
 
         If obj references a structural systemrdl object, then the corresponding Verilog
         expression is returned that represents its value.
+
+        The optional width argument can be provided to hint at the expression's desired bitwidth.
         """
         if isinstance(obj, int):
             # Is a simple scalar value
-            return get_sv_int(obj)
+            return get_sv_int(obj, width)
 
         if isinstance(obj, FieldNode):
             if obj.implements_storage:

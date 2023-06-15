@@ -78,7 +78,7 @@ always_comb begin
     axil_ar_accept = '0;
     axil_aw_accept = '0;
 
-    if(axil_n_in_flight < 'd{{cpuif.max_outstanding}}) begin
+    if(axil_n_in_flight < {{clog2(cpuif.max_outstanding+1)}}'d{{cpuif.max_outstanding}}) begin
         // Can safely issue more transactions without overwhelming response buffer
         if(axil_arvalid && !axil_prev_was_rd) begin
             cpuif_req = '1;

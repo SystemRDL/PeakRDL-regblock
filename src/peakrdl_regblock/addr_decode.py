@@ -157,7 +157,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             # Is an external block
             addr_str = self._get_address_str(node)
             strb = self.addr_decode.get_external_block_access_strobe(node)
-            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {get_sv_int(node.size - 1)})"
+            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {get_sv_int(node.size - 1, self.addr_decode.exp.ds.addr_width)})"
             self.add_content(f"{strb} = {rhs};")
             self.add_content(f"is_external |= {rhs};")
             return WalkerAction.SkipDescendants
@@ -166,9 +166,12 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
 
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
-        a = get_sv_int(node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset)
+        a = get_sv_int(
+            node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
+            self.addr_decode.exp.ds.addr_width
+        )
         for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*{get_sv_int(stride)}"
+            a += f" + i{i}*{get_sv_int(stride, self.addr_decode.exp.ds.addr_width)}"
         return a
 
 

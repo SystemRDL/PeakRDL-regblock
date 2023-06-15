@@ -220,7 +220,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
 
         reset_value = node.get_property('reset')
         if reset_value is not None:
-            reset_value_str = self.exp.dereferencer.get_value(reset_value)
+            reset_value_str = self.exp.dereferencer.get_value(reset_value, node.width)
         else:
             # 5.9.1-g: If no reset value given, the field is not reset, even if it has a resetsignal.
             reset_value_str = None

@@ -110,7 +110,7 @@ class FieldLogic:
         """
         incrvalue = field.get_property('incrvalue')
         if incrvalue is not None:
-            return self.exp.dereferencer.get_value(incrvalue)
+            return self.exp.dereferencer.get_value(incrvalue, field.width)
         if field.get_property('incrwidth'):
             return self.exp.hwif.get_implied_prop_input_identifier(field, "incrvalue")
         return "1'b1"
@@ -118,8 +118,8 @@ class FieldLogic:
     def get_counter_incrsaturate_value(self, field: 'FieldNode') -> str:
         prop_value = field.get_property('incrsaturate')
         if prop_value is True:
-            return self.exp.dereferencer.get_value(2**field.width - 1)
-        return self.exp.dereferencer.get_value(prop_value)
+            return self.exp.dereferencer.get_value(2**field.width - 1, field.width)
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def counter_incrsaturates(self, field: 'FieldNode') -> bool:
         """
@@ -131,8 +131,8 @@ class FieldLogic:
         prop_value = field.get_property('incrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use max
-            return self.exp.dereferencer.get_value(2**field.width - 1)
-        return self.exp.dereferencer.get_value(prop_value)
+            return self.exp.dereferencer.get_value(2**field.width - 1, field.width)
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def get_counter_decr_strobe(self, field: 'FieldNode') -> str:
         """
@@ -151,7 +151,7 @@ class FieldLogic:
         """
         decrvalue = field.get_property('decrvalue')
         if decrvalue is not None:
-            return self.exp.dereferencer.get_value(decrvalue)
+            return self.exp.dereferencer.get_value(decrvalue, field.width)
         if field.get_property('decrwidth'):
             return self.exp.hwif.get_implied_prop_input_identifier(field, "decrvalue")
         return "1'b1"
@@ -159,8 +159,8 @@ class FieldLogic:
     def get_counter_decrsaturate_value(self, field: 'FieldNode') -> str:
         prop_value = field.get_property('decrsaturate')
         if prop_value is True:
-            return "'d0"
-        return self.exp.dereferencer.get_value(prop_value)
+            return f"{field.width}'d0"
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def counter_decrsaturates(self, field: 'FieldNode') -> bool:
         """
@@ -172,8 +172,8 @@ class FieldLogic:
         prop_value = field.get_property('decrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use min
-            return "'d0"
-        return self.exp.dereferencer.get_value(prop_value)
+            return f"{field.width}'d0"
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def get_swacc_identifier(self, field: 'FieldNode') -> str:
         """

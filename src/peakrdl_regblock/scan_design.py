@@ -5,7 +5,7 @@ from systemrdl.node import SignalNode, RegNode
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, FieldNode, AddressableNode, AddrmapNode
-    from .exporter import RegblockExporter
+    from .exporter import DesignState
 
 
 class DesignScanner(RDLListener):
@@ -15,14 +15,13 @@ class DesignScanner(RDLListener):
 
     Also collects any information that is required prior to the start of the export process.
     """
-    def __init__(self, exp:'RegblockExporter') -> None:
-        self.exp = exp
-        self.ds = exp.ds
+    def __init__(self, ds:'DesignState') -> None:
+        self.ds = ds
         self.msg = self.top_node.env.msg
 
     @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.ds.top_node
+        return self.ds.top_node
 
     def _get_out_of_hier_field_reset(self) -> None:
         current_node = self.top_node.parent
@@ -93,7 +92,7 @@ class DesignScanner(RDLListener):
     def enter_Reg(self, node: 'RegNode') -> None:
         # The CPUIF's bus width is sized according to the largest accesswidth in the design
         accesswidth = node.get_property('accesswidth')
-        self.exp.ds.cpuif_data_width = max(self.exp.ds.cpuif_data_width, accesswidth)
+        self.ds.cpuif_data_width = max(self.ds.cpuif_data_width, accesswidth)
 
         self.ds.has_buffered_write_regs = self.ds.has_buffered_write_regs or bool(node.get_property('buffer_writes'))
         self.ds.has_buffered_read_regs = self.ds.has_buffered_read_regs or bool(node.get_property('buffer_reads'))
