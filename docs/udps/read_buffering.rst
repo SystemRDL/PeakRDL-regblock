@@ -64,7 +64,7 @@ Other Rules
     other.
 *   Unless it is a register, the reference assigned to ``rbuffer_trigger`` shall
     represent a single bit.
-*   The software read operation considered to take place when the buffer is loaded
+*   The software read operation considered to take place when the buffer is loaded.
     This influences the behavior of properties like ``swmod`` and ``swacc`` -
     they are not asserted until the register's fields are actually sampled by the
     buffer.

@@ -251,6 +251,16 @@ class DesignState:
         # Scan the design to fill in above variables
         DesignScanner(self).do_scan()
 
+        if self.cpuif_data_width == 0:
+            # Scanner did not find any registers in the design being exported,
+            # so the width is not known.
+            # Assume 32-bits
+            msg.warning(
+                "Addrmap being exported only contains external components. Unable to infer the CPUIF bus width. Assuming 32-bits.",
+                self.top_node.inst.def_src_ref
+            )
+            self.cpuif_data_width = 32
+
         #------------------------
         # Min address width encloses the total size AND at least 1 useful address bit
         self.addr_width = max(clog2(self.top_node.size), clog2(self.cpuif_data_width//8) + 1)
