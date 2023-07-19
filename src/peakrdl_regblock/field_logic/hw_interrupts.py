@@ -121,7 +121,7 @@ class BothedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        return f"{Iq} ^ {I}"
+        return f"{Iq} != {I}"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
