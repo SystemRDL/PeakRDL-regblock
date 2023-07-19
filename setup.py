@@ -24,7 +24,7 @@ setuptools.setup(
     include_package_data=True,
     python_requires='>=3.6',
     install_requires=[
-        "systemrdl-compiler>=1.25.1",
+        "systemrdl-compiler >= 1.25.1, < 2",
         "Jinja2>=2.11",
     ],
     entry_points = {
