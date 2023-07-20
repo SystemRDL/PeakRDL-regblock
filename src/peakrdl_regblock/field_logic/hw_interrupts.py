@@ -44,7 +44,8 @@ class Stickybit(NextStateConditional):
         )
 
     def get_predicate(self, field: 'FieldNode') -> str:
-        return self.exp.hwif.get_input_identifier(field)
+        F = self.exp.hwif.get_input_identifier(field)
+        return f"{F} != '0"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -69,7 +70,7 @@ class PosedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        return f"~{Iq} & {I}"
+        return f"(~{Iq} & {I}) != '0"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -95,7 +96,7 @@ class NegedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        return f"{Iq} & ~{I}"
+        return f"({Iq} & ~{I}) != '0"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
