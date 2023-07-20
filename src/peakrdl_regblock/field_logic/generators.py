@@ -212,9 +212,18 @@ class FieldLogicGenerator(RDLForLoopGenerator):
     def generate_field_storage(self, node: 'FieldNode') -> None:
         conditionals = self.field_logic.get_conditionals(node)
         extra_combo_signals = OrderedDict()
+        unconditional = None
+        new_conditionals = []
         for conditional in conditionals:
             for signal in conditional.get_extra_combo_signals(node):
                 extra_combo_signals[signal.name] = signal
+
+            if conditional.is_unconditional:
+                assert unconditional is None # Can only have one unconditional assignment per field
+                unconditional = conditional
+            else:
+                new_conditionals.append(conditional)
+        conditionals = new_conditionals
 
         resetsignal = node.get_property('resetsignal')
 
@@ -232,6 +241,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'field_logic': self.field_logic,
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
+            'unconditional': unconditional,
             'resetsignal': resetsignal,
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             'get_value': self.exp.dereferencer.get_value,

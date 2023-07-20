@@ -64,7 +64,13 @@ class NextStateConditional:
         end
     """
 
+    # Assign to True if predicate can never evaluate to false.
+    # This will be generated as an 'else' clause, or a direct assignment
+    is_unconditional = False
+
+    # Optional comment to emit next to the conditional
     comment = ""
+
     def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
 

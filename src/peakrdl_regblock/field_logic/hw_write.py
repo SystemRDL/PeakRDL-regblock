@@ -10,17 +10,16 @@ class AlwaysWrite(NextStateConditional):
     """
     hw writable, without any qualifying we/wel
     """
+
+    is_unconditional = True
     comment = "HW Write"
+
     def is_match(self, field: 'FieldNode') -> bool:
         return (
             field.is_hw_writable
             and not field.get_property('we')
             and not field.get_property('wel')
         )
-
-    def get_predicate(self, field: 'FieldNode') -> str:
-        # TODO: make exporter promote this to an "else"?
-        return "1"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         hwmask = field.get_property('hwmask')
@@ -42,6 +41,7 @@ class AlwaysWrite(NextStateConditional):
         ]
 
 class WEWrite(AlwaysWrite):
+    is_unconditional = False
     comment = "HW Write - we"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
@@ -59,6 +59,7 @@ class WEWrite(AlwaysWrite):
         return identifier
 
 class WELWrite(AlwaysWrite):
+    is_unconditional = False
     comment = "HW Write - wel"
     def is_match(self, field: 'FieldNode') -> bool:
         return (

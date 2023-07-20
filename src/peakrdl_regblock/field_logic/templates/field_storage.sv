@@ -14,6 +14,19 @@ always_comb begin
         {%- endfor %}
     end
     {%- endfor %}
+    {%- if unconditional %}
+    {%- if conditionals %} else begin // {{unconditional.comment}}
+        {%- for assignment in unconditional.get_assignments(node) %}
+        {{assignment|indent}}
+        {%- endfor %}
+    end
+    {%- else %}
+    // {{unconditional.comment}}
+    {%- for assignment in unconditional.get_assignments(node) %}
+    {{assignment|indent}}
+    {%- endfor %}
+    {%- endif %}
+    {%- endif %}
 
     {%- if node.is_up_counter %}
     {{counter_macros.up_counter(node)}}
