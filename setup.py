@@ -53,5 +53,6 @@ setuptools.setup(
         "Documentation": "http://peakrdl-regblock.readthedocs.io",
         "Source": "https://github.com/SystemRDL/PeakRDL-regblock",
         "Tracker": "https://github.com/SystemRDL/PeakRDL-regblock/issues",
+        "Changelog": "https://github.com/SystemRDL/PeakRDL-regblock/releases",
     },
 )
