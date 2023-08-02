@@ -71,6 +71,9 @@ hwif_in..rd_ack
     Single-cycle strobe indicating a read transfer has completed.
     Qualifies all other read response signals.
 
+    If the transfer is always completed in the same cycle, it is acceptable to
+    tie this signal to ``hwif_out..req && !hwif_out..req_is_wr``.
+
 hwif_in..rd_data
     Read response data.
 
@@ -78,6 +81,9 @@ Write Response
 ^^^^^^^^^^^^^^
 hwif_in..wr_ack
     Single-cycle strobe indicating a write transfer has completed.
+
+    If the transfer is always completed in the same cycle, it is acceptable to
+    tie this signal to ``hwif_out..req && hwif_out..req_is_wr``.
 
 
 
