@@ -44,9 +44,15 @@ hwif_out..req
     When asserted, a read or write transfer will be initiated.
     Qualifies all other request signals.
 
-    If a register is wide (``regwidth`` > ``accesswidth``), then the
+    If the register is wide (``regwidth`` > ``accesswidth``), then the
     ``hwif_out..req`` will consist of multiple bits, representing the access
     strobe for each sub-word of the register.
+
+    If the register does not contain any readable fields, this strobe will be
+    suppressed for read operations.
+
+    If the register does not contain any writable readable fields, this strobe
+    will be suppressed for write operations.
 
 hwif_out..req_is_wr
     If ``1``, denotes that the current transfer is a write. Otherwise transfer is
@@ -59,10 +65,14 @@ hwif_out..wr_data
     The bit-width of this signal always matches the CPUIF's bus width,
     regardless of the regwidth.
 
+    If the register does not contain any writable fields, this signal is omitted.
+
 hwif_out..wr_biten
     Active-high bit-level write-enable strobes.
     Only asserted bit positions will change the register value during a write
     transfer.
+
+    If the register does not contain any writable fields, this signal is omitted.
 
 
 Read Response
@@ -74,8 +84,12 @@ hwif_in..rd_ack
     If the transfer is always completed in the same cycle, it is acceptable to
     tie this signal to ``hwif_out..req && !hwif_out..req_is_wr``.
 
+    If the register does not contain any readable fields, this signal is omitted.
+
 hwif_in..rd_data
     Read response data.
+
+    If the register does not contain any readable fields, this signal is omitted.
 
 Write Response
 ^^^^^^^^^^^^^^
@@ -84,6 +98,8 @@ hwif_in..wr_ack
 
     If the transfer is always completed in the same cycle, it is acceptable to
     tie this signal to ``hwif_out..req && hwif_out..req_is_wr``.
+
+    If the register does not contain any writable fields, this signal is omitted.
 
 
 

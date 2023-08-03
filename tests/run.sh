@@ -15,7 +15,7 @@ pip install -r $this_dir/requirements.txt
 
 # Install dut
 cd $this_dir/../
-python $this_dir/../setup.py install
+pip install -U .
 cd $this_dir
 
 # Run unit tests

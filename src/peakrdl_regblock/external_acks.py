@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from systemrdl.walker import WalkerAction
+from systemrdl.node import RegNode
 
 from .forloop_generator import RDLForLoopGenerator
 
@@ -24,7 +25,8 @@ class ExternalWriteAckGenerator(RDLForLoopGenerator):
         super().enter_AddressableComponent(node)
 
         if node.external:
-            self.add_content(f"wr_ack |= {self.exp.hwif.get_external_wr_ack(node)};")
+            if not isinstance(node, RegNode) or node.has_sw_writable:
+                self.add_content(f"wr_ack |= {self.exp.hwif.get_external_wr_ack(node)};")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
@@ -45,7 +47,8 @@ class ExternalReadAckGenerator(RDLForLoopGenerator):
         super().enter_AddressableComponent(node)
 
         if node.external:
-            self.add_content(f"rd_ack |= {self.exp.hwif.get_external_rd_ack(node)};")
+            if not isinstance(node, RegNode) or node.has_sw_readable:
+                self.add_content(f"rd_ack |= {self.exp.hwif.get_external_rd_ack(node)};")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue

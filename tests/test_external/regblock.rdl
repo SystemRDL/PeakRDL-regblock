@@ -26,4 +26,26 @@ addrmap top {
         memwidth = 32;
         mementries = 8;
     } mm @ 0x3000;
+
+    reg my_ro_reg {
+        field {sw=r; hw=w;} whatever[32] = 0;
+    };
+    reg my_wo_reg {
+        field {sw=w; hw=r;} whatever[32] = 0;
+    };
+    external my_ro_reg ro_reg @ 0x4000;
+    external my_wo_reg wo_reg @ 0x4004;
+
+    reg my_wide_ro_reg {
+        regwidth = 64;
+        accesswidth = 32;
+        field {sw=r; hw=w;} whatever[32] = 0;
+    };
+    reg my_wide_wo_reg {
+        regwidth = 64;
+        accesswidth = 32;
+        field {sw=w; hw=r;} whatever[32] = 0;
+    };
+    external my_wide_ro_reg wide_ro_reg @ 0x4010;
+    external my_wide_wo_reg wide_wo_reg @ 0x4018;
 };

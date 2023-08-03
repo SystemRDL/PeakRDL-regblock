@@ -95,6 +95,62 @@
         .rd_data(hwif_in.mm.rd_data),
         .wr_ack(hwif_in.mm.wr_ack)
     );
+
+    external_reg wo_reg_inst (
+        .clk(clk),
+        .rst(rst),
+
+        .req(hwif_out.wo_reg.req),
+        .req_is_wr(hwif_out.wo_reg.req_is_wr),
+        .wr_data(hwif_out.wo_reg.wr_data),
+        .wr_biten(hwif_out.wo_reg.wr_biten),
+        .rd_ack(),
+        .rd_data(),
+        .wr_ack(hwif_in.wo_reg.wr_ack)
+    );
+
+    external_reg ro_reg_inst (
+        .clk(clk),
+        .rst(rst),
+
+        .req(hwif_out.ro_reg.req),
+        .req_is_wr(hwif_out.ro_reg.req_is_wr),
+        .wr_data(32'b0),
+        .wr_biten(32'b0),
+        .rd_ack(hwif_in.ro_reg.rd_ack),
+        .rd_data(hwif_in.ro_reg.rd_data),
+        .wr_ack()
+    );
+
+    external_reg #(
+        .SUBWORDS(2)
+    ) wide_wo_reg_inst (
+        .clk(clk),
+        .rst(rst),
+
+        .req(hwif_out.wide_wo_reg.req),
+        .req_is_wr(hwif_out.wide_wo_reg.req_is_wr),
+        .wr_data(hwif_out.wide_wo_reg.wr_data),
+        .wr_biten(hwif_out.wide_wo_reg.wr_biten),
+        .rd_ack(),
+        .rd_data(),
+        .wr_ack(hwif_in.wide_wo_reg.wr_ack)
+    );
+
+    external_reg #(
+        .SUBWORDS(2)
+    ) wide_ro_reg_inst (
+        .clk(clk),
+        .rst(rst),
+
+        .req(hwif_out.wide_ro_reg.req),
+        .req_is_wr(hwif_out.wide_ro_reg.req_is_wr),
+        .wr_data(64'b0),
+        .wr_biten(64'b0),
+        .rd_ack(hwif_in.wide_ro_reg.rd_ack),
+        .rd_data(hwif_in.wide_ro_reg.rd_data),
+        .wr_ack()
+    );
 {%- endblock %}
 
 
@@ -158,6 +214,40 @@
             cpuif.write('h3000 + i*4, x);
             cpuif.assert_read('h3000 + i*4, x);
             assert(mm_inst.mem[i] == x);
+        end
+    end
+
+    repeat(20) begin
+        x = $urandom();
+        ro_reg_inst.value <= x;
+        cpuif.write('h4000, ~x);
+        cpuif.assert_read('h4000, x);
+        assert(ro_reg_inst.value == x);
+    end
+
+    repeat(20) begin
+        x = $urandom();
+        cpuif.write('h4004, x);
+        cpuif.assert_read('h4004, 0);
+        assert(wo_reg_inst.value == x);
+    end
+
+    for(int i=0; i<2; i++) begin
+        repeat(20) begin
+            x = $urandom();
+            wide_ro_reg_inst.value[i] <= x;
+            cpuif.write('h4010 + i*4, ~x);
+            cpuif.assert_read('h4010 + i*4, x);
+            assert(wide_ro_reg_inst.value[i] == x);
+        end
+    end
+
+    for(int i=0; i<2; i++) begin
+        repeat(20) begin
+            x = $urandom();
+            cpuif.write('h4018 + i*4, x);
+            cpuif.assert_read('h4018 + i*4, 0);
+            assert(wide_wo_reg_inst.value[i] == x);
         end
     end
 

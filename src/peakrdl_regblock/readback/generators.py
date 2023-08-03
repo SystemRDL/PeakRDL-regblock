@@ -92,11 +92,11 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         return WalkerAction.Continue
 
     def enter_Reg(self, node: RegNode) -> WalkerAction:
-        if node.external:
-            self.process_external_reg(node)
+        if not node.has_sw_readable:
             return WalkerAction.SkipDescendants
 
-        if not node.has_sw_readable:
+        if node.external:
+            self.process_external_reg(node)
             return WalkerAction.SkipDescendants
 
         accesswidth = node.get_property('accesswidth')

@@ -347,6 +347,8 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             bslice = ""
 
         context = {
+            "has_sw_writable": node.has_sw_writable,
+            "has_sw_readable": node.has_sw_readable,
             "prefix": prefix,
             "strb": strb,
             "bslice": bslice,

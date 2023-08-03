@@ -97,9 +97,11 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         super().enter_Reg(node)
         if node.external:
             width = min(self.hwif.ds.cpuif_data_width, node.get_property('regwidth'))
-            self.add_member("rd_ack")
-            self.add_member("rd_data", width)
-            self.add_member("wr_ack")
+            if node.has_sw_readable:
+                self.add_member("rd_ack")
+                self.add_member("rd_data", width)
+            if node.has_sw_writable:
+                self.add_member("wr_ack")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
@@ -194,8 +196,9 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
             self.add_member("req", n_subwords)
             self.add_member("req_is_wr")
-            self.add_member("wr_data", width)
-            self.add_member("wr_biten", width)
+            if node.has_sw_writable:
+                self.add_member("wr_data", width)
+                self.add_member("wr_biten", width)
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
