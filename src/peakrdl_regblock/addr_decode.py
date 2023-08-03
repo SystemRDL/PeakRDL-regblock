@@ -78,16 +78,12 @@ class DecodeStructGenerator(RDLStructGenerator):
         )
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> Optional[WalkerAction]:
-        if node.external:
-            self._enter_external_block(node)
-            return WalkerAction.SkipDescendants
-        super().enter_Addrmap(node)
-        return WalkerAction.Continue
+        assert node.external
+        self._enter_external_block(node)
+        return WalkerAction.SkipDescendants
 
     def exit_Addrmap(self, node: 'AddrmapNode') -> None:
-        if node.external:
-            return
-        super().exit_Addrmap(node)
+        assert node.external
 
     def enter_Regfile(self, node: 'RegfileNode') -> Optional[WalkerAction]:
         if node.external:
@@ -102,16 +98,12 @@ class DecodeStructGenerator(RDLStructGenerator):
         super().exit_Regfile(node)
 
     def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
-        if node.external:
-            self._enter_external_block(node)
-            return WalkerAction.SkipDescendants
-        super().enter_Mem(node)
-        return WalkerAction.Continue
+        assert node.external
+        self._enter_external_block(node)
+        return WalkerAction.SkipDescendants
 
     def exit_Mem(self, node: 'MemNode') -> None:
-        if node.external:
-            return
-        super().exit_Mem(node)
+        assert node.external
 
     def enter_Reg(self, node: 'RegNode') -> None:
         # if register is "wide", expand the strobe to be able to access the sub-words

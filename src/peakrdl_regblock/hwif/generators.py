@@ -74,10 +74,9 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> None:
         super().enter_Addrmap(node)
-        if node.external:
-            self._add_external_block_members(node)
-            return WalkerAction.SkipDescendants
-        return WalkerAction.Continue
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
 
     def enter_Regfile(self, node: 'RegfileNode') -> None:
         super().enter_Regfile(node)
@@ -88,10 +87,9 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
 
     def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
         super().enter_Mem(node)
-        if node.external:
-            self._add_external_block_members(node)
-            return WalkerAction.SkipDescendants
-        return WalkerAction.Continue
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
 
     def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
         super().enter_Reg(node)
@@ -170,10 +168,9 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> None:
         super().enter_Addrmap(node)
-        if node.external:
-            self._add_external_block_members(node)
-            return WalkerAction.SkipDescendants
-        return WalkerAction.Continue
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
 
     def enter_Regfile(self, node: 'RegfileNode') -> None:
         super().enter_Regfile(node)
@@ -184,10 +181,9 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
     def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
         super().enter_Mem(node)
-        if node.external:
-            self._add_external_block_members(node)
-            return WalkerAction.SkipDescendants
-        return WalkerAction.Continue
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
 
     def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
         super().enter_Reg(node)
