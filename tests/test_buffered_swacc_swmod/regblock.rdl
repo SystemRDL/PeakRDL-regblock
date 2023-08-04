@@ -28,4 +28,33 @@ addrmap top {
             rclr;
         } f[16] = 0x1030;
     } r3;
+
+    reg {
+        buffer_reads;
+        buffer_writes;
+        field {
+            sw=rw; hw=r;
+            swacc;
+            swmod;
+        } f[16] = 0x1234;
+    } r4;
+
+    reg {
+        buffer_writes;
+        field {
+            sw=rw; hw=r;
+            swacc;
+            swmod;
+        } f[16] = 0xABCD;
+    } r5;
+
+    reg {
+        buffer_reads;
+        field {
+            sw=r; hw=rw;
+            we;
+            swmod;
+            rclr;
+        } f[16] = 0x1030;
+    } r6;
 };

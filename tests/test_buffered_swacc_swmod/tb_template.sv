@@ -7,6 +7,7 @@
     logic [7:0] rd_data_h;
     logic [15:0] latched_data;
     int event_count;
+    bit fired;
     latched_data = 'x;
 
     ##1;
@@ -35,7 +36,7 @@
         begin
             cpuif.read('h0, rd_data_l);
             cpuif.read('h1, rd_data_h);
-            @cb;
+            repeat(3) @cb;
         end
     join_any
     disable fork;
@@ -44,6 +45,7 @@
 
 
     // Verify that hwif changes 1 cycle after swmod
+    fired = 0;
     fork
         begin
             ##0;
@@ -52,6 +54,7 @@
                 if(cb.hwif_out.r2.f.swmod) break;
                 @cb;
             end
+            fired = 1;
             @cb;
             forever begin
                 assert(cb.hwif_out.r2.f.value == 'h4221);
@@ -63,12 +66,14 @@
         begin
             cpuif.write('h2, 'h21);
             cpuif.write('h3, 'h42);
-            @cb;
+            repeat(3) @cb;
         end
     join_any
     disable fork;
+    assert(fired);
 
     // Verify that hwif changes 1 cycle after swmod
+    fired = 0;
     fork
         begin
             ##0;
@@ -77,6 +82,7 @@
                 if(cb.hwif_out.r3.f.swmod) break;
                 @cb;
             end
+            fired = 1;
             @cb;
             forever begin
                 assert(cb.hwif_out.r3.f.value == 0);
@@ -88,9 +94,104 @@
         begin
             cpuif.assert_read('h4, 'h30);
             cpuif.assert_read('h5, 'h10);
-            @cb;
+            repeat(3) @cb;
         end
     join_any
     disable fork;
+    assert(fired);
+
+    // Verify swacc and swmod assert when written
+    fired = 0;
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(cb.hwif_out.r4.f.value == 'h1234);
+                if(cb.hwif_out.r4.f.swmod || cb.hwif_out.r4.f.swacc) begin
+                    assert(cb.hwif_out.r4.f.swmod == 1);
+                    assert(cb.hwif_out.r4.f.swacc == 1);
+                    break;
+                end
+                @cb;
+            end
+            fired = 1;
+            @cb;
+            forever begin
+                assert(cb.hwif_out.r4.f.value == 'h4567);
+                assert(cb.hwif_out.r4.f.swmod == 0);
+                assert(cb.hwif_out.r4.f.swacc == 0);
+                @cb;
+            end
+        end
+
+        begin
+            cpuif.write('h6, 'h67);
+            cpuif.write('h7, 'h45);
+            repeat(3) @cb;
+        end
+    join_any
+    disable fork;
+    assert(fired);
+
+    // Verify swacc and swmod assert when written
+    fired = 0;
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(cb.hwif_out.r5.f.value == 'hABCD);
+                if(cb.hwif_out.r5.f.swmod || cb.hwif_out.r5.f.swacc) begin
+                    assert(cb.hwif_out.r5.f.swmod == 1);
+                    assert(cb.hwif_out.r5.f.swacc == 1);
+                    break;
+                end
+                @cb;
+            end
+            fired = 1;
+            @cb;
+            forever begin
+                assert(cb.hwif_out.r5.f.value == 'hEF12);
+                assert(cb.hwif_out.r5.f.swmod == 0);
+                assert(cb.hwif_out.r5.f.swacc == 0);
+                @cb;
+            end
+        end
+
+        begin
+            cpuif.write('h8, 'h12);
+            cpuif.write('h9, 'hEF);
+            repeat(3) @cb;
+        end
+    join_any
+    disable fork;
+    assert(fired);
+
+    // Verify that hwif changes 1 cycle after swmod
+    fired = 0;
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(cb.hwif_out.r6.f.value == 'h1030);
+                if(cb.hwif_out.r6.f.swmod) break;
+                @cb;
+            end
+            fired = 1;
+            @cb;
+            forever begin
+                assert(cb.hwif_out.r6.f.value == 0);
+                assert(cb.hwif_out.r6.f.swmod == 0);
+                @cb;
+            end
+        end
+
+        begin
+            cpuif.assert_read('ha, 'h30);
+            cpuif.assert_read('hb, 'h10);
+            repeat(3) @cb;
+        end
+    join_any
+    disable fork;
+    assert(fired);
 
 {% endblock %}

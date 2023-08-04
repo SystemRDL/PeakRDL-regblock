@@ -5,6 +5,7 @@ addrmap top {
         field {
             sw=r; hw=w;
             swacc;
+            swmod;
         } f[8];
     } r1;
 
@@ -22,4 +23,21 @@ addrmap top {
             rclr;
         } f[8] = 30;
     } r3;
+
+    reg {
+        field {
+            sw=rw; hw=r;
+            swacc;
+            swmod;
+        } f[8] = 0x12;
+    } r4;
+
+    reg {
+        field {
+            sw=r; hw=rw;
+            we;
+            swmod;
+            rclr;
+        } f[8] = 30;
+    } r5;
 };
