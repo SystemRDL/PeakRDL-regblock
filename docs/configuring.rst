@@ -1,3 +1,5 @@
+.. _peakrdl_cfg:
+
 Configuring PeakRDL-regblock
 ============================
 
@@ -34,3 +36,10 @@ All regblock-specific options are defined under the ``[regblock]`` TOML heading.
         * ``rst_n``
         * ``arst``
         * ``arst_n``
+
+    For example:
+
+    .. code-block:: toml
+
+        [regblock]
+        default_reset = "arst"

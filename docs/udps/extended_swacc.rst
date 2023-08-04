@@ -19,7 +19,8 @@ These UDP definitions, along with others supported by PeakRDL-regblock can be
 enabled by compiling the following file along with your design:
 :download:`regblock_udps.rdl <../../hdl-src/regblock_udps.rdl>`.
 
-``rd_swacc``
+.. describe:: rd_swacc
+
     If true, infers an output signal ``hwif_out..rd_swacc`` that is asserted
     when accessed by a software read operation. The output signal is asserted
     on the same clock cycle that the field is being sampled during the software
@@ -34,7 +35,8 @@ enabled by compiling the following file along with your design:
         ]}
 
 
-``wr_swacc``
+.. describe:: wr_swacc
+
     If true, infers an output signal ``hwif_out..wr_swacc`` that is asserted
     as the field is being modified by a software write operation.
 

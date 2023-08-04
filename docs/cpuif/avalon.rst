@@ -8,14 +8,15 @@ CPU interface.
 The Avalon interface comes in two i/o port flavors:
 
 SystemVerilog Interface
-    Class: :class:`peakrdl_regblock.cpuif.avalon.Avalon_Cpuif`
-
-    Interface Definition: :download:`avalon_mm_intf.sv <../../hdl-src/avalon_mm_intf.sv>`
+    * Command line: ``--cpuif avalon-mm``
+    * Interface Definition: :download:`avalon_mm_intf.sv <../../hdl-src/avalon_mm_intf.sv>`
+    * Class: :class:`peakrdl_regblock.cpuif.avalon.Avalon_Cpuif`
 
 Flattened inputs/outputs
     Flattens the interface into discrete input and output ports.
 
-    Class: :class:`peakrdl_regblock.cpuif.avalon.Avalon_Cpuif_flattened`
+    * Command line: ``--cpuif avalon-mm-flat``
+    * Class: :class:`peakrdl_regblock.cpuif.avalon.Avalon_Cpuif_flattened`
 
 
 Implementation Details

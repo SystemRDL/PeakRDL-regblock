@@ -32,10 +32,10 @@ External registers are annotated as such by using the ``external`` keyword:
 
 .. code-block:: systemrdl
 
-    # An internal register
+    // An internal register
     my_reg int_reg;
 
-    # An external register
+    // An external register
     external my_reg ext_reg;
 
 Request
