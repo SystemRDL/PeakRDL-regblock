@@ -2,5 +2,9 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package {{ds.package_name}};
+
+    localparam {{ds.module_name.upper()}}_DATA_WIDTH = {{ds.cpuif_data_width}};
+    localparam {{ds.module_name.upper()}}_MIN_ADDR_WIDTH = {{ds.addr_width}};
+
     {{hwif.get_package_contents()|indent}}
 endpackage
