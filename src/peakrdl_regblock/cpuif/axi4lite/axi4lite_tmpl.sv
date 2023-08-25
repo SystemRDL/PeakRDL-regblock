@@ -83,17 +83,29 @@ always_comb begin
         if(axil_arvalid && !axil_prev_was_rd) begin
             cpuif_req = '1;
             cpuif_req_is_wr = '0;
+            {%- if cpuif.data_width_bytes == 1 %}
             cpuif_addr = axil_araddr;
+            {%- else %}
+            cpuif_addr = {axil_araddr[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
+            {%- endif %}
             if(!cpuif_req_stall_rd) axil_ar_accept = '1;
         end else if(axil_awvalid && axil_wvalid) begin
             cpuif_req = '1;
             cpuif_req_is_wr = '1;
+            {%- if cpuif.data_width_bytes == 1 %}
             cpuif_addr = axil_awaddr;
+            {%- else %}
+            cpuif_addr = {axil_awaddr[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
+            {%- endif %}
             if(!cpuif_req_stall_wr) axil_aw_accept = '1;
         end else if(axil_arvalid) begin
             cpuif_req = '1;
             cpuif_req_is_wr = '0;
+            {%- if cpuif.data_width_bytes == 1 %}
             cpuif_addr = axil_araddr;
+            {%- else %}
+            cpuif_addr = {axil_araddr[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
+            {%- endif %}
             if(!cpuif_req_stall_rd) axil_ar_accept = '1;
         end
     end
