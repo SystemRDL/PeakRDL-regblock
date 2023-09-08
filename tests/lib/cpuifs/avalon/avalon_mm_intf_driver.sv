@@ -6,11 +6,11 @@ interface avalon_mm_intf_driver #(
         input wire rst,
         avalon_mm_intf.host avalon
     );
-    localparam ADDR_PAD = $clog2(DATA_WIDTH/8);
-    localparam WORD_ADDR_WIDTH = ADDR_WIDTH - ADDR_PAD;
-
     timeunit 1ps;
     timeprecision 1ps;
+
+    localparam ADDR_PAD = $clog2(DATA_WIDTH/8);
+    localparam WORD_ADDR_WIDTH = ADDR_WIDTH - ADDR_PAD;
 
     logic av_read;
     logic av_write;
