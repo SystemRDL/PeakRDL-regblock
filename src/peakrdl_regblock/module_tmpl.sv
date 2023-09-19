@@ -2,14 +2,14 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 module {{ds.module_name}} (
-        input wire clk,
-        input wire {{default_resetsignal_name}},
+        input logic clk,
+        input logic {{default_resetsignal_name}},
 
         {%- for signal in ds.out_of_hier_signals.values() %}
         {%- if signal.width == 1 %}
-        input wire {{kwf(signal.inst_name)}},
+        input logic {{kwf(signal.inst_name)}},
         {%- else %}
-        input wire [{{signal.width-1}}:0] {{kwf(signal.inst_name)}},
+        input logic [{{signal.width-1}}:0] {{kwf(signal.inst_name)}},
         {%- endif %}
         {%- endfor %}
 

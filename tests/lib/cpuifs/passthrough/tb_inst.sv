@@ -1,16 +1,16 @@
 {% sv_line_anchor %}
-wire s_cpuif_req;
-wire s_cpuif_req_is_wr;
-wire [{{exporter.cpuif.addr_width-1}}:0] s_cpuif_addr;
-wire [{{exporter.cpuif.data_width-1}}:0] s_cpuif_wr_data;
-wire [{{exporter.cpuif.data_width-1}}:0] s_cpuif_wr_biten;
-wire s_cpuif_req_stall_wr;
-wire s_cpuif_req_stall_rd;
-wire s_cpuif_rd_ack;
-wire s_cpuif_rd_err;
-wire [{{exporter.cpuif.data_width-1}}:0] s_cpuif_rd_data;
-wire s_cpuif_wr_ack;
-wire s_cpuif_wr_err;
+logic s_cpuif_req;
+logic s_cpuif_req_is_wr;
+logic [{{exporter.cpuif.addr_width-1}}:0] s_cpuif_addr;
+logic [{{exporter.cpuif.data_width-1}}:0] s_cpuif_wr_data;
+logic [{{exporter.cpuif.data_width-1}}:0] s_cpuif_wr_biten;
+logic s_cpuif_req_stall_wr;
+logic s_cpuif_req_stall_rd;
+logic s_cpuif_rd_ack;
+logic s_cpuif_rd_err;
+logic [{{exporter.cpuif.data_width-1}}:0] s_cpuif_rd_data;
+logic s_cpuif_wr_ack;
+logic s_cpuif_wr_err;
 passthrough_driver #(
     .DATA_WIDTH({{exporter.cpuif.data_width}}),
     .ADDR_WIDTH({{exporter.cpuif.addr_width}})

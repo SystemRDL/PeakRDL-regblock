@@ -2,14 +2,14 @@ module external_block #(
     parameter WIDTH = 32,
     parameter ADDR_WIDTH = 8
 )(
-    input wire clk,
-    input wire rst,
+    input logic clk,
+    input logic rst,
 
-    input wire req,
-    input wire req_is_wr,
-    input wire [ADDR_WIDTH-1:0] addr,
-    input wire [WIDTH-1:0] wr_data,
-    input wire [WIDTH-1:0] wr_biten,
+    input logic req,
+    input logic req_is_wr,
+    input logic [ADDR_WIDTH-1:0] addr,
+    input logic [WIDTH-1:0] wr_data,
+    input logic [WIDTH-1:0] wr_biten,
     output logic rd_ack,
     output logic [WIDTH-1:0] rd_data,
     output logic wr_ack

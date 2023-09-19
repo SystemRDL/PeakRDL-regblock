@@ -2,8 +2,8 @@ interface avalon_mm_intf_driver #(
         parameter DATA_WIDTH = 32,
         parameter ADDR_WIDTH = 32
     )(
-        input wire clk,
-        input wire rst,
+        input logic clk,
+        input logic rst,
         avalon_mm_intf.host avalon
     );
     timeunit 1ps;

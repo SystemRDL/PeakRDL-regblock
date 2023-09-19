@@ -13,14 +13,14 @@ apb3_intf_driver #(
 );
 {% if type(cpuif).__name__.startswith("Flat") %}
 {% sv_line_anchor %}
-wire s_apb_psel;
-wire s_apb_penable;
-wire s_apb_pwrite;
-wire [{{exporter.cpuif.addr_width - 1}}:0] s_apb_paddr;
-wire [{{exporter.cpuif.data_width - 1}}:0] s_apb_pwdata;
-wire s_apb_pready;
-wire [{{exporter.cpuif.data_width - 1}}:0] s_apb_prdata;
-wire s_apb_pslverr;
+logic s_apb_psel;
+logic s_apb_penable;
+logic s_apb_pwrite;
+logic [{{exporter.cpuif.addr_width - 1}}:0] s_apb_paddr;
+logic [{{exporter.cpuif.data_width - 1}}:0] s_apb_pwdata;
+logic s_apb_pready;
+logic [{{exporter.cpuif.data_width - 1}}:0] s_apb_prdata;
+logic s_apb_pslverr;
 assign s_apb_psel = s_apb.PSEL;
 assign s_apb_penable = s_apb.PENABLE;
 assign s_apb_pwrite = s_apb.PWRITE;

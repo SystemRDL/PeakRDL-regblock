@@ -20,12 +20,12 @@ class Avalon_Cpuif_flattened(Avalon_Cpuif):
     @property
     def port_declaration(self) -> str:
         lines = [
-            "input wire " + self.signal("read"),
-            "input wire " + self.signal("write"),
+            "input logic " + self.signal("read"),
+            "input logic " + self.signal("write"),
             "output logic " + self.signal("waitrequest"),
-            f"input wire [{self.word_addr_width-1}:0] " + self.signal("address"),
-            f"input wire [{self.data_width-1}:0] " + self.signal("writedata"),
-            f"input wire [{self.data_width_bytes-1}:0] " + self.signal("byteenable"),
+            f"input logic [{self.word_addr_width-1}:0] " + self.signal("address"),
+            f"input logic [{self.data_width-1}:0] " + self.signal("writedata"),
+            f"input logic [{self.data_width_bytes-1}:0] " + self.signal("byteenable"),
             "output logic " + self.signal("readdatavalid"),
             "output logic " + self.signal("writeresponsevalid"),
             f"output logic [{self.data_width-1}:0] " + self.signal("readdata"),

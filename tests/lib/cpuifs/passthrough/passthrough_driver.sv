@@ -2,21 +2,21 @@ interface passthrough_driver #(
         parameter DATA_WIDTH = 32,
         parameter ADDR_WIDTH = 32
     )(
-        input wire clk,
-        input wire rst,
+        input logic clk,
+        input logic rst,
 
         output logic m_cpuif_req,
         output logic m_cpuif_req_is_wr,
         output logic [ADDR_WIDTH-1:0] m_cpuif_addr,
         output logic [DATA_WIDTH-1:0] m_cpuif_wr_data,
         output logic [DATA_WIDTH-1:0] m_cpuif_wr_biten,
-        input wire m_cpuif_req_stall_wr,
-        input wire m_cpuif_req_stall_rd,
-        input wire m_cpuif_rd_ack,
-        input wire m_cpuif_rd_err,
-        input wire [DATA_WIDTH-1:0] m_cpuif_rd_data,
-        input wire m_cpuif_wr_ack,
-        input wire m_cpuif_wr_err
+        input logic m_cpuif_req_stall_wr,
+        input logic m_cpuif_req_stall_rd,
+        input logic m_cpuif_rd_ack,
+        input logic m_cpuif_rd_err,
+        input logic [DATA_WIDTH-1:0] m_cpuif_rd_data,
+        input logic m_cpuif_wr_ack,
+        input logic m_cpuif_wr_err
     );
 
     timeunit 1ps;

@@ -38,25 +38,25 @@ class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
     def port_declaration(self) -> str:
         lines = [
             "output logic " + self.signal("awready"),
-            "input wire " + self.signal("awvalid"),
-            f"input wire [{self.addr_width-1}:0] " + self.signal("awaddr"),
-            "input wire [2:0] " + self.signal("awprot"),
+            "input logic " + self.signal("awvalid"),
+            f"input logic [{self.addr_width-1}:0] " + self.signal("awaddr"),
+            "input logic [2:0] " + self.signal("awprot"),
 
             "output logic " + self.signal("wready"),
-            "input wire " + self.signal("wvalid"),
-            f"input wire [{self.data_width-1}:0] " + self.signal("wdata"),
-            f"input wire [{self.data_width_bytes-1}:0]" + self.signal("wstrb"),
+            "input logic " + self.signal("wvalid"),
+            f"input logic [{self.data_width-1}:0] " + self.signal("wdata"),
+            f"input logic [{self.data_width_bytes-1}:0]" + self.signal("wstrb"),
 
-            "input wire " + self.signal("bready"),
+            "input logic " + self.signal("bready"),
             "output logic " + self.signal("bvalid"),
             "output logic [1:0] " + self.signal("bresp"),
 
             "output logic " + self.signal("arready"),
-            "input wire " + self.signal("arvalid"),
-            f"input wire [{self.addr_width-1}:0] " + self.signal("araddr"),
-            "input wire [2:0] " + self.signal("arprot"),
+            "input logic " + self.signal("arvalid"),
+            f"input logic [{self.addr_width-1}:0] " + self.signal("araddr"),
+            "input logic [2:0] " + self.signal("arprot"),
 
-            "input wire " + self.signal("rready"),
+            "input logic " + self.signal("rready"),
             "output logic " + self.signal("rvalid"),
             f"output logic [{self.data_width-1}:0] " + self.signal("rdata"),
             "output logic [1:0] " + self.signal("rresp"),

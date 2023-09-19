@@ -13,16 +13,16 @@ avalon_mm_intf_driver #(
 );
 {% if type(cpuif).__name__.startswith("Flat") %}
 {% sv_line_anchor %}
-wire avalon_read;
-wire avalon_write;
-wire avalon_waitrequest;
-wire [{{exporter.cpuif.word_addr_width - 1}}:0] avalon_address;
-wire [{{exporter.cpuif.data_width - 1}}:0] avalon_writedata;
-wire [{{exporter.cpuif.data_width_bytes - 1}}:0] avalon_byteenable;
-wire avalon_readdatavalid;
-wire avalon_writeresponsevalid;
-wire [{{exporter.cpuif.data_width - 1}}:0] avalon_readdata;
-wire [1:0] avalon_response;
+logic avalon_read;
+logic avalon_write;
+logic avalon_waitrequest;
+logic [{{exporter.cpuif.word_addr_width - 1}}:0] avalon_address;
+logic [{{exporter.cpuif.data_width - 1}}:0] avalon_writedata;
+logic [{{exporter.cpuif.data_width_bytes - 1}}:0] avalon_byteenable;
+logic avalon_readdatavalid;
+logic avalon_writeresponsevalid;
+logic [{{exporter.cpuif.data_width - 1}}:0] avalon_readdata;
+logic [1:0] avalon_response;
 assign avalon_read = avalon.read;
 assign avalon_write = avalon.write;
 assign avalon.waitrequest = avalon_waitrequest;

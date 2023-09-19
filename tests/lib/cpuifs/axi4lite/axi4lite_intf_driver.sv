@@ -2,8 +2,8 @@ interface axi4lite_intf_driver #(
         parameter DATA_WIDTH = 32,
         parameter ADDR_WIDTH = 32
     )(
-        input wire clk,
-        input wire rst,
+        input logic clk,
+        input logic rst,
         axi4lite_intf.master m_axil
     );
 
