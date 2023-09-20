@@ -109,7 +109,7 @@ class Hwif:
     #---------------------------------------------------------------------------
     def has_value_input(self, obj: Union[FieldNode, SignalNode]) -> bool:
         """
-        Returns True if the object infers an input wire in the hwif
+        Returns True if the object infers an input signal in the hwif
         """
         if isinstance(obj, FieldNode):
             return obj.is_hw_writable
@@ -122,7 +122,7 @@ class Hwif:
 
     def has_value_output(self, obj: FieldNode) -> bool:
         """
-        Returns True if the object infers an output wire in the hwif
+        Returns True if the object infers an output signal in the hwif
         """
         return obj.is_hw_readable
 
