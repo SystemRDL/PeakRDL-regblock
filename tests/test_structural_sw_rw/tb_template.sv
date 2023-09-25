@@ -73,11 +73,11 @@
     // rw_reg_lsb0
     `ifndef XSIM
         // Xilinx simulator has poor support for streaming operators. Skip
-        cpuif.assert_read('h3004, 0);
+	cpuif.assert_read('h3004, 0);
         cpuif.write('h3004, 'h4DEAB000);
         @cb;
-        assert({<<{cb.hwif_out.rw_reg_lsb0.f1.value}} == 8'hAB);
-        assert({<<{cb.hwif_out.rw_reg_lsb0.f2.value}} == 11'h4DE);
+        assert($bits({<<{cb.hwif_out.rw_reg_lsb0.f1.value}}) == 8'hAB);
+        assert($bits({<<{cb.hwif_out.rw_reg_lsb0.f2.value}}) == 11'h4DE);
         cpuif.assert_read('h3004, 'h4DEAB000);
     `endif
 {% endblock %}

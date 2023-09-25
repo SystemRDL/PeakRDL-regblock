@@ -5,11 +5,12 @@ import jinja2 as jj
 from .sv_line_anchor import SVLineAnchor
 
 from .simulators.questa import Questa
+from .simulators.vcs import Vcs
 from .simulators import StubSimulator
 
 from .base_testcase import BaseTestCase
 
-SIM_CLS = Questa
+SIM_CLS = Vcs
 if os.environ.get("STUB_SIMULATOR", False):
     SIM_CLS = StubSimulator
 

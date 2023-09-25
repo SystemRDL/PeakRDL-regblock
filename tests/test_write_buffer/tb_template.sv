@@ -69,7 +69,7 @@
     assert(cb.hwif_out.reg1_msb0.f1.value == 0);
     cpuif.write('hE, 'hDEF1);
     @cb; @cb;
-    assert({<<{cb.hwif_out.reg1_msb0.f1.value}} == 64'hDEF19ABC56781234);
+    assert($bits({<<{cb.hwif_out.reg1_msb0.f1.value}}) == 64'hDEF19ABC56781234);
     cpuif.assert_read('h8, 'h1234);
     cpuif.assert_read('hA, 'h5678);
     cpuif.assert_read('hC, 'h9ABC);
@@ -104,8 +104,8 @@
     assert(cb.hwif_out.reg2_msb0.f2.value == 0);
     cpuif.write('h16, 'hAA12);
     @cb; @cb;
-    assert({<<{cb.hwif_out.reg2_msb0.f1.value}} == 12'h234);
-    assert({<<{cb.hwif_out.reg2_msb0.f2.value}} == 4'h1);
+    assert($bits({<<{cb.hwif_out.reg2_msb0.f1.value}}) == 12'h234);
+    assert($bits({<<{cb.hwif_out.reg2_msb0.f2.value}}) == 4'h1);
     cpuif.assert_read('h14, 'h3400);
     cpuif.assert_read('h16, 'h0012);
 
@@ -281,7 +281,7 @@
     cpuif.assert_read('hA, 'h0200);
     cpuif.assert_read('hC, 'h0070);
     cpuif.assert_read('hE, 'h0002);
-    assert({<<{cb.hwif_out.reg1_msb0.f1.value}} == 'h0002_0070_0200_A000);
+    assert($bits({<<{cb.hwif_out.reg1_msb0.f1.value}}) == 'h0002_0070_0200_A000);
 
     // Check that strobes are cumulative
     cpuif.write('h8, 'h0030, 'h00F0);
@@ -297,7 +297,7 @@
     cpuif.assert_read('hA, 'h0278);
     cpuif.assert_read('hC, 'hA07D);
     cpuif.assert_read('hE, 'hAF02);
-    assert({<<{cb.hwif_out.reg1_msb0.f1.value}} == 'hAF02_A07D_0278_A230);
+    assert($bits({<<{cb.hwif_out.reg1_msb0.f1.value}}) == 'hAF02_A07D_0278_A230);
 
 
 {% endblock %}
