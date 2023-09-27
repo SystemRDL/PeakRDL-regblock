@@ -10,7 +10,8 @@ from .simulators import StubSimulator
 
 from .base_testcase import BaseTestCase
 
-SIM_CLS = Vcs
+# SIM_CLS = Vcs (if Synopsys VCS is available) 
+SIM_CLS = Questa
 if os.environ.get("STUB_SIMULATOR", False):
     SIM_CLS = StubSimulator
 
