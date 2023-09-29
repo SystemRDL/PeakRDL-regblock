@@ -8,7 +8,7 @@ logic axil_awvalid;
 logic [{{cpuif.addr_width-1}}:0] axil_awaddr;
 logic axil_wvalid;
 logic [{{cpuif.data_width-1}}:0] axil_wdata;
-logic [{{cpuif.data_width-1}}:0] axil_wstrb;
+logic [{{cpuif.data_width_bytes-1}}:0] axil_wstrb;
 logic axil_aw_accept;
 logic axil_resp_acked;
 
