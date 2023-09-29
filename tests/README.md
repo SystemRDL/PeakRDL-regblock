@@ -41,7 +41,7 @@ export SKIP_SYNTH_TESTS=1
 Install dependencies required for running tests
 
 ```bash
-python3 -m pip install test/requirements.txt
+python3 -m pip install -r tests/requirements.txt
 ```
 
 
