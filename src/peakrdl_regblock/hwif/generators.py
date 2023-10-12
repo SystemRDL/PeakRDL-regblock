@@ -230,41 +230,35 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 #-------------------------------------------------------------------------------
 class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node') -> str:
-        scope_path = node.inst.get_scope_path("__")
+        scope_path = node.get_global_type_name("__")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
             # Add prefix to prevent collision when mixing namespace methods
             scope_path = "xtern__" + super().get_typdef_name(node)
 
-        if isinstance(node, FieldNode):
-            extra_suffix = get_field_type_name_suffix(node)
+        if node.external:
+            # Node generates alternate external signals
+            extra_suffix = "__external"
         else:
             extra_suffix = ""
 
-        if node.external:
-            # Node generates alternate external signals
-            extra_suffix += "__external"
-
-        return f'{scope_path}__{node.type_name}{extra_suffix}__in_t'
+        return f'{scope_path}{extra_suffix}__in_t'
 
 class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node') -> str:
-        scope_path = node.inst.get_scope_path("__")
+        scope_path = node.get_global_type_name("__")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
             # Add prefix to prevent collision when mixing namespace methods
             scope_path = "xtern__" + super().get_typdef_name(node)
 
-        if isinstance(node, FieldNode):
-            extra_suffix = get_field_type_name_suffix(node)
+        if node.external:
+            # Node generates alternate external signals
+            extra_suffix = "__external"
         else:
             extra_suffix = ""
 
-        if node.external:
-            # Node generates alternate external signals
-            extra_suffix += "__external"
-
-        return f'{scope_path}__{node.type_name}{extra_suffix}__out_t'
+        return f'{scope_path}{extra_suffix}__out_t'
 
 #-------------------------------------------------------------------------------
 class EnumGenerator:
@@ -302,26 +296,3 @@ class EnumGenerator:
             + ",\n".join(lines)
             + f"\n}} {prefix}_e;"
         )
-
-
-def get_field_type_name_suffix(field: FieldNode) -> str:
-    """
-    Fields may reuse the same type, but end up instantiating different widths
-    Uniquify the type name further if the field width was overridden when instantiating
-    """
-    if field.inst.original_def is None:
-        return ""
-
-    if field.inst.original_def.type_name is None:
-        # is an anonymous definition. No extra suffix needed
-        return ""
-
-    if "fieldwidth" in field.list_properties():
-        # fieldwidth was explicitly set. This type name is already sufficiently distinct
-        return ""
-
-    if field.width == 1:
-        # field width is the default. Skip suffix
-        return ""
-
-    return f"_w{field.width}"

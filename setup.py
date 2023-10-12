@@ -24,7 +24,7 @@ setuptools.setup(
     include_package_data=True,
     python_requires='>=3.6',
     install_requires=[
-        "systemrdl-compiler >= 1.25.1, < 2",
+        "systemrdl-compiler >= 1.27.0, < 2",
         "Jinja2>=2.11",
     ],
     entry_points = {
@@ -43,6 +43,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3 :: Only",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
