@@ -30,11 +30,6 @@ To run synthesis tests, Vivado needs to be installed and visible via the PATH en
 
 Vivado can be downloaded for free from: https://www.xilinx.com/support/download.html
 
-To skip synthesis tests, export the following environment variable:
-```bash
-export SKIP_SYNTH_TESTS=1
-```
-
 
 
 ## Python Packages
@@ -61,6 +56,13 @@ You can also run a specific testcase. For example:
 ```bash
 pytest tests/test_hw_access
 ```
+
+Command-line arguments can be used to explicitly select which simulator/synthesis tools are used
+If unspecified, the tool will be selected automatically based on what you have installed.
+```bash
+pytest --sim-tool questa --synth-tool vivado
+```
+
 
 Alternatively, launch tests using the helper script. This handles installing
 dependencies into a virtual environment automatically.

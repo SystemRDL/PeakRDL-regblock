@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 import unittest
 import os
 import glob
@@ -49,41 +49,37 @@ class BaseTestCase(unittest.TestCase):
     def _load_request(self, request):
         self.request = request
 
-    @classmethod
-    def get_testcase_dir(cls) -> str:
-        class_dir = os.path.dirname(inspect.getfile(cls))
+    def get_testcase_dir(self) -> str:
+        class_dir = os.path.dirname(inspect.getfile(self.__class__))
         return class_dir
 
-    @classmethod
-    def get_run_dir(cls) -> str:
-        this_dir = cls.get_testcase_dir()
-        run_dir = os.path.join(this_dir, "run.out", cls.__name__)
+    def get_run_dir(self) -> str:
+        this_dir = self.get_testcase_dir()
+        run_dir = os.path.join(this_dir, "run.out", self.__class__.__name__)
         return run_dir
 
-    @classmethod
-    def _write_params(cls) -> None:
+    def _write_params(self) -> None:
         """
         Write out the class parameters to a file so that it is easier to debug
         how a testcase was parameterized
         """
-        path = os.path.join(cls.get_run_dir(), "params.txt")
+        path = os.path.join(self.get_run_dir(), "params.txt")
 
         with open(path, 'w') as f:
-            for k, v in cls.__dict__.items():
+            for k, v in self.__class__.__dict__.items():
                 if k.startswith("_") or callable(v):
                     continue
                 f.write(f"{k}: {repr(v)}\n")
 
 
-    @classmethod
-    def _export_regblock(cls):
+    def _export_regblock(self):
         """
         Call the peakrdl_regblock exporter to generate the DUT
         """
-        this_dir = cls.get_testcase_dir()
+        this_dir = self.get_testcase_dir()
 
-        if cls.rdl_file:
-            rdl_file = cls.rdl_file
+        if self.rdl_file:
+            rdl_file = self.rdl_file
         else:
             # Find any *.rdl file in testcase dir
             rdl_file = glob.glob(os.path.join(this_dir, "*.rdl"))[0]
@@ -98,45 +94,33 @@ class BaseTestCase(unittest.TestCase):
         rdlc.compile_file(udp_file)
 
         rdlc.compile_file(rdl_file)
-        root = rdlc.elaborate(cls.rdl_elab_target, "regblock", cls.rdl_elab_params)
+        root = rdlc.elaborate(self.rdl_elab_target, "regblock", self.rdl_elab_params)
 
-        cls.exporter.export(
+        self.exporter.export(
             root,
-            cls.get_run_dir(),
+            self.get_run_dir(),
             module_name="regblock",
             package_name="regblock_pkg",
-            cpuif_cls=cls.cpuif.cpuif_cls,
-            retime_read_fanin=cls.retime_read_fanin,
-            retime_read_response=cls.retime_read_response,
-            reuse_hwif_typedefs=cls.reuse_hwif_typedefs,
-            retime_external_reg=cls.retime_external,
-            retime_external_regfile=cls.retime_external,
-            retime_external_mem=cls.retime_external,
-            retime_external_addrmap=cls.retime_external,
-            default_reset_activelow=cls.default_reset_activelow,
-            default_reset_async=cls.default_reset_async,
+            cpuif_cls=self.cpuif.cpuif_cls,
+            retime_read_fanin=self.retime_read_fanin,
+            retime_read_response=self.retime_read_response,
+            reuse_hwif_typedefs=self.reuse_hwif_typedefs,
+            retime_external_reg=self.retime_external,
+            retime_external_regfile=self.retime_external,
+            retime_external_mem=self.retime_external,
+            retime_external_addrmap=self.retime_external,
+            default_reset_activelow=self.default_reset_activelow,
+            default_reset_async=self.default_reset_async,
         )
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self) -> None:
         # Create fresh build dir
-        run_dir = cls.get_run_dir()
+        run_dir = self.get_run_dir()
         if os.path.exists(run_dir):
             shutil.rmtree(run_dir)
         pathlib.Path(run_dir).mkdir(parents=True, exist_ok=True)
 
-        cls._write_params()
+        self._write_params()
 
         # Convert testcase RDL file --> SV
-        cls._export_regblock()
-
-
-    def setUp(self) -> None:
-        # cd into the run directory
-        self.original_cwd = os.getcwd()
-        os.chdir(self.get_run_dir())
-
-
-    def run_test(self, plusargs:List[str] = None) -> None:
-        simulator = self.simulator_cls(testcase_cls_inst=self)
-        simulator.run(plusargs)
+        self._export_regblock()

@@ -40,11 +40,11 @@ module tb;
     default clocking cb @(posedge clk);
         default input #1step output #1;
         output rst;
-{%- if exporter.hwif.has_input_struct and cls.clocking_hwif_in %}
+{%- if exporter.hwif.has_input_struct and testcase.clocking_hwif_in %}
         output hwif_in;
 {%- endif %}
 
-{%- if exporter.hwif.has_output_struct and cls.clocking_hwif_out %}
+{%- if exporter.hwif.has_output_struct and testcase.clocking_hwif_out %}
         input hwif_out;
 {%- endif %}
 
@@ -61,7 +61,7 @@ module tb;
     //--------------------------------------------------------------------------
     // CPUIF
     //--------------------------------------------------------------------------
-    {{cls.cpuif.get_tb_inst(cls, exporter)|indent}}
+    {{testcase.cpuif.get_tb_inst(testcase, exporter)|indent}}
 
     //--------------------------------------------------------------------------
     // DUT
@@ -93,7 +93,7 @@ module tb;
     //--------------------------------------------------------------------------
     initial begin
         cb.rst <= '1;
-    {%- if exporter.hwif.has_input_struct and cls.init_hwif_in %}
+    {%- if exporter.hwif.has_input_struct and testcase.init_hwif_in %}
         cb.hwif_in <= '{default: '0};
     {%- endif %}
 
@@ -112,8 +112,8 @@ module tb;
     // Monitor for timeout
     //--------------------------------------------------------------------------
     initial begin
-        ##{{cls.timeout_clk_cycles}};
-        $fatal(1, "Test timed out after {{cls.timeout_clk_cycles}} clock cycles");
+        ##{{testcase.timeout_clk_cycles}};
+        $fatal(1, "Test timed out after {{testcase.timeout_clk_cycles}} clock cycles");
     end
 
 endmodule

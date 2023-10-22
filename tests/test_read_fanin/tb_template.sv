@@ -2,9 +2,9 @@
 
 {%- block declarations %}
     {% sv_line_anchor %}
-    localparam REGWIDTH = {{cls.regwidth}};
+    localparam REGWIDTH = {{testcase.regwidth}};
     localparam STRIDE = REGWIDTH/8;
-    localparam N_REGS = {{cls.n_regs}};
+    localparam N_REGS = {{testcase.n_regs}};
 {%- endblock %}
 
 

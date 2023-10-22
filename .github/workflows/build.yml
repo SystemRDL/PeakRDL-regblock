@@ -52,9 +52,7 @@ jobs:
       - name: Test
         run: |
           cd tests
-          export SKIP_SYNTH_TESTS=1
-          export STUB_SIMULATOR=1
-          pytest --cov=peakrdl_regblock
+          pytest --cov=peakrdl_regblock --synth-tool skip --sim-tool stub
 
       - name: Coveralls
         env:

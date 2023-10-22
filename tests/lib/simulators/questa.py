@@ -1,10 +1,20 @@
 from typing import List
 import subprocess
 import os
+import shutil
 
-from . import Simulator
+from .base import Simulator
 
 class Questa(Simulator):
+    name = "questa"
+
+    @classmethod
+    def is_installed(cls) -> bool:
+        return (
+            shutil.which("vlog") is not None
+            and shutil.which("vsim") is not None
+        )
+
     def compile(self) -> None:
         cmd = [
             "vlog", "-sv", "-quiet", "-l", "build.log",
@@ -31,7 +41,7 @@ class Questa(Simulator):
     def run(self, plusargs:List[str] = None) -> None:
         plusargs = plusargs or []
 
-        test_name = self.testcase_cls_inst.request.node.name
+        test_name = self.testcase.request.node.name
 
         # call vsim
         cmd = [
@@ -54,11 +64,11 @@ class Questa(Simulator):
 
 
     def assertSimLogPass(self, path: str):
-        self.testcase_cls_inst.assertTrue(os.path.isfile(path))
+        self.testcase.assertTrue(os.path.isfile(path))
 
         with open(path, encoding="utf-8") as f:
             for line in f:
                 if line.startswith("# ** Error"):
-                    self.testcase_cls_inst.fail(line)
+                    self.testcase.fail(line)
                 elif line.startswith("# ** Fatal"):
-                    self.testcase_cls_inst.fail(line)
+                    self.testcase.fail(line)

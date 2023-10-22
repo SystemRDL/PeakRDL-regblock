@@ -1,22 +1,34 @@
 from typing import List
 import subprocess
 import os
+import shutil
 
-from . import Simulator
+from .base import Simulator
 
 class Xilinx(Simulator):
     """
     Don't bother using the Xilinx simulator... Its buggy and extraordinarily slow.
-    As observed in v2021.1:
+    As observed in v2023.2:
         - clocking block assignments do not seem to actually simulate correctly.
           assignment statements get ignored or the values get mangled.
         - Streaming operators have all sorts of limitations.
 
     Keeping this here in case someday it works better...
     """
+    name = "xilinx"
+
+    @classmethod
+    def is_installed(cls) -> bool:
+        return (
+            shutil.which("xvlog") is not None
+            and shutil.which("xelab") is not None
+            and shutil.which("xsim") is not None
+        )
+
     def compile(self) -> None:
         cmd = [
             "xvlog", "--sv",
+            "--log", "compile.log",
             "--include", os.path.join(os.path.dirname(__file__), ".."),
             "--define", "XSIM",
         ]
@@ -25,6 +37,7 @@ class Xilinx(Simulator):
 
         cmd = [
             "xelab",
+            "--log", "elaborate.log",
             "--timescale", "1ns/1ps",
             "--debug", "all",
             "tb",
@@ -35,7 +48,7 @@ class Xilinx(Simulator):
     def run(self, plusargs:List[str] = None) -> None:
         plusargs = plusargs or []
 
-        test_name = self.testcase_cls_inst.request.node.name
+        test_name = self.testcase.request.node.name
 
         # call vsim
         cmd = [
@@ -54,13 +67,13 @@ class Xilinx(Simulator):
 
 
     def assertSimLogPass(self, path: str):
-        self.testcase_cls_inst.assertTrue(os.path.isfile(path))
+        self.testcase.assertTrue(os.path.isfile(path))
 
         with open(path, encoding="utf-8") as f:
             for line in f:
                 if line.startswith("Error:"):
-                    self.testcase_cls_inst.fail(line)
+                    self.testcase.fail(line)
                 elif line.startswith("Fatal:"):
-                    self.testcase_cls_inst.fail(line)
+                    self.testcase.fail(line)
                 elif line.startswith("FATAL_ERROR:"):
-                    self.testcase_cls_inst.fail(line)
+                    self.testcase.fail(line)
