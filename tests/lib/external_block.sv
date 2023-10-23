@@ -14,7 +14,7 @@ module external_block #(
     output logic [WIDTH-1:0] rd_data,
     output logic wr_ack
 );
-timeunit 1ns;
+timeunit 1ps;
 timeprecision 1ps;
 
 localparam ADDR_SHIFT = $clog2(WIDTH/8);

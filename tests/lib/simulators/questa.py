@@ -48,14 +48,21 @@ class Questa(Simulator):
             "vsim", "-quiet",
             "-voptargs=+acc",
             "-msgmode", "both",
-            "-do", "set WildcardFilter [lsearch -not -all -inline $WildcardFilter Memory]",
-            "-do", "log -r /*;",
-            "-do", "run -all; exit;",
-            "-c",
             "-l", "%s.log" % test_name,
             "-wlf", "%s.wlf" % test_name,
             "tb",
+            "-do", "set WildcardFilter [lsearch -not -all -inline $WildcardFilter Memory]",
+            "-do", "log -r /*;",
         ]
+
+        if self.gui_mode:
+            cmd.append("-i")
+        else:
+            cmd.extend([
+                "-do", "run -all; exit;",
+                "-c",
+            ])
+
         for plusarg in plusargs:
             cmd.append("+" + plusarg)
         subprocess.run(cmd, check=True)

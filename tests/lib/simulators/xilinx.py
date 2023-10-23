@@ -5,17 +5,17 @@ import shutil
 
 from .base import Simulator
 
-class Xilinx(Simulator):
+class XilinxXSIM(Simulator):
     """
-    Don't bother using the Xilinx simulator... Its buggy and extraordinarily slow.
+    Avoid using the Xilinx simulator... Its buggy and extraordinarily slow.
     As observed in v2023.2:
-        - clocking block assignments do not seem to actually simulate correctly.
-          assignment statements get ignored or the values get mangled.
-        - Streaming operators have all sorts of limitations.
-
-    Keeping this here in case someday it works better...
+        - Clocking block assignments to struct members do not simulate correctly.
+          assignment statements get lost.
+            https://support.xilinx.com/s/question/0D54U00007ZIGfXSAX/xsim-bug-xsim-does-not-simulate-struct-assignments-in-clocking-blocks-correctly?language=en_US
+        - Streaming bit-swap within a conditional returns a corrupted value
+            https://support.xilinx.com/s/question/0D54U00007ZIIBPSA5/xsim-bug-xsim-corrupts-value-of-signal-that-is-bitswapped-within-a-conditional-operator?language=en_US
     """
-    name = "xilinx"
+    name = "xsim"
 
     @classmethod
     def is_installed(cls) -> bool:
@@ -30,7 +30,7 @@ class Xilinx(Simulator):
             "xvlog", "--sv",
             "--log", "compile.log",
             "--include", os.path.join(os.path.dirname(__file__), ".."),
-            "--define", "XSIM",
+            "--define", "XILINX_XSIM",
         ]
         cmd.extend(self.tb_files)
         subprocess.run(cmd, check=True)
@@ -38,7 +38,7 @@ class Xilinx(Simulator):
         cmd = [
             "xelab",
             "--log", "elaborate.log",
-            "--timescale", "1ns/1ps",
+            "--timescale", "1ps/1ps",
             "--debug", "all",
             "tb",
         ]
@@ -50,13 +50,17 @@ class Xilinx(Simulator):
 
         test_name = self.testcase.request.node.name
 
-        # call vsim
-        cmd = [
-            "xsim",
-            "--R",
+        # call xsim
+        cmd = ["xsim"]
+        if self.gui_mode:
+            cmd.append("--gui")
+        else:
+            cmd.append("-R")
+
+        cmd.extend([
             "--log", "%s.log" % test_name,
             "tb",
-        ]
+        ])
 
         for plusarg in plusargs:
             cmd.append("--testplusarg")

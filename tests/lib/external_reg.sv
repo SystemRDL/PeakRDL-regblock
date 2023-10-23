@@ -13,7 +13,7 @@ module external_reg #(
     output logic [WIDTH-1:0] rd_data,
     output logic wr_ack
 );
-timeunit 1ns;
+timeunit 1ps;
 timeprecision 1ps;
 logic [SUBWORDS-1:0][WIDTH-1:0] value;
 
@@ -69,6 +69,7 @@ initial begin
         #1ns;
 
         if(!rst && req) begin
+            $info("got request");
             if(req_is_wr) do_write(req, wr_data, wr_biten);
             else do_read(req);
         end

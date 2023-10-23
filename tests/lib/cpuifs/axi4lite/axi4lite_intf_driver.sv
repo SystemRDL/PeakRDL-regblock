@@ -95,79 +95,148 @@ interface axi4lite_intf_driver #(
         @cb;
     end
 
-    semaphore txn_aw_mutex = new(1);
-    semaphore txn_w_mutex = new(1);
-    semaphore txn_b_mutex = new(1);
-    semaphore txn_ar_mutex = new(1);
-    semaphore txn_r_mutex = new(1);
+    //--------------------------------------------------------------------------
+    typedef struct {
+        logic [1:0] bresp;
+    } write_response_t;
+
+    class write_request_t;
+        mailbox #(write_response_t) response_mbx;
+        logic [ADDR_WIDTH-1:0] addr;
+        logic [DATA_WIDTH-1:0] data;
+        logic [DATA_WIDTH/8-1:0] strb;
+        function new();
+            this.response_mbx = new();
+        endfunction
+    endclass
+
+    mailbox #(write_request_t) aw_mbx = new();
+    mailbox #(write_request_t) w_mbx = new();
+    write_request_t write_queue[$];
+
+    // Issue AW transfers
+    initial forever begin
+        write_request_t req;
+        aw_mbx.get(req);
+        ##0;
+        repeat($urandom_range(2,0)) @cb;
+        cb.AWVALID <= '1;
+        cb.AWADDR <= req.addr;
+        cb.AWPROT <= '0;
+        @(cb);
+        while(cb.AWREADY !== 1'b1) @(cb);
+        cb.AWVALID <= '0;
+    end
+
+    // Issue W transfers
+    initial forever begin
+        write_request_t req;
+        w_mbx.get(req);
+        ##0;
+        repeat($urandom_range(2,0)) @cb;
+        cb.WVALID <= '1;
+        cb.WDATA <= req.data;
+        cb.WSTRB <= req.strb;
+        @(cb);
+        while(cb.WREADY !== 1'b1) @(cb);
+        cb.WVALID <= '0;
+        cb.WSTRB <= '0;
+    end
+
+    // Listen for R responses
+    initial forever begin
+        @cb;
+        while(rst || !(cb.BREADY === 1'b1 && cb.BVALID === 1'b1)) @cb;
+        if(write_queue.size() != 0) begin
+            // Can match this response with an existing request.
+            // Send response to requestor
+            write_request_t req;
+            write_response_t resp;
+            req = write_queue.pop_front();
+            resp.bresp = cb.BRESP;
+            req.response_mbx.put(resp);
+        end else begin
+            $error("Got unmatched write response");
+        end
+    end
 
     task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1);
-        bit w_before_aw;
-        w_before_aw = $urandom_range(1,0);
+        write_request_t req;
+        write_response_t resp;
 
-        fork
-            begin
-                txn_aw_mutex.get();
-                ##0;
-                if(w_before_aw) repeat($urandom_range(2,0)) @cb;
-                cb.AWVALID <= '1;
-                cb.AWADDR <= addr;
-                cb.AWPROT <= '0;
-                @(cb);
-                while(cb.AWREADY !== 1'b1) @(cb);
-                cb.AWVALID <= '0;
-                txn_aw_mutex.put();
-            end
+        req = new();
+        req.addr = addr;
+        req.data = data;
+        req.strb = strb;
 
-            begin
-                txn_w_mutex.get();
-                ##0;
-                if(!w_before_aw) repeat($urandom_range(2,0)) @cb;
-                cb.WVALID <= '1;
-                cb.WDATA <= data;
-                cb.WSTRB <= strb;
-                @(cb);
-                while(cb.WREADY !== 1'b1) @(cb);
-                cb.WVALID <= '0;
-                cb.WSTRB <= '0;
-                txn_w_mutex.put();
-            end
+        aw_mbx.put(req);
+        w_mbx.put(req);
+        write_queue.push_back(req);
 
-            begin
-                txn_b_mutex.get();
-                @cb;
-                while(!(cb.BREADY === 1'b1 && cb.BVALID === 1'b1)) @(cb);
-                assert(!$isunknown(cb.BRESP)) else $error("Read from 0x%0x returned X's on BRESP", addr);
-                txn_b_mutex.put();
-            end
-        join
+        // Wait for response
+        req.response_mbx.get(resp);
+        assert(!$isunknown(resp.bresp)) else $error("Read from 0x%0x returned X's on BRESP", addr);
     endtask
 
+    //--------------------------------------------------------------------------
+    typedef struct {
+        logic [DATA_WIDTH-1: 0] rdata;
+        logic [1:0] rresp;
+    } read_response_t;
+
+    class read_request_t;
+        mailbox #(read_response_t) response_mbx;
+        function new();
+            this.response_mbx = new();
+        endfunction
+    endclass
+
+    semaphore txn_ar_mutex = new(1);
+    read_request_t read_queue[$];
+
+    // Listen for R responses
+    initial forever begin
+        @cb;
+        while(rst || !(cb.RREADY === 1'b1 && cb.RVALID === 1'b1)) @cb;
+        if(read_queue.size() != 0) begin
+            // Can match this response with an existing request.
+            // Send response to requestor
+            read_request_t req;
+            read_response_t resp;
+            req = read_queue.pop_front();
+            resp.rdata = cb.RDATA;
+            resp.rresp = cb.RRESP;
+            req.response_mbx.put(resp);
+        end else begin
+            $error("Got unmatched read response");
+        end
+    end
+
     task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
+        read_request_t req;
+        read_response_t resp;
 
-        fork
-            begin
-                txn_ar_mutex.get();
-                ##0;
-                cb.ARVALID <= '1;
-                cb.ARADDR <= addr;
-                cb.ARPROT <= '0;
-                @(cb);
-                while(cb.ARREADY !== 1'b1) @(cb);
-                cb.ARVALID <= '0;
-                txn_ar_mutex.put();
-            end
+        txn_ar_mutex.get();
+        // Issue read request
+        ##0;
+        cb.ARVALID <= '1;
+        cb.ARADDR <= addr;
+        cb.ARPROT <= '0;
+        @(cb);
+        while(cb.ARREADY !== 1'b1) @(cb);
+        cb.ARVALID <= '0;
 
-            begin
-                txn_r_mutex.get();
-                @cb;
-                while(!(cb.RREADY === 1'b1 && cb.RVALID === 1'b1)) @(cb);
-                assert(!$isunknown(cb.RDATA)) else $error("Read from 0x%0x returned X's on RDATA", addr);
-                assert(!$isunknown(cb.RRESP)) else $error("Read from 0x%0x returned X's on RRESP", addr);
-                data = cb.RDATA;
-                txn_r_mutex.put();
-            end
-        join
+        // Push new request into queue
+        req = new();
+        read_queue.push_back(req);
+        txn_ar_mutex.put();
+
+        // Wait for response
+        req.response_mbx.get(resp);
+
+        assert(!$isunknown(resp.rdata)) else $error("Read from 0x%0x returned X's on RDATA", addr);
+        assert(!$isunknown(resp.rresp)) else $error("Read from 0x%0x returned X's on RRESP", addr);
+        data = resp.rdata;
     endtask
 
     task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
@@ -177,6 +246,7 @@ interface axi4lite_intf_driver #(
         assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
     endtask
 
+    //--------------------------------------------------------------------------
     initial begin
         reset();
     end

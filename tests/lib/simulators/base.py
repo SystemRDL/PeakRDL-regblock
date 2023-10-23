@@ -14,6 +14,10 @@ class Simulator:
         self.testcase = testcase
 
     @property
+    def gui_mode(self) -> bool:
+        return self.testcase.request.config.getoption("--gui")
+
+    @property
     def tb_files(self) -> List[str]:
         files = []
         files.extend(self.testcase.cpuif.get_sim_files())

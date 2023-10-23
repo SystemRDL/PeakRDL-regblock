@@ -50,10 +50,10 @@
     cpuif.write('h14, 'h9ABC);
     cpuif.write('h16, 'hDEF1);
     @cb;
-    assert({<<{cb.hwif_out.rw_reg1_lsb0.f1.value}} == 8'h34);
-    assert({<<{cb.hwif_out.rw_reg1_lsb0.f2.value}} == 3'h1);
-    assert({<<{cb.hwif_out.rw_reg1_lsb0.f3.value}} == 1'h1);
-    assert({<<{cb.hwif_out.rw_reg1_lsb0.f4.value}} == 8'h9A);
+    assert(`bitswap(cb.hwif_out.rw_reg1_lsb0.f1.value) == 8'h34);
+    assert(`bitswap(cb.hwif_out.rw_reg1_lsb0.f2.value) == 3'h1);
+    assert(`bitswap(cb.hwif_out.rw_reg1_lsb0.f3.value) == 1'h1);
+    assert(`bitswap(cb.hwif_out.rw_reg1_lsb0.f4.value) == 8'h9A);
     cpuif.assert_read('h10, 'h1034);
     cpuif.assert_read('h12, 'h0000);
     cpuif.assert_read('h14, 'h9A10);
@@ -67,8 +67,8 @@
     cpuif.write('h1C, 'h9ABC);
     cpuif.write('h1E, 'hDEF1);
     @cb;
-    assert({<<{cb.hwif_out.rw_reg2_lsb0.f1.value}} == 4'h8);
-    assert({<<{cb.hwif_out.rw_reg2_lsb0.f2.value}} == 16'hDEF1);
+    assert(`bitswap(cb.hwif_out.rw_reg2_lsb0.f1.value) == 4'h8);
+    assert(`bitswap(cb.hwif_out.rw_reg2_lsb0.f2.value) == 16'hDEF1);
     cpuif.assert_read('h18, 'h0000);
     cpuif.assert_read('h1A, 'h0008);
     cpuif.assert_read('h1C, 'h0000);

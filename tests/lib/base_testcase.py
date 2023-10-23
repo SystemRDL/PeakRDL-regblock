@@ -49,6 +49,13 @@ class BaseTestCase(unittest.TestCase):
     def _load_request(self, request):
         self.request = request
 
+    @property
+    def rerun(self) -> bool:
+        """
+        Re-run wothout deleting and re-generating prior output directory.
+        """
+        return self.request.config.getoption("--rerun")
+
     def get_testcase_dir(self) -> str:
         class_dir = os.path.dirname(inspect.getfile(self.__class__))
         return class_dir
@@ -114,6 +121,9 @@ class BaseTestCase(unittest.TestCase):
         )
 
     def setUp(self) -> None:
+        if self.rerun:
+            return
+
         # Create fresh build dir
         run_dir = self.get_run_dir()
         if os.path.exists(run_dir):

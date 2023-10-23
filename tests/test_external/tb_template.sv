@@ -145,8 +145,8 @@
 
         .req(hwif_out.wide_ro_reg.req),
         .req_is_wr(hwif_out.wide_ro_reg.req_is_wr),
-        .wr_data(64'b0),
-        .wr_biten(64'b0),
+        .wr_data(32'b0),
+        .wr_biten(32'b0),
         .rd_ack(hwif_in.wide_ro_reg.rd_ack),
         .rd_data(hwif_in.wide_ro_reg.rd_data),
         .wr_ack()

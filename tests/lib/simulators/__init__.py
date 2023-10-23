@@ -3,13 +3,13 @@ import functools
 
 from .base import Simulator
 from .questa import Questa
-from .xilinx import Xilinx
+from .xilinx import XilinxXSIM
 from .stub import StubSimulator
 
 ALL_SIMULATORS: List[Simulator]
 ALL_SIMULATORS = [
     Questa,
-    Xilinx,
+    XilinxXSIM,
     StubSimulator,
 ]
 

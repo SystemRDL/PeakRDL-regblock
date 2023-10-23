@@ -76,7 +76,8 @@ class SimTestCase(BaseTestCase):
         super().setUp()
 
         # Create testbench from template
-        self._generate_tb()
+        if not self.rerun:
+            self._generate_tb()
 
         simulator = simulator_cls(self)
 

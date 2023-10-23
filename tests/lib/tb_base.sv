@@ -1,7 +1,9 @@
 {% sv_line_anchor %}
 module tb;
-    timeunit 1ns;
+    timeunit 10ps;
     timeprecision 1ps;
+
+    `define bitswap(x) ($bits(x))'({<<{x}})
 
     logic rst = '1;
     logic clk = '0;
