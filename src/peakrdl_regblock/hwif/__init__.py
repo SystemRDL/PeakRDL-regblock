@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING, Union, Set, Dict, Optional, TextIO, Type, List
+from typing import TYPE_CHECKING, Union, Optional, TextIO
 
 from systemrdl.node import AddrmapNode, SignalNode, FieldNode, RegNode, AddressableNode
-from systemrdl.rdltypes import PropertyReference, UserEnum
+from systemrdl.rdltypes import PropertyReference
 
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
+from ..sv_int import SVInt
 
 from .generators import InputStructGenerator_Hier, OutputStructGenerator_Hier
 from .generators import InputStructGenerator_TypeScope, OutputStructGenerator_TypeScope
@@ -127,7 +128,11 @@ class Hwif:
         return obj.is_hw_readable
 
 
-    def get_input_identifier(self, obj: Union[FieldNode, SignalNode, PropertyReference]) -> str:
+    def get_input_identifier(
+        self,
+        obj: Union[FieldNode, SignalNode, PropertyReference],
+        width: Optional[int] = None,
+    ) -> Union[SVInt, str]:
         """
         Returns the identifier string that best represents the input object.
 
@@ -143,7 +148,7 @@ class Hwif:
             next_value = obj.get_property('next')
             if next_value is not None:
                 # 'next' property replaces the inferred input signal
-                return self.exp.dereferencer.get_value(next_value)
+                return self.exp.dereferencer.get_value(next_value, width)
             # Otherwise, use inferred
             path = get_indexed_path(self.top_node, obj)
             return "hwif_in." + path + ".next"

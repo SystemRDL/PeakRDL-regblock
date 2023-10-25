@@ -5,6 +5,7 @@ from systemrdl.node import AddrmapNode, RegNode, FieldNode, SignalNode
 from .storage_generator import WBufStorageStructGenerator
 from .implementation_generator import WBufLogicGenerator
 from ..utils import get_indexed_path
+from ..sv_int import SVInt
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -42,7 +43,7 @@ class WriteBuffering:
         prefix = self.get_wbuf_prefix(node)
         return f"{prefix}.pending && {self.get_trigger(node)}"
 
-    def get_raw_trigger(self, node: 'RegNode') -> str:
+    def get_raw_trigger(self, node: 'RegNode') -> Union[SVInt, str]:
         trigger = node.get_property('wbuffer_trigger')
 
         if isinstance(trigger, RegNode):
@@ -67,7 +68,7 @@ class WriteBuffering:
             # Trigger is a field or propref bit
             return self.exp.dereferencer.get_value(trigger)
 
-    def get_trigger(self, node: Union[RegNode, FieldNode]) -> str:
+    def get_trigger(self, node: Union[RegNode, FieldNode]) -> Union[SVInt, str]:
         if isinstance(node, FieldNode):
             node = node.parent
         trigger = node.get_property('wbuffer_trigger')

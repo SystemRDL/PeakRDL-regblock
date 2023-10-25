@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING, Union, List, Optional
 from systemrdl.node import FieldNode, RegNode
 from systemrdl.walker import WalkerAction
 
-from .utils import get_indexed_path, get_sv_int
+from .utils import get_indexed_path
 from .struct_generator import RDLStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
+from .sv_int import SVInt
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
@@ -149,7 +150,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             # Is an external block
             addr_str = self._get_address_str(node)
             strb = self.addr_decode.get_external_block_access_strobe(node)
-            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {get_sv_int(node.size - 1, self.addr_decode.exp.ds.addr_width)})"
+            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {SVInt(node.size - 1, self.addr_decode.exp.ds.addr_width)})"
             self.add_content(f"{strb} = {rhs};")
             self.add_content(f"is_external |= {rhs};")
             return WalkerAction.SkipDescendants
@@ -158,12 +159,12 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
 
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
-        a = get_sv_int(
+        a = str(SVInt(
             node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
             self.addr_decode.exp.ds.addr_width
-        )
+        ))
         for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*{get_sv_int(stride, self.addr_decode.exp.ds.addr_width)}"
+            a += f" + i{i}*{SVInt(stride, self.addr_decode.exp.ds.addr_width)}"
         return a
 
 

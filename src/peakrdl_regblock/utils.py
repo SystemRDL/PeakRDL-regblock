@@ -1,10 +1,11 @@
 import re
-from typing import Match, Union, Optional
+from typing import Match, Union
 
 from systemrdl.rdltypes.references import PropertyReference
 from systemrdl.node import Node, AddrmapNode
 
 from .identifier_filter import kw_filter as kwf
+from .sv_int import SVInt
 
 def get_indexed_path(top_node: Node, target_node: Node) -> str:
     """
@@ -65,13 +66,36 @@ def ref_is_internal(top_node: AddrmapNode, ref: Union[Node, PropertyReference]) 
     # This is considerd internal for this exporter
     return True
 
-def get_sv_int(n: int, width: Optional[int]=None) -> str:
-    if width is not None:
-        # Explicit width
-        return f"{width}'h{n:x}"
-    elif n.bit_length() > 32:
-        # SV standard only enforces that unsized literals shall be at least 32-bits
-        # To support larger literals, they need to be sized explicitly
-        return f"{n.bit_length()}'h{n:x}"
+
+def do_slice(value: Union[SVInt, str], high: int, low: int) -> Union[SVInt, str]:
+    if isinstance(value, str):
+        # If string, assume this is an identifier. Append bit-slice
+        if high == low:
+            return f"{value}[{low}]"
+        else:
+            return f"{value}[{high}:{low}]"
     else:
-        return f"'h{n:x}"
+        # it is an SVInt literal. Slice it down
+        mask = (1 << (high + 1)) - 1
+        v = (value.value & mask) >> low
+
+        if value.width is not None:
+            w = high - low + 1
+        else:
+            w = None
+
+        return SVInt(v, w)
+
+def do_bitswap(value: Union[SVInt, str]) -> Union[SVInt, str]:
+    if isinstance(value, str):
+        # If string, assume this is an identifier. Wrap in a streaming operator
+        return "{<<{" + value + "}}"
+    else:
+        # it is an SVInt literal. bitswap it
+        assert value.width is not None # width must be known!
+        v = value.value
+        vswap = 0
+        for _ in range(value.width):
+            vswap = (vswap << 1) + (v & 1)
+            v >>= 1
+        return SVInt(vswap, value.width)

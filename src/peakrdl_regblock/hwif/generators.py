@@ -5,7 +5,7 @@ from systemrdl.walker import WalkerAction
 
 from ..struct_generator import RDLFlatStructGenerator
 from ..identifier_filter import kw_filter as kwf
-from ..utils import get_sv_int
+from ..sv_int import SVInt
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, AddressableNode, RegfileNode
@@ -289,7 +289,7 @@ class EnumGenerator:
 
         lines = []
         for enum_member in user_enum:
-            lines.append(f"    {prefix}__{enum_member.name} = {get_sv_int(enum_member.value)}")
+            lines.append(f"    {prefix}__{enum_member.name} = {SVInt(enum_member.value)}")
 
         return (
             "typedef enum {\n"

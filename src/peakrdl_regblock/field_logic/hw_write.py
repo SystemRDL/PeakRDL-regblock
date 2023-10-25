@@ -24,7 +24,7 @@ class AlwaysWrite(NextStateConditional):
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         hwmask = field.get_property('hwmask')
         hwenable = field.get_property('hwenable')
-        I = self.exp.hwif.get_input_identifier(field)
+        I = str(self.exp.hwif.get_input_identifier(field))
         R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
@@ -55,7 +55,7 @@ class WEWrite(AlwaysWrite):
             identifier = self.exp.hwif.get_implied_prop_input_identifier(field, "we")
         else:
             # signal or field
-            identifier = self.exp.dereferencer.get_value(prop)
+            identifier = str(self.exp.dereferencer.get_value(prop))
         return identifier
 
 class WELWrite(AlwaysWrite):
@@ -73,5 +73,5 @@ class WELWrite(AlwaysWrite):
             identifier = self.exp.hwif.get_implied_prop_input_identifier(field, "wel")
         else:
             # signal or field
-            identifier = self.exp.dereferencer.get_value(prop)
+            identifier = str(self.exp.dereferencer.get_value(prop))
         return f"!{identifier}"

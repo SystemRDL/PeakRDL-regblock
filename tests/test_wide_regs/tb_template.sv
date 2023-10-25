@@ -108,4 +108,14 @@
     // counter_reg
     cpuif.assert_read('h30, 16'h0204);
 
+    // r_reg3
+    cpuif.assert_read('h34, 16'h5678);
+    cpuif.assert_read('h36, 16'h1234);
+    assert(cb.hwif_out.r_reg3.f1.value == 32'h12345678);
+
+    // r_reg4
+    cpuif.assert_read('h38, 16'h2C48);
+    cpuif.assert_read('h3A, 16'h1E6A);
+    assert(cb.hwif_out.r_reg4.f1.value == 32'h12345678);
+
 {% endblock %}

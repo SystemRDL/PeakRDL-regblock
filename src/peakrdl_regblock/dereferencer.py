@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Union, Optional
 from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
 
-from .utils import get_sv_int
+from .sv_int import SVInt
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter, DesignState
@@ -38,7 +38,7 @@ class Dereferencer:
     def top_node(self) -> AddrmapNode:
         return self.exp.ds.top_node
 
-    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> str:
+    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> Union[SVInt, str]:
         """
         Returns the Verilog string that represents the readable value associated
         with the object.
@@ -52,20 +52,20 @@ class Dereferencer:
         """
         if isinstance(obj, int):
             # Is a simple scalar value
-            return get_sv_int(obj, width)
+            return SVInt(obj, width)
 
         if isinstance(obj, FieldNode):
             if obj.implements_storage:
                 return self.field_logic.get_storage_identifier(obj)
 
             if self.hwif.has_value_input(obj):
-                return self.hwif.get_input_identifier(obj)
+                return self.hwif.get_input_identifier(obj, width)
 
             # Field does not have a storage element, nor does it have a HW input
             # must be a constant value as defined by its reset value
             reset_value = obj.get_property('reset')
             if reset_value is not None:
-                return self.get_value(reset_value)
+                return self.get_value(reset_value, obj.width)
             else:
                 # No reset value defined!
                 obj.env.msg.warning(
@@ -76,11 +76,11 @@ class Dereferencer:
 
         if isinstance(obj, SignalNode):
             # Signals are always inputs from the hwif
-            return self.hwif.get_input_identifier(obj)
+            return self.hwif.get_input_identifier(obj, width)
 
         if isinstance(obj, PropertyReference):
             if isinstance(obj.node, FieldNode):
-                return self.get_field_propref_value(obj.node, obj.name)
+                return self.get_field_propref_value(obj.node, obj.name, width)
             elif isinstance(obj.node, RegNode):
                 return self.get_reg_propref_value(obj.node, obj.name)
             else:
@@ -89,7 +89,12 @@ class Dereferencer:
         raise RuntimeError(f"Unhandled reference to: {obj}")
 
 
-    def get_field_propref_value(self, field: FieldNode, prop_name: str) -> str:
+    def get_field_propref_value(
+        self,
+        field: FieldNode,
+        prop_name: str,
+        width: Optional[int] = None,
+    ) -> Union[SVInt, str]:
         # Value reduction properties.
         # Wrap with the appropriate Verilog reduction operator
         if prop_name == "anded":
@@ -115,7 +120,7 @@ class Dereferencer:
             'reset',
             'resetsignal',
         }:
-            return self.get_value(field.get_property(prop_name))
+            return self.get_value(field.get_property(prop_name), width)
 
         # Field Next
         if prop_name == "next":
@@ -124,7 +129,7 @@ class Dereferencer:
                 # unset by the user, points to the implied internal signal
                 return self.field_logic.get_field_combo_identifier(field, "next")
             else:
-                return self.get_value(prop_value)
+                return self.get_value(prop_value, width)
 
         # References to another component value, or an implied input
         if prop_name in {'hwclr', 'hwset'}:
@@ -163,7 +168,7 @@ class Dereferencer:
                 else:
                     return f"!({self.get_value(prop_value)})"
             else:
-                return self.get_value(prop_value)
+                return self.get_value(prop_value, width)
 
         if prop_name == "swacc":
             return self.field_logic.get_swacc_identifier(field)
@@ -232,7 +237,7 @@ class Dereferencer:
         if isinstance(obj, SignalNode):
             s = self.get_value(obj)
             if obj.get_property('activehigh'):
-                return s
+                return str(s)
             else:
                 return f"~{s}"
 

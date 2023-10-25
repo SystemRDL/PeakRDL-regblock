@@ -17,7 +17,7 @@ class HWSet(NextStateConditional):
             identifier = self.exp.hwif.get_implied_prop_input_identifier(field, "hwset")
         else:
             # signal or field
-            identifier = self.exp.dereferencer.get_value(prop)
+            identifier = str(self.exp.dereferencer.get_value(prop))
         return identifier
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -50,7 +50,7 @@ class HWClear(NextStateConditional):
             identifier = self.exp.hwif.get_implied_prop_input_identifier(field, "hwclr")
         else:
             # signal or field
-            identifier = self.exp.dereferencer.get_value(prop)
+            identifier = str(self.exp.dereferencer.get_value(prop))
         return identifier
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
