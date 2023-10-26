@@ -4,7 +4,7 @@ from systemrdl.udp import UDPDefinition
 from systemrdl.component import Reg
 from systemrdl.rdltypes.references import RefType, PropertyReference
 from systemrdl.rdltypes import NoValue
-from systemrdl.node import Node, RegNode, VectorNode, SignalNode
+from systemrdl.node import Node, RegNode, VectorNode, SignalNode, FieldNode
 
 
 class xBufferTrigger(UDPDefinition):
@@ -90,6 +90,16 @@ class WBufferTrigger(xBufferTrigger):
         if node.get_property('buffer_writes'):
             return node
         return None
+
+    def validate(self, node: Node, value: Any) -> None:
+        super().validate(node, value)
+
+        if isinstance(value, FieldNode):
+            if value.parent == node:
+                self.msg.error(
+                    "Trigger for a write-buffered register cannot be a field "
+                    "within the same register since the buffering makes it impossible to trigger."
+                )
 
 
 class BufferReads(UDPDefinition):
