@@ -18,7 +18,7 @@ description = "Compile SystemRDL into a SystemVerilog control/status register (C
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = [
-    "SystmRDL", "PeakRDL", "CSR", "compiler", "tool", "registers", "generator",
+    "SystemRDL", "PeakRDL", "CSR", "compiler", "tool", "registers", "generator",
     "Verilog", "SystemVerilog", "register abstraction layer",
     "FPGA", "ASIC",
 ]
