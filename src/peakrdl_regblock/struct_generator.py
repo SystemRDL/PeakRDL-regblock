@@ -34,7 +34,7 @@ class _AnonymousStruct(_StructBase):
             suffix = ""
 
         return (
-            "struct {\n"
+            "struct packed {\n"
             + super().__str__()
             + f"\n}} {self.inst_name}{suffix};"
         )
@@ -49,7 +49,7 @@ class _TypedefStruct(_StructBase):
 
     def __str__(self) -> str:
         return (
-            "typedef struct {\n"
+            "typedef struct packed {\n"
             + super().__str__()
             + f"\n}} {self.type_name};"
         )
