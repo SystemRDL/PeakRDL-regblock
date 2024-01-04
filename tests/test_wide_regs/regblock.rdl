@@ -90,4 +90,22 @@ addrmap top {
     } counter_reg;
     counter_reg.f1_cnt->incr = r_reg2.f1->swacc;
     counter_reg.f2_cnt->incr = r_reg2.f2->swacc;
+
+    reg {
+        regwidth = 32;
+        accesswidth = 16;
+        default sw=r;
+        default hw=r;
+
+        field {} f1[31:0] = 0x1234_5678;
+    } r_reg3;
+
+    reg {
+        regwidth = 32;
+        accesswidth = 16;
+        default sw=r;
+        default hw=r;
+
+        field {} f1[0:31] = 0x1234_5678;
+    } r_reg4;
 };

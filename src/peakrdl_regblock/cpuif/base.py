@@ -1,25 +1,30 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import inspect
 import os
 
 import jinja2 as jj
 
-from ..utils import get_always_ff_event, clog2, is_pow2, roundup_pow2
+from ..utils import clog2, is_pow2, roundup_pow2
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
-    from systemrdl import SignalNode
 
 class CpuifBase:
 
     # Path is relative to the location of the class that assigns this variable
     template_path = ""
 
-    def __init__(self, exp:'RegblockExporter', cpuif_reset:Optional['SignalNode'], data_width:int=32, addr_width:int=32):
+    def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
-        self.reset = cpuif_reset
-        self.data_width = data_width
-        self.addr_width = addr_width
+        self.reset = exp.ds.top_node.cpuif_reset
+
+    @property
+    def addr_width(self) -> int:
+        return self.exp.ds.addr_width
+
+    @property
+    def data_width(self) -> int:
+        return self.exp.ds.cpuif_data_width
 
     @property
     def data_width_bytes(self) -> int:
@@ -55,7 +60,7 @@ class CpuifBase:
 
         context = {
             "cpuif": self,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            "get_always_ff_event": self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "clog2": clog2,
             "is_pow2": is_pow2,

@@ -1,33 +1,37 @@
-from typing import Type, TYPE_CHECKING, List
+from typing import Type, Optional, List
+import functools
 
-if TYPE_CHECKING:
-    from ..sim_testcase import SimTestCase
+from .base import Simulator
+from .questa import Questa
+from .xilinx import XilinxXSIM
+from .stub import StubSimulator
 
-class Simulator:
+ALL_SIMULATORS: List[Simulator]
+ALL_SIMULATORS = [
+    Questa,
+    XilinxXSIM,
+    StubSimulator,
+]
 
-    def __init__(self, testcase_cls: 'Type[SimTestCase]' = None, testcase_cls_inst: 'SimTestCase' = None) -> None:
-        self.testcase_cls = testcase_cls
-        self.testcase_cls_inst = testcase_cls_inst
+@functools.lru_cache()
+def get_simulator_cls(name: str) -> Optional[Type[Simulator]]:
+    if name == "skip":
+        return None
 
-    @property
-    def tb_files(self) -> List[str]:
-        files = []
-        files.extend(self.testcase_cls.cpuif.get_sim_files())
-        files.append("regblock_pkg.sv")
-        files.append("regblock.sv")
-        files.append("tb.sv")
+    if name == "auto":
+        # Find the first simulator that is installed
+        for sim_cls in ALL_SIMULATORS:
+            if sim_cls is StubSimulator:
+                # Never offer the stub as an automatic option
+                continue
+            if sim_cls.is_installed():
+                return sim_cls
+        raise ValueError("Could not find any installed simulators")
 
-        return files
-
-    def compile(self) -> None:
-        raise NotImplementedError
-
-    def run(self, plusargs:List[str] = None) -> None:
-        raise NotImplementedError
-
-class StubSimulator(Simulator):
-    def compile(self) -> None:
-        pass
-
-    def run(self, plusargs:List[str] = None) -> None:
-        pass
+    # Look up which explicit simulator name was specified
+    for sim_cls in ALL_SIMULATORS:
+        if sim_cls.name == name:
+            if not sim_cls.is_installed():
+                raise ValueError("Simulator '%s' is not installed" % sim_cls.name)
+            return sim_cls
+    raise RuntimeError

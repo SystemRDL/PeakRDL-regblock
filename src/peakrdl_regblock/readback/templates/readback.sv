@@ -4,7 +4,7 @@ logic [{{cpuif.data_width-1}}:0] readback_array[{{array_size}}];
 {{array_assignments}}
 
 
-{%- if do_fanin_stage %}
+{%- if ds.retime_read_fanin %}
 
 // fanin stage
 logic [{{cpuif.data_width-1}}:0] readback_array_c[{{fanin_array_size}}];
@@ -29,13 +29,17 @@ end
 
 logic [{{cpuif.data_width-1}}:0] readback_array_r[{{fanin_array_size}}];
 logic readback_done_r;
-always_ff @(posedge clk) begin
-    if(rst) begin
+always_ff {{get_always_ff_event(cpuif.reset)}} begin
+    if({{get_resetsignal(cpuif.reset)}}) begin
         for(int i=0; i<{{fanin_array_size}}; i++) readback_array_r[i] <= '0;
         readback_done_r <= '0;
     end else begin
         readback_array_r <= readback_array_c;
+        {%- if ds.has_external_addressable %}
+        readback_done_r <= decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
+        {%- else %}
         readback_done_r <= decoded_req & ~decoded_req_is_wr;
+        {%- endif %}
     end
 end
 
@@ -54,7 +58,11 @@ end
 // Reduce the array
 always_comb begin
     automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
+    {%- if ds.has_external_addressable %}
+    readback_done = decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
+    {%- else %}
     readback_done = decoded_req & ~decoded_req_is_wr;
+    {%- endif %}
     readback_err = '0;
     readback_data_var = '0;
     for(int i=0; i<{{array_size}}; i++) readback_data_var |= readback_array[i];

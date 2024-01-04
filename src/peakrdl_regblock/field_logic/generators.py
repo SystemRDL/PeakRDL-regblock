@@ -1,15 +1,18 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from collections import OrderedDict
 
+from systemrdl.walker import WalkerAction
+from systemrdl.node import RegNode, RegfileNode, MemNode, AddrmapNode
+
 from ..struct_generator import RDLStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
-from ..utils import get_always_ff_event
+from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
     from . import FieldLogic
-    from systemrdl.node import FieldNode, RegNode
+    from systemrdl.node import FieldNode, AddressableNode
     from .bases import SVLogic
 
 class CombinationalStructGenerator(RDLStructGenerator):
@@ -18,6 +21,12 @@ class CombinationalStructGenerator(RDLStructGenerator):
         super().__init__()
         self.field_logic = field_logic
 
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
+        super().enter_AddressableComponent(node)
+
+        if node.external:
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
 
     def enter_Field(self, node: 'FieldNode') -> None:
         # If a field doesn't implement storage, it is not relevant here
@@ -44,6 +53,8 @@ class CombinationalStructGenerator(RDLStructGenerator):
             self.add_up_counter_members(node)
         if node.is_down_counter:
             self.add_down_counter_members(node)
+        if node.get_property('paritycheck'):
+            self.add_member("parity_error")
         self.pop_struct()
 
     def add_up_counter_members(self, node: 'FieldNode') -> None:
@@ -67,11 +78,20 @@ class FieldStorageStructGenerator(RDLStructGenerator):
         super().__init__()
         self.field_logic = field_logic
 
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
+        super().enter_AddressableComponent(node)
+
+        if node.external:
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
     def enter_Field(self, node: 'FieldNode') -> None:
         self.push_struct(kwf(node.inst_name))
 
         if node.implements_storage:
             self.add_member("value", node.width)
+            if node.get_property('paritycheck'):
+                self.add_member("parity")
 
         if self.field_logic.has_next_q(node):
             self.add_member("next_q", node.width)
@@ -85,16 +105,42 @@ class FieldLogicGenerator(RDLForLoopGenerator):
         super().__init__()
         self.field_logic = field_logic
         self.exp = field_logic.exp
+        self.ds = self.exp.ds
         self.field_storage_template = self.exp.jj_env.get_template(
             "field_logic/templates/field_storage.sv"
+        )
+        self.external_reg_template = self.exp.jj_env.get_template(
+            "field_logic/templates/external_reg.sv"
+        )
+        self.external_block_template = self.exp.jj_env.get_template(
+            "field_logic/templates/external_block.sv"
         )
         self.intr_fields = [] # type: List[FieldNode]
         self.halt_fields = [] # type: List[FieldNode]
 
 
-    def enter_Reg(self, node: 'RegNode') -> None:
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
+        super().enter_AddressableComponent(node)
+
+        if node.external and not isinstance(node, RegNode):
+            # Is an external block
+            self.assign_external_block_outputs(node)
+
+            # Do not recurse
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
+
+    def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
         self.intr_fields = []
         self.halt_fields = []
+
+        if node.external:
+            self.assign_external_reg_outputs(node)
+            # Do not recurse to fields
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
 
 
     def enter_Field(self, node: 'FieldNode') -> None:
@@ -166,15 +212,24 @@ class FieldLogicGenerator(RDLForLoopGenerator):
     def generate_field_storage(self, node: 'FieldNode') -> None:
         conditionals = self.field_logic.get_conditionals(node)
         extra_combo_signals = OrderedDict()
+        unconditional = None
+        new_conditionals = []
         for conditional in conditionals:
             for signal in conditional.get_extra_combo_signals(node):
                 extra_combo_signals[signal.name] = signal
+
+            if conditional.is_unconditional:
+                assert unconditional is None # Can only have one unconditional assignment per field
+                unconditional = conditional
+            else:
+                new_conditionals.append(conditional)
+        conditionals = new_conditionals
 
         resetsignal = node.get_property('resetsignal')
 
         reset_value = node.get_property('reset')
         if reset_value is not None:
-            reset_value_str = self.exp.dereferencer.get_value(reset_value)
+            reset_value_str = self.exp.dereferencer.get_value(reset_value, node.width)
         else:
             # 5.9.1-g: If no reset value given, the field is not reset, even if it has a resetsignal.
             reset_value_str = None
@@ -186,11 +241,13 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'field_logic': self.field_logic,
             'extra_combo_signals': extra_combo_signals,
             'conditionals': conditionals,
+            'unconditional': unconditional,
             'resetsignal': resetsignal,
-            'get_always_ff_event': lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             'get_value': self.exp.dereferencer.get_value,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,
             'get_input_identifier': self.exp.hwif.get_input_identifier,
+            'ds': self.ds,
         }
         self.add_content(self.field_storage_template.render(context))
 
@@ -277,3 +334,51 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             self.add_content(
                 f"assign {output_identifier} = {value};"
             )
+
+
+    def assign_external_reg_outputs(self, node: 'RegNode') -> None:
+        prefix = "hwif_out." + get_indexed_path(self.exp.ds.top_node, node)
+        strb = self.exp.dereferencer.get_access_strobe(node)
+
+        width = min(self.exp.cpuif.data_width, node.get_property('regwidth'))
+        if width != self.exp.cpuif.data_width:
+            bslice = f"[{width - 1}:0]"
+        else:
+            bslice = ""
+
+        context = {
+            "has_sw_writable": node.has_sw_writable,
+            "has_sw_readable": node.has_sw_readable,
+            "prefix": prefix,
+            "strb": strb,
+            "bslice": bslice,
+            "retime": self.ds.retime_external_reg,
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
+            "get_resetsignal": self.exp.dereferencer.get_resetsignal,
+            "resetsignal": self.exp.ds.top_node.cpuif_reset,
+        }
+        self.add_content(self.external_reg_template.render(context))
+
+    def assign_external_block_outputs(self, node: 'AddressableNode') -> None:
+        prefix = "hwif_out." + get_indexed_path(self.exp.ds.top_node, node)
+        strb = self.exp.dereferencer.get_external_block_access_strobe(node)
+        addr_width = node.size.bit_length()
+
+        retime = False
+        if isinstance(node, RegfileNode):
+            retime = self.ds.retime_external_regfile
+        elif isinstance(node, MemNode):
+            retime = self.ds.retime_external_mem
+        elif isinstance(node, AddrmapNode):
+            retime = self.ds.retime_external_addrmap
+
+        context = {
+            "prefix": prefix,
+            "strb": strb,
+            "addr_width": addr_width,
+            "retime": retime,
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
+            "get_resetsignal": self.exp.dereferencer.get_resetsignal,
+            "resetsignal": self.exp.ds.top_node.cpuif_reset,
+        }
+        self.add_content(self.external_block_template.render(context))

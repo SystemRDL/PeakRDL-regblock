@@ -448,7 +448,10 @@ Misc
 
 encode
 ^^^^^^
-|NO|
+If assigned a user-defined enumeration, the resulting package file will include
+its definition. Due to limitations from type-strictness rules in SystemVerilog,
+the field will remain as a ``logic`` datatype.
+
 
 next
 ^^^^
@@ -457,7 +460,15 @@ If assigned, replaces the inferred ``hwif_in..next`` input with an explicit refe
 
 paritycheck
 ^^^^^^^^^^^
-|NO|
+If set, enables parity checking for this field.
+
+Adds a ``parity_error`` output signal to the module.
+
+.. note::
+
+    If this field does not implement storage, the ``partycheck`` property is ignored.
+
+
 
 precedence
 ^^^^^^^^^^

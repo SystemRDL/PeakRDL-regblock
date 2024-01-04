@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
-from systemrdl.node import AddrmapNode, RegNode, FieldNode, SignalNode
+from systemrdl.node import AddrmapNode, RegNode, SignalNode
 
 from .storage_generator import RBufStorageStructGenerator
 from .implementation_generator import RBufLogicGenerator
 from ..utils import get_indexed_path
+from ..sv_int import SVInt
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter
@@ -16,7 +17,7 @@ class ReadBuffering:
 
     @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
     def get_storage_struct(self) -> str:
         struct_gen = RBufStorageStructGenerator()
@@ -47,12 +48,12 @@ class ReadBuffering:
         elif isinstance(trigger, SignalNode):
             s = self.exp.dereferencer.get_value(trigger)
             if trigger.get_property('activehigh'):
-                return s
+                return str(s)
             else:
                 return f"~{s}"
         else:
             # Trigger is a field or propref bit
-            return self.exp.dereferencer.get_value(trigger)
+            return str(self.exp.dereferencer.get_value(trigger))
 
     def get_rbuf_data(self, node: RegNode) -> str:
         return "rbuf_storage." + get_indexed_path(self.top_node, node) + ".data"

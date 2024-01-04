@@ -65,7 +65,8 @@ you can define your own.
     in this shall implement a translation between your custom protocol and the
     :ref:`cpuif_protocol`.
 
-    Reminder that this template will be preprocessed using Jinja, so you can use
+    Reminder that this template will be preprocessed using
+    `Jinja <https://jinja.palletsprojects.com>`_, so you can use
     some templating tags to dynamically render content. See the implementations of
     existing CPU interfaces as an example.
 
@@ -75,16 +76,26 @@ you can define your own.
     Define the port declaration string, and provide a reference to your template file.
 
 3. Use your new CPUIF definition when exporting.
-4. If you think the CPUIF protocol is something others might find useful, let me know and I can add it to PeakRDL!
+4. If you think the CPUIF protocol is something others might find useful, let me
+   know and I can add it to PeakRDL!
 
 
-Entry point for the PeakRDL command line tool
----------------------------------------------
-To make your custom CPUIF class visible to the `PeakRDL command-line tool <https://peakrdl.readthedocs.io>`_,
-provide an entry point linkage in your package's ``setup.py``. This advertises
-your custom CPUIF class to the PeakRDL-regblock tool as a plugin that should be
-loaded, and made available as a command-line option in PeakRDL.
+Loading into the PeakRDL command line tool
+------------------------------------------
+There are two ways to make your custom CPUIF class visible to the
+`PeakRDL command-line tool <https://peakrdl.readthedocs.io>`_.
 
+Via the PeakRDL TOML
+^^^^^^^^^^^^^^^^^^^^
+The easiest way to add your cpuif is via the TOML config file. See the
+:ref:`peakrdl_cfg` section for more details.
+
+Via a package's entry point definition
+--------------------------------------
+If you are publishing a collecxtion of PeakRDL plugins as an installable Python
+package, you can advertise them to PeakRDL using an entry point.
+This advertises your custom CPUIF class to the PeakRDL-regblock tool as a plugin
+that should be loaded, and made available as a command-line option in PeakRDL.
 
 .. code-block:: python
     :emphasize-lines: 7-11

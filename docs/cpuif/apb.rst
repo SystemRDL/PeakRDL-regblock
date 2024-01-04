@@ -27,14 +27,15 @@ CPU interface.
 The APB3 CPU interface comes in two i/o port flavors:
 
 SystemVerilog Interface
-    Class: :class:`peakrdl_regblock.cpuif.apb3.APB3_Cpuif`
-
-    Interface Definition: :download:`apb3_intf.sv <../../hdl-src/apb3_intf.sv>`
+    * Command line: ``--cpuif apb3``
+    * Interface Definition: :download:`apb3_intf.sv <../../hdl-src/apb3_intf.sv>`
+    * Class: :class:`peakrdl_regblock.cpuif.apb3.APB3_Cpuif`
 
 Flattened inputs/outputs
     Flattens the interface into discrete input and output ports.
 
-    Class: :class:`peakrdl_regblock.cpuif.apb3.APB3_Cpuif_flattened`
+    * Command line: ``--cpuif apb3-flat``
+    * Class: :class:`peakrdl_regblock.cpuif.apb3.APB3_Cpuif_flattened`
 
 
 APB4
@@ -47,11 +48,12 @@ CPU interface.
 The APB4 CPU interface comes in two i/o port flavors:
 
 SystemVerilog Interface
-    Class: :class:`peakrdl_regblock.cpuif.apb4.APB4_Cpuif`
-
-    Interface Definition: :download:`apb4_intf.sv <../../hdl-src/apb4_intf.sv>`
+    * Command line: ``--cpuif apb4``
+    * Interface Definition: :download:`apb4_intf.sv <../../hdl-src/apb4_intf.sv>`
+    * Class: :class:`peakrdl_regblock.cpuif.apb4.APB4_Cpuif`
 
 Flattened inputs/outputs
     Flattens the interface into discrete input and output ports.
 
-    Class: :class:`peakrdl_regblock.cpuif.apb4.APB4_Cpuif_flattened`
+    * Command line: ``--cpuif apb4-flat``
+    * Class: :class:`peakrdl_regblock.cpuif.apb4.APB4_Cpuif_flattened`

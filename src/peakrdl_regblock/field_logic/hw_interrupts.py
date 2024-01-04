@@ -44,7 +44,8 @@ class Stickybit(NextStateConditional):
         )
 
     def get_predicate(self, field: 'FieldNode') -> str:
-        return self.exp.hwif.get_input_identifier(field)
+        F = self.exp.hwif.get_input_identifier(field)
+        return f"{F} != '0"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -69,7 +70,7 @@ class PosedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        return f"~{Iq} & {I}"
+        return f"(~{Iq} & {I}) != '0"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -95,7 +96,7 @@ class NegedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        return f"{Iq} & ~{I}"
+        return f"({Iq} & ~{I}) != '0"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -121,7 +122,7 @@ class BothedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        return f"{Iq} ^ {I}"
+        return f"{Iq} != {I}"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -136,6 +137,7 @@ class PosedgeNonsticky(NextStateConditional):
     """
     Positive edge non-stickybit
     """
+    is_unconditional = True
     comment = "posedge nonsticky"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
@@ -143,9 +145,6 @@ class PosedgeNonsticky(NextStateConditional):
             and not field.get_property('stickybit')
             and field.get_property('intr type') == InterruptType.posedge
         )
-
-    def get_predicate(self, field: 'FieldNode') -> str:
-        return "1"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -159,6 +158,7 @@ class NegedgeNonsticky(NextStateConditional):
     """
     Negative edge non-stickybit
     """
+    is_unconditional = True
     comment = "negedge nonsticky"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
@@ -166,9 +166,6 @@ class NegedgeNonsticky(NextStateConditional):
             and not field.get_property('stickybit')
             and field.get_property('intr type') == InterruptType.negedge
         )
-
-    def get_predicate(self, field: 'FieldNode') -> str:
-        return "1"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)
@@ -182,6 +179,7 @@ class BothedgeNonsticky(NextStateConditional):
     """
     edge-sensitive non-stickybit
     """
+    is_unconditional = True
     comment = "bothedge nonsticky"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
@@ -189,9 +187,6 @@ class BothedgeNonsticky(NextStateConditional):
             and not field.get_property('stickybit')
             and field.get_property('intr type') == InterruptType.bothedge
         )
-
-    def get_predicate(self, field: 'FieldNode') -> str:
-        return "1"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         I = self.exp.hwif.get_input_identifier(field)

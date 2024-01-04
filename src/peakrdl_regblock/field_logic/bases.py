@@ -64,7 +64,13 @@ class NextStateConditional:
         end
     """
 
+    # Assign to True if predicate can never evaluate to false.
+    # This will be generated as an 'else' clause, or a direct assignment
+    is_unconditional = False
+
+    # Optional comment to emit next to the conditional
     comment = ""
+
     def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
 
@@ -77,7 +83,7 @@ class NextStateConditional:
         raise NotImplementedError
 
     def get_field_path(self, field:'FieldNode') -> str:
-        return get_indexed_path(self.exp.top_node, field)
+        return get_indexed_path(self.exp.ds.top_node, field)
 
     def get_predicate(self, field: 'FieldNode') -> str:
         """

@@ -6,11 +6,6 @@ supported properties, see the appropriate property listing page in the following
 sections.
 
 
-External Components
--------------------
-Regfiles, registers & fields instantiated using the ``external`` keyword are not supported yet.
-
-
 Alias Registers
 ---------------
 Registers instantiated using the ``alias`` keyword are not supported yet.

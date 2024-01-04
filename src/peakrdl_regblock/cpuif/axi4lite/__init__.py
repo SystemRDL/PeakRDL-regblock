@@ -12,7 +12,7 @@ class AXI4Lite_Cpuif(CpuifBase):
 
     @property
     def regblock_latency(self) -> int:
-        return max(self.exp.min_read_latency, self.exp.min_write_latency)
+        return max(self.exp.ds.min_read_latency, self.exp.ds.min_write_latency)
 
     @property
     def max_outstanding(self) -> int:

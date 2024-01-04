@@ -15,27 +15,7 @@ Mux Strategy:
         -- Cant parameterize
         + better performance?
 
-    Flatten array then mux:
-        - First, flatten ALL readback values into an array
-            Round up the size of the array to next ^2
-                needs to be fully addressable anyways!
-            This can be in a combinational block
-            Initialize the array to the default readback value
-            then, assign all register values. Use loops where necessary.
-            Append an extra 'is-valid' bit if I need to slverr on bad reads
-        - Next, use the read address as an index into this array
-        - If needed, I can do a staged decode!
-            Compute the most balanced fanin staging in Python. eg:
-                64 regs --mux--> 8x8 --mux--> 1
-                128 regs --mux--> 8x16 --mux--> 1
-                    Favor smaller fanin first. Latter stage should have more fanin since routing congestion will be easier
-                256 regs --mux--> 16x16 --mux--> 1
-        - Potential sparseness of this makes me uncomfortable,
-          but its synthesis SEEMS like it would be really efficient!
-        - TODO: Rethink this
-            I feel like people will complain about this
-            It will likely also be pretty sim-inefficient?
-    Flat 1-hot array then OR reduce: <-- DO THIS
+    Flat 1-hot array then OR reduce:
         - Create a bus-wide flat array
             eg: 32-bits x N readable registers
         - Assign each element:

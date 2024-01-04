@@ -37,7 +37,8 @@ These UDP definitions, along with others supported by PeakRDL-regblock can be
 enabled by compiling the following file along with your design:
 :download:`regblock_udps.rdl <../../hdl-src/regblock_udps.rdl>`.
 
-``buffer_writes``
+.. describe:: buffer_writes
+
     *   Assigned value is a boolean.
     *   If true, enables double-buffering of writes to this register.
     *   Any software write operation to a buffered register is held back in a
@@ -47,7 +48,8 @@ enabled by compiling the following file along with your design:
     *   Unless specified otherwise, the buffer trigger occurs when the highest
         address of the buffered register is written.
 
-``wbuffer_trigger``
+.. describe:: wbuffer_trigger
+
     *   Assigned value is a reference to a register, single-bit field, signal,
         or single-bit property.
     *   Controls when the double-buffer commits the software write operation to

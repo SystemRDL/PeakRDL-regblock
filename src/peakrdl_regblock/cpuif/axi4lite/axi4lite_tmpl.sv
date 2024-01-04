@@ -8,7 +8,7 @@ logic axil_awvalid;
 logic [{{cpuif.addr_width-1}}:0] axil_awaddr;
 logic axil_wvalid;
 logic [{{cpuif.data_width-1}}:0] axil_wdata;
-logic [{{cpuif.data_width-1}}:0] axil_wstrb;
+logic [{{cpuif.data_width_bytes-1}}:0] axil_wstrb;
 logic axil_aw_accept;
 logic axil_resp_acked;
 
@@ -78,22 +78,34 @@ always_comb begin
     axil_ar_accept = '0;
     axil_aw_accept = '0;
 
-    if(axil_n_in_flight < 'd{{cpuif.max_outstanding}}) begin
+    if(axil_n_in_flight < {{clog2(cpuif.max_outstanding+1)}}'d{{cpuif.max_outstanding}}) begin
         // Can safely issue more transactions without overwhelming response buffer
         if(axil_arvalid && !axil_prev_was_rd) begin
             cpuif_req = '1;
             cpuif_req_is_wr = '0;
+            {%- if cpuif.data_width_bytes == 1 %}
             cpuif_addr = axil_araddr;
+            {%- else %}
+            cpuif_addr = {axil_araddr[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
+            {%- endif %}
             if(!cpuif_req_stall_rd) axil_ar_accept = '1;
         end else if(axil_awvalid && axil_wvalid) begin
             cpuif_req = '1;
             cpuif_req_is_wr = '1;
+            {%- if cpuif.data_width_bytes == 1 %}
             cpuif_addr = axil_awaddr;
+            {%- else %}
+            cpuif_addr = {axil_awaddr[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
+            {%- endif %}
             if(!cpuif_req_stall_wr) axil_aw_accept = '1;
         end else if(axil_arvalid) begin
             cpuif_req = '1;
             cpuif_req_is_wr = '0;
+            {%- if cpuif.data_width_bytes == 1 %}
             cpuif_addr = axil_araddr;
+            {%- else %}
+            cpuif_addr = {axil_araddr[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
+            {%- endif %}
             if(!cpuif_req_stall_rd) axil_ar_accept = '1;
         end
     end

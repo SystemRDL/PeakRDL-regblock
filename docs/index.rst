@@ -15,7 +15,7 @@ your hardware design.
 .. warning::
 
     The PeakRDL-regblock SV generator is still in pre-production (v0.x version numbers).
-    During this time, I may decide to refactor things which could break compatibility.
+    During this time, I may decide to refactor things which could affect compatibility.
 
 
 Installing
@@ -31,55 +31,17 @@ Install from `PyPi`_ using pip
 
 
 
-Quick Start
------------
+Example
+-------
 The easiest way is to use the `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_:
 
 .. code-block:: bash
 
-    peakrdl regblock atxmega_spi.rdl -o regblock/ --cpuif apb3-flat
+    # Install the command line tool
+    python3 -m pip install peakrdl
 
-
-Otherwise if you want, there is a Python API.
-Below is a simple example that demonstrates how to generate a SystemVerilog
-implementation from SystemRDL source.
-
-.. code-block:: python
-    :emphasize-lines: 2-4, 29-33
-
-    from systemrdl import RDLCompiler, RDLCompileError
-    from peakrdl_regblock import RegblockExporter
-    from peakrdl_regblock.cpuif.apb3 import APB3_Cpuif
-    from peakrdl_regblock.udps import ALL_UDPS
-
-    input_files = [
-        "PATH/TO/my_register_block.rdl"
-    ]
-
-    # Create an instance of the compiler
-    rdlc = RDLCompiler()
-
-    # Register all UDPs that 'regblock' requires
-    for udp in ALL_UDPS:
-        rdlc.register_udp(udp)
-
-    try:
-        # Compile your RDL files
-        for input_file in input_files:
-            rdlc.compile_file(input_file)
-
-        # Elaborate the design
-        root = rdlc.elaborate()
-    except RDLCompileError:
-        # A compilation error occurred. Exit with error code
-        sys.exit(1)
-
-    # Export a SystemVerilog implementation
-    exporter = RegblockExporter()
-    exporter.export(
-        root, "path/to/output_dir",
-        cpuif_cls=APB3_Cpuif
-    )
+    # Export!
+    peakrdl regblock atxmega_spi.rdl -o regblock/ --cpuif axi4-lite
 
 
 Links
@@ -92,17 +54,16 @@ Links
 - `SystemRDL Specification <http://accellera.org/downloads/standards/systemrdl>`_
 
 
-
 .. toctree::
     :hidden:
 
     self
     architecture
     hwif
-    api
     configuring
     limitations
     licensing
+    api
 
 .. toctree::
     :hidden:
@@ -111,6 +72,7 @@ Links
     cpuif/introduction
     cpuif/apb
     cpuif/axi4lite
+    cpuif/avalon
     cpuif/passthrough
     cpuif/internal_protocol
     cpuif/customizing
@@ -124,6 +86,12 @@ Links
     props/addrmap
     props/signal
     props/rhs_props
+
+.. toctree::
+    :hidden:
+    :caption: Other SystemRDL Features
+
+    rdl_features/external
 
 .. toctree::
     :hidden:

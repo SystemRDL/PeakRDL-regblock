@@ -4,7 +4,7 @@ from systemrdl.udp import UDPDefinition
 from systemrdl.component import Reg
 from systemrdl.rdltypes.references import RefType, PropertyReference
 from systemrdl.rdltypes import NoValue
-from systemrdl.node import Node, RegNode, VectorNode, SignalNode
+from systemrdl.node import Node, RegNode, VectorNode, SignalNode, FieldNode
 
 
 class xBufferTrigger(UDPDefinition):
@@ -23,7 +23,7 @@ class xBufferTrigger(UDPDefinition):
             # Trigger can reference a vector, but only if it is a single-bit
             if value.width != 1:
                 self.msg.error(
-                    "%s '%s' references %s '%s' but it's width is not 1"
+                    "%s '%s' references %s '%s' but its width is not 1"
                     % (
                         type(node.inst).__name__.lower(), node.inst_name,
                         type(value.inst).__name__.lower(), value.inst_name
@@ -42,7 +42,7 @@ class xBufferTrigger(UDPDefinition):
             # Trigger can reference a property, but only if it is a single-bit
             if value.width != 1:
                 self.msg.error(
-                    "%s '%s' references property '%s->%s' but it's width is not 1"
+                    "%s '%s' references property '%s->%s' but its width is not 1"
                     % (
                         type(node.inst).__name__.lower(), node.inst_name,
                         value.node.inst_name, value.name,
@@ -90,6 +90,16 @@ class WBufferTrigger(xBufferTrigger):
         if node.get_property('buffer_writes'):
             return node
         return None
+
+    def validate(self, node: Node, value: Any) -> None:
+        super().validate(node, value)
+
+        if isinstance(value, FieldNode):
+            if value.parent == node:
+                self.msg.error(
+                    "Trigger for a write-buffered register cannot be a field "
+                    "within the same register since the buffering makes it impossible to trigger."
+                )
 
 
 class BufferReads(UDPDefinition):

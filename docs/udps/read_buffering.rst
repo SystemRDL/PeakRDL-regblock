@@ -31,17 +31,19 @@ These UDP definitions, along with others supported by PeakRDL-regblock can be
 enabled by compiling the following file along with your design:
 :download:`regblock_udps.rdl <../../hdl-src/regblock_udps.rdl>`.
 
-``buffer_reads``
+.. describe:: buffer_reads
+
     *   Assigned value is a boolean.
     *   If true, enables double-buffering of software reads of this register.
-    *   The read buffer will load the register's field values when it's trigger
+    *   The read buffer will load the register's field values when its trigger
         event is asserted.
     *   Unless specified otherwise, the buffer trigger occurs when the lowest
         address of the buffered register is read.
     *   When read by software the data returned is from the buffer contents, not
         directly from the register's fields.
 
-``rbuffer_trigger``
+.. describe:: rbuffer_trigger
+
     *   Assigned value is a reference to a register, single-bit field, signal, or
         single-bit property.
     *   Controls when the double-buffer loads the register's field vaues into the
@@ -64,7 +66,7 @@ Other Rules
     other.
 *   Unless it is a register, the reference assigned to ``rbuffer_trigger`` shall
     represent a single bit.
-*   The software read operation considered to take place when the buffer is loaded
+*   The software read operation considered to take place when the buffer is loaded.
     This influences the behavior of properties like ``swmod`` and ``swacc`` -
     they are not asserted until the register's fields are actually sampled by the
     buffer.

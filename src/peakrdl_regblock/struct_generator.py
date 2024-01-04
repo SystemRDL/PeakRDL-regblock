@@ -9,7 +9,7 @@ from .identifier_filter import kw_filter as kwf
 if TYPE_CHECKING:
     from typing import Union
 
-    from systemrdl.node import AddrmapNode, RegfileNode, RegNode, FieldNode, Node
+    from systemrdl.node import AddrmapNode, RegfileNode, RegNode, FieldNode, Node, MemNode
 
 
 class _StructBase:
@@ -144,6 +144,12 @@ class RDLStructGenerator(StructGenerator, RDLListener):
     def exit_Regfile(self, node: 'RegfileNode') -> None:
         self.pop_struct()
 
+    def enter_Mem(self, node: 'MemNode') -> None:
+        self.push_struct(kwf(node.inst_name), node.array_dimensions)
+
+    def exit_Mem(self, node: 'MemNode') -> None:
+        self.pop_struct()
+
     def enter_Reg(self, node: 'RegNode') -> None:
         self.push_struct(kwf(node.inst_name), node.array_dimensions)
 
@@ -226,6 +232,13 @@ class RDLFlatStructGenerator(FlatStructGenerator, RDLListener):
         self.push_struct(type_name, kwf(node.inst_name), node.array_dimensions)
 
     def exit_Regfile(self, node: 'RegfileNode') -> None:
+        self.pop_struct()
+
+    def enter_Mem(self, node: 'MemNode') -> None:
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, kwf(node.inst_name), node.array_dimensions)
+
+    def exit_Mem(self, node: 'MemNode') -> None:
         self.pop_struct()
 
     def enter_Reg(self, node: 'RegNode') -> None:

@@ -15,14 +15,11 @@ pip install -r $this_dir/requirements.txt
 
 # Install dut
 cd $this_dir/../
-python $this_dir/../setup.py install
+pip install -U .
 cd $this_dir
 
 # Run unit tests
-export SKIP_SYNTH_TESTS=1
-#export STUB_SIMULATOR=1
-export NO_XSIM=1
-pytest --workers auto --cov=peakrdl_regblock
+pytest --workers auto --cov=peakrdl_regblock --synth-tool skip
 
 # Generate coverage report
 coverage html -i -d $this_dir/htmlcov

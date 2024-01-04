@@ -53,8 +53,6 @@ Represents the signal that controls the field's hwenable/hwmask behavior.
 
 field -> we/wel
 ^^^^^^^^^^^^^^^
-|EX|
-
 Represents the signal that controls the field's we/wel behavior.
 
 field -> next
@@ -63,11 +61,11 @@ field -> next
 
 field -> reset
 ^^^^^^^^^^^^^^
-|EX|
+Represents the value that was assigned to this property.
 
 field -> resetsignal
 ^^^^^^^^^^^^^^^^^^^^
-|EX|
+Represents the value that was assigned to this property.
 
 --------------------------------------------------------------------------------
 
@@ -81,8 +79,6 @@ Represents the signal that controls the field's counter increment control.
 
 field -> incrsaturate/saturate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the internal 1-bit event signal that indicates whether the counter is saturated
 at its saturation value.
 
@@ -103,8 +99,6 @@ at its saturation value.
 
 field -> incrthreshold/threshold
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the 1-bit event signal that indicates whether the counter has met or
 exceeded its incrthreshold.
 
@@ -122,8 +116,6 @@ Represents the signal that controls the field's counter decrement control.
 
 field -> decrsaturate
 ^^^^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the internal 1-bit event signal that indicates whether the counter is saturated
 at its saturation value.
 
@@ -143,8 +135,6 @@ at its saturation value.
 
 field -> decrthreshold
 ^^^^^^^^^^^^^^^^^^^^^^
-|EX|
-
 Represents the 1-bit event signal that indicates whether the counter has met or
 exceeded its incrthreshold.
 

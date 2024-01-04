@@ -14,7 +14,7 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
                 is_active <= '1;
                 cpuif_req <= '1;
                 cpuif_req_is_wr <= {{cpuif.signal("pwrite")}};
-                {%- if cpuif.data_width == 8 %}
+                {%- if cpuif.data_width_bytes == 1 %}
                 cpuif_addr <= {{cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:0];
                 {%- else %}
                 cpuif_addr <= { {{-cpuif.signal("paddr")}}[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};

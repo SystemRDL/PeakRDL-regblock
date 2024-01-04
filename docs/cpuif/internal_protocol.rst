@@ -36,7 +36,8 @@ cpuif_wr_data
 
 cpuif_wr_biten
     Active-high bit-level write-enable strobes.
-    Only asserted bit positions will change the register value during a write transfer.
+    Only asserted bit positions will change the register value during a write
+    transfer.
 
 cpuif_req_stall_rd
     If asserted, and the next pending request is a read operation, then the

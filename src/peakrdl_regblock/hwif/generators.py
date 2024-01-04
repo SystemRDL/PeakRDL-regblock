@@ -1,13 +1,16 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Type
 
-from systemrdl.node import FieldNode
+from systemrdl.node import FieldNode, RegNode, AddrmapNode, MemNode
+from systemrdl.walker import WalkerAction
 
 from ..struct_generator import RDLFlatStructGenerator
 from ..identifier_filter import kw_filter as kwf
+from ..sv_int import SVInt
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, SignalNode, RegNode
+    from systemrdl.node import Node, SignalNode, AddressableNode, RegfileNode
     from . import Hwif
+    from systemrdl.rdltypes import UserEnum
 
 class HWIFStructGenerator(RDLFlatStructGenerator):
     def __init__(self, hwif: 'Hwif', hwif_name: str) -> None:
@@ -61,8 +64,45 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
     def enter_Signal(self, node: 'SignalNode') -> None:
         # only emit the signal if design scanner detected it is actually being used
         path = node.get_path()
-        if path in self.hwif.in_hier_signal_paths:
+        if path in self.hwif.ds.in_hier_signal_paths:
             self.add_member(kwf(node.inst_name), node.width)
+
+    def _add_external_block_members(self, node: 'AddressableNode') -> None:
+        self.add_member("rd_ack")
+        self.add_member("rd_data", self.hwif.ds.cpuif_data_width)
+        self.add_member("wr_ack")
+
+    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+        super().enter_Addrmap(node)
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
+
+    def enter_Regfile(self, node: 'RegfileNode') -> None:
+        super().enter_Regfile(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
+        super().enter_Mem(node)
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
+
+    def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
+        super().enter_Reg(node)
+        if node.external:
+            width = min(self.hwif.ds.cpuif_data_width, node.get_property('regwidth'))
+            if node.has_sw_readable:
+                self.add_member("rd_ack")
+                self.add_member("rd_data", width)
+            if node.has_sw_writable:
+                self.add_member("wr_ack")
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
@@ -119,6 +159,46 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
         )
         return f'{base}__out_t'
 
+    def _add_external_block_members(self, node: 'AddressableNode') -> None:
+        self.add_member("req")
+        self.add_member("addr", (node.size - 1).bit_length())
+        self.add_member("req_is_wr")
+        self.add_member("wr_data", self.hwif.ds.cpuif_data_width)
+        self.add_member("wr_biten", self.hwif.ds.cpuif_data_width)
+
+    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+        super().enter_Addrmap(node)
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
+
+    def enter_Regfile(self, node: 'RegfileNode') -> None:
+        super().enter_Regfile(node)
+        if node.external:
+            self._add_external_block_members(node)
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Mem(self, node: 'MemNode') -> Optional[WalkerAction]:
+        super().enter_Mem(node)
+        assert node.external
+        self._add_external_block_members(node)
+        return WalkerAction.SkipDescendants
+
+    def enter_Reg(self, node: 'RegNode') -> Optional[WalkerAction]:
+        super().enter_Reg(node)
+        if node.external:
+            width = min(self.hwif.ds.cpuif_data_width, node.get_property('regwidth'))
+            n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
+            self.add_member("req", n_subwords)
+            self.add_member("req_is_wr")
+            if node.has_sw_writable:
+                self.add_member("wr_data", width)
+                self.add_member("wr_biten", width)
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
+
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
@@ -150,53 +230,69 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 #-------------------------------------------------------------------------------
 class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node') -> str:
-        scope_path = node.inst.get_scope_path("__")
+        scope_path = node.get_global_type_name("__")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
             # Add prefix to prevent collision when mixing namespace methods
             scope_path = "xtern__" + super().get_typdef_name(node)
 
-        if isinstance(node, FieldNode):
-            extra_suffix = get_field_type_name_suffix(node)
+        if node.external:
+            # Node generates alternate external signals
+            extra_suffix = "__external"
         else:
             extra_suffix = ""
 
-        return f'{scope_path}__{node.type_name}{extra_suffix}__in_t'
+        return f'{scope_path}{extra_suffix}__in_t'
 
 class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node') -> str:
-        scope_path = node.inst.get_scope_path("__")
+        scope_path = node.get_global_type_name("__")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
             # Add prefix to prevent collision when mixing namespace methods
             scope_path = "xtern__" + super().get_typdef_name(node)
 
-        if isinstance(node, FieldNode):
-            extra_suffix = get_field_type_name_suffix(node)
+        if node.external:
+            # Node generates alternate external signals
+            extra_suffix = "__external"
         else:
             extra_suffix = ""
 
-        return f'{scope_path}__{node.type_name}{extra_suffix}__out_t'
+        return f'{scope_path}{extra_suffix}__out_t'
 
-
-def get_field_type_name_suffix(field: FieldNode) -> str:
+#-------------------------------------------------------------------------------
+class EnumGenerator:
     """
-    Fields may reuse the same type, but end up instantiating different widths
-    Uniquify the type name further if the field width was overridden when instantiating
+    Generator for user-defined enum definitions
     """
-    if field.inst.original_def is None:
-        return ""
 
-    if field.inst.original_def.type_name is None:
-        # is an anonymous definition. No extra suffix needed
-        return ""
+    def get_enums(self, user_enums: List[Type['UserEnum']]) -> Optional[str]:
+        if not user_enums:
+            return None
 
-    if "fieldwidth" in field.list_properties():
-        # fieldwidth was explicitly set. This type name is already sufficiently distinct
-        return ""
+        lines = []
+        for user_enum in user_enums:
+            lines.append(self._enum_typedef(user_enum))
 
-    if field.width == 1:
-        # field width is the default. Skip suffix
-        return ""
+        return '\n\n'.join(lines)
 
-    return f"_w{field.width}"
+    @staticmethod
+    def _get_prefix(user_enum: Type['UserEnum']) -> str:
+        scope = user_enum.get_scope_path("__")
+        if scope:
+            return f"{scope}__{user_enum.type_name}"
+        else:
+            return user_enum.type_name
+
+    def _enum_typedef(self, user_enum: Type['UserEnum']) -> str:
+        prefix = self._get_prefix(user_enum)
+
+        lines = []
+        for enum_member in user_enum:
+            lines.append(f"    {prefix}__{enum_member.name} = {SVInt(enum_member.value)}")
+
+        return (
+            "typedef enum {\n"
+            + ",\n".join(lines)
+            + f"\n}} {prefix}_e;"
+        )

@@ -1,9 +1,15 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
+from systemrdl.rdltypes import PropertyReference
+from systemrdl.node import Node, RegNode, FieldNode, SignalNode, AddressableNode
+from systemrdl.node import RegfileNode, AddrmapNode
+
+from .utils import roundup_pow2, is_pow2
+
+from .utils import ref_is_internal
 
 if TYPE_CHECKING:
-    from systemrdl.node import Node, RegNode, FieldNode, SignalNode, AddressableNode
     from .exporter import RegblockExporter
 
 class DesignValidator(RDLListener):
@@ -13,30 +19,47 @@ class DesignValidator(RDLListener):
     """
     def __init__(self, exp:'RegblockExporter') -> None:
         self.exp = exp
-        self.msg = exp.top_node.env.msg
+        self.msg = self.top_node.env.msg
+
+        self._contains_external_block_stack = [] # type: List[bool]
+        self.contains_external_block = False
+
+    @property
+    def top_node(self) -> 'AddrmapNode':
+        return self.exp.ds.top_node
 
     def do_validate(self) -> None:
-        RDLWalker().walk(self.exp.top_node, self)
+        RDLWalker().walk(self.top_node, self)
         if self.msg.had_error:
             self.msg.fatal(
                 "Unable to export due to previous errors"
             )
 
     def enter_Component(self, node: 'Node') -> Optional[WalkerAction]:
-        if node.external and (node != self.exp.top_node):
-            self.msg.error(
-                "Exporter does not support external components",
-                node.inst.inst_src_ref
-            )
+        if node.external and (node != self.top_node):
             # Do not inspect external components. None of my business
             return WalkerAction.SkipDescendants
+
+        # Check if any property references reach across the internal/external boundary
+        for prop_name in node.list_properties():
+            value = node.get_property(prop_name)
+            if isinstance(value, (PropertyReference, Node)):
+                if not ref_is_internal(self.top_node, value):
+                    if isinstance(value, PropertyReference):
+                        src_ref = value.src_ref
+                    else:
+                        src_ref = node.inst.property_src_ref.get(prop_name, node.inst.inst_src_ref)
+                    self.msg.error(
+                        "Property is assigned a reference that points to a component not internal to the regblock being exported.",
+                        src_ref
+                    )
         return None
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         # If encountering a CPUIF reset that is nested within the register model,
         # warn that it will be ignored.
         # Only cpuif resets in the top-level node or above will be honored
-        if node.get_property('cpuif_reset') and (node.parent != self.exp.top_node):
+        if node.get_property('cpuif_reset') and (node.parent != self.top_node):
             self.msg.warning(
                 "Only cpuif_reset signals that are instantiated in the top-level "
                 "addrmap or above will be honored. Any cpuif_reset signals nested "
@@ -58,6 +81,27 @@ class DesignValidator(RDLListener):
                 "Unaligned registers are not supported. Address stride of "
                 f"instance array '{node.inst_name}' must be a multiple of {alignment}",
                 node.inst.inst_src_ref
+            )
+
+        if not isinstance(node, RegNode):
+            # Entering a block-like node
+            if node == self.top_node:
+                # Ignore top addrmap's external property when entering
+                self._contains_external_block_stack.append(False)
+            else:
+                self._contains_external_block_stack.append(node.external)
+
+    def enter_Regfile(self, node: RegfileNode) -> None:
+        self._check_sharedextbus(node)
+
+    def enter_Addrmap(self, node: AddrmapNode) -> None:
+        self._check_sharedextbus(node)
+
+    def _check_sharedextbus(self, node: Node) -> None:
+        if node.get_property('sharedextbus'):
+            self.msg.error(
+                "This exporter does not support enabling the 'sharedextbus' property yet.",
+                node.inst.property_src_ref.get('sharedextbus', node.inst.inst_src_ref)
             )
 
     def enter_Reg(self, node: 'RegNode') -> None:
@@ -84,6 +128,16 @@ class DesignValidator(RDLListener):
             and (node.lsb // parent_accesswidth) != (node.msb // parent_accesswidth)
         ):
             # field spans multiple sub-words
+            if node.external:
+                # External fields that span multiple subwords is not supported
+                self.msg.error(
+                    "External fields that span multiple software-accessible "
+                    "subwords are not supported.",
+                    node.inst.inst_src_ref
+                )
+                # Skip remaining validation rules for external fields
+                return
+
             if node.is_sw_writable and not node.parent.get_property('buffer_writes'):
                 # ... and is writable without the protection of double-buffering
                 # Enforce 10.6.1-f
@@ -106,3 +160,38 @@ class DesignValidator(RDLListener):
                     "For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/read_buffering.html",
                     node.inst.inst_src_ref
                 )
+
+    def exit_AddressableComponent(self, node: AddressableNode) -> None:
+        if not isinstance(node, RegNode):
+            # Exiting block-like node
+            contains_external_block = self._contains_external_block_stack.pop()
+
+            if self._contains_external_block_stack:
+                # Still in the design. Update stack
+                self._contains_external_block_stack[-1] |= contains_external_block
+            else:
+                # Exiting top addrmap. Resolve final answer
+                self.contains_external_block = contains_external_block
+
+            if contains_external_block:
+                # Check that addressing follows strict alignment rules to allow
+                # for simplified address bit-pruning
+                if node.external:
+                    err_suffix = "is external"
+                else:
+                    err_suffix = "contains an external addrmap/regfile/mem"
+
+                req_align = roundup_pow2(node.size)
+                if (node.raw_address_offset % req_align) != 0:
+                    self.msg.error(
+                        f"Address offset +0x{node.raw_address_offset:x} of instance '{node.inst_name}' is not a power of 2 multiple of its size 0x{node.size:x}. "
+                        f"This is required by the regblock exporter if a component {err_suffix}.",
+                        node.inst.inst_src_ref
+                    )
+                if node.is_array:
+                    if not is_pow2(node.array_stride):
+                        self.msg.error(
+                            f"Address stride of instance array '{node.inst_name}' is not a power of 2"
+                            f"This is required by the regblock exporter if a component {err_suffix}.",
+                            node.inst.inst_src_ref
+                        )

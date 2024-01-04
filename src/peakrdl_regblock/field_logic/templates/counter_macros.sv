@@ -7,7 +7,7 @@
             next_c = next_c + {{field_logic.get_counter_incrvalue(node)}};
         end
         {%- else %}
-        {{field_logic.get_field_combo_identifier(node, "overflow")}} = ((({{node.width+1}})'(next_c) + {{field_logic.get_counter_incrvalue(node)}}) > {{get_value(2**node.width - 1)}});
+        {{field_logic.get_field_combo_identifier(node, "overflow")}} = ((({{node.width+1}})'(next_c) + {{field_logic.get_counter_incrvalue(node)}}) > {{get_value(2**node.width - 1, node.width)}});
         next_c = next_c + {{field_logic.get_counter_incrvalue(node)}};
         {%- endif %}
         load_next_c = '1;

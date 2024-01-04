@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peakrdl-regblock"
+dynamic = ["version"]
+requires-python = ">=3.6"
+dependencies = [
+    "systemrdl-compiler >= 1.27.0, < 2",
+    "Jinja2>=2.11",
+]
+
+authors = [
+    {name="Alex Mykyta"},
+]
+description = "Compile SystemRDL into a SystemVerilog control/status register (CSR) block"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = [
+    "SystemRDL", "PeakRDL", "CSR", "compiler", "tool", "registers", "generator",
+    "Verilog", "SystemVerilog", "register abstraction layer",
+    "FPGA", "ASIC",
+]
+classifiers = [
+    #"Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+
+[project.urls]
+Source = "https://github.com/SystemRDL/PeakRDL-regblock"
+Tracker = "https://github.com/SystemRDL/PeakRDL-regblock/issues"
+Changelog = "https://github.com/SystemRDL/PeakRDL-regblock/releases"
+Documentation = "https://peakrdl-regblock.readthedocs.io/"
+
+[tool.setuptools.dynamic]
+version = {attr = "peakrdl_regblock.__about__.__version__"}
+
+[project.entry-points."peakrdl.exporters"]
+regblock = "peakrdl_regblock.__peakrdl__:Exporter"

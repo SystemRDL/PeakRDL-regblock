@@ -1,12 +1,11 @@
 from typing import List
-import subprocess
 import os
 
 import pytest
 
 from .base_testcase import BaseTestCase
+from .synthesizers import get_synthesizer_cls
 
-@pytest.mark.skipif(os.environ.get("SKIP_SYNTH_TESTS", False), reason="user skipped")
 class SynthTestCase(BaseTestCase):
 
     def _get_synth_files(self) -> List[str]:
@@ -17,20 +16,24 @@ class SynthTestCase(BaseTestCase):
 
         return files
 
+    def setUp(self) -> None:
+        name = self.request.config.getoption("--synth-tool")
+        synth_cls = get_synthesizer_cls(name)
+        if synth_cls is None:
+            pytest.skip()
+        super().setUp()
 
     def run_synth(self) -> None:
-        script = os.path.join(
-            os.path.dirname(__file__),
-            "synthesis/vivado/run.tcl"
-        )
+        name = self.request.config.getoption("--synth-tool")
+        synth_cls = get_synthesizer_cls(name)
+        synth = synth_cls(self)
 
-        cmd = [
-            "vivado", "-nojournal", "-notrace",
-            "-mode", "batch",
-            "-log", "out.log",
-            "-source", script,
-            "-tclargs"
-        ]
-        cmd.extend(self._get_synth_files())
+        # cd into the build directory
+        cwd = os.getcwd()
+        os.chdir(self.get_run_dir())
 
-        subprocess.run(cmd, check=True)
+        try:
+            synth.run()
+        finally:
+            # cd back
+            os.chdir(cwd)

@@ -7,11 +7,11 @@ Testcases require an installation of the Questa simulator, and for `vlog` & `vsi
 commands to be visible via the PATH environment variable.
 
 *Questa - Intel FPGA Starter Edition* can be downloaded for free from Intel:
-* Go to https://www.intel.com/content/www/us/en/collections/products/fpga/software/downloads.html?edition=pro&s=Newest
-* Select latest version of *Intel Quartus Prime Pro*
-* Go to the *Individual Files* tab.
+* Go to https://www.intel.com/content/www/us/en/collections/products/fpga/software/downloads.html?edition=pro&q=questa&s=Relevancy
+* Select latest version of Questa
 * Download Questa files. (Don't forget part 2!)
 * Install
+    * Be sure to choose "Starter Edition" for the free version.
 * Create an account on https://licensing.intel.com
     * press "Enroll" to register
     * After you confirm your email, go back to this page and press "Enroll" again to finish enrollment
@@ -19,6 +19,9 @@ commands to be visible via the PATH environment variable.
 * Generate a free *Starter Edition* license file for Questa
     * Easiest to use a *fixed* license using your NIC ID (MAC address of your network card via `ifconfig`)
 * Download the license file and point the `LM_LICENSE_FILE` environment variable to the folder which contains it.
+* (optional) Delete Intel libraries to save some disk space
+    * Delete `<install_dir>/questa_fse/intel`
+    * Edit `<install_dir>/questa_fse/modelsim.ini` and remove lines that reference the `intel` libraries
 
 
 ## Vivado (optional)
@@ -27,18 +30,13 @@ To run synthesis tests, Vivado needs to be installed and visible via the PATH en
 
 Vivado can be downloaded for free from: https://www.xilinx.com/support/download.html
 
-To skip synthesis tests, export the following environment variable:
-```bash
-export SKIP_SYNTH_TESTS=1
-```
-
 
 
 ## Python Packages
 Install dependencies required for running tests
 
 ```bash
-python3 -m pip install test/requirements.txt
+python3 -m pip install -r tests/requirements.txt
 ```
 
 
@@ -58,6 +56,13 @@ You can also run a specific testcase. For example:
 ```bash
 pytest tests/test_hw_access
 ```
+
+Command-line arguments can be used to explicitly select which simulator/synthesis tools are used
+If unspecified, the tool will be selected automatically based on what you have installed.
+```bash
+pytest --sim-tool questa --synth-tool vivado
+```
+
 
 Alternatively, launch tests using the helper script. This handles installing
 dependencies into a virtual environment automatically.

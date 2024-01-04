@@ -5,7 +5,6 @@ from systemrdl.component import Reg
 from systemrdl.node import RegNode
 
 from ..forloop_generator import RDLForLoopGenerator
-from ..utils import get_always_ff_event
 
 if TYPE_CHECKING:
     from . import WriteBuffering
@@ -54,7 +53,7 @@ class WBufLogicGenerator(RDLForLoopGenerator):
             'node': node,
             'cpuif': self.exp.cpuif,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,
-            'get_always_ff_event': lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             'is_own_trigger': is_own_trigger,
         }
         self.add_content(self.template.render(context))

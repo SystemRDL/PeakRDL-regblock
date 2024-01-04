@@ -7,9 +7,11 @@
 **/_build
 **/*.out
 **/transcript
+**/htmlcov
 **/*.log
 **/*.pb
 **/.Xil
+**/.coverage.*
 
 build/
 dist/

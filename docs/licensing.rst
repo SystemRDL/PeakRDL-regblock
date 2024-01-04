@@ -47,4 +47,4 @@ workplace. This is totally OK, as long as you don't start distributing it
 outside your workplace in ways that violate the GPL v3 license.
 
 That said, I'd encourage you to check out the `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_.
-It might already do everything you need.
+It may already do everything you need.

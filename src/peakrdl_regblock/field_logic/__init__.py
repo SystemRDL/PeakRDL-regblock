@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from systemrdl.rdltypes import PrecedenceType, InterruptType
 
@@ -11,13 +11,14 @@ from . import hw_set_clr
 from . import hw_interrupts
 
 from ..utils import get_indexed_path
+from ..sv_int import SVInt
 
 from .generators import CombinationalStructGenerator, FieldStorageStructGenerator, FieldLogicGenerator
 
 if TYPE_CHECKING:
     from typing import Dict, List
     from systemrdl.node import AddrmapNode, FieldNode
-    from ..exporter import RegblockExporter
+    from ..exporter import RegblockExporter, DesignState
 
 class FieldLogic:
     def __init__(self, exp:'RegblockExporter'):
@@ -29,8 +30,12 @@ class FieldLogic:
         self.init_conditionals()
 
     @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
+
+    @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
     def get_storage_struct(self) -> str:
         struct_gen = FieldStorageStructGenerator(self)
@@ -95,27 +100,27 @@ class FieldLogic:
         """
         prop_value = field.get_property('incr')
         if prop_value:
-            return self.exp.dereferencer.get_value(prop_value)
+            return str(self.exp.dereferencer.get_value(prop_value))
 
         # unset by the user, points to the implied input signal
         return self.exp.hwif.get_implied_prop_input_identifier(field, "incr")
 
-    def get_counter_incrvalue(self, field: 'FieldNode') -> str:
+    def get_counter_incrvalue(self, field: 'FieldNode') -> Union[SVInt, str]:
         """
         Return the string that represents the field's increment value
         """
         incrvalue = field.get_property('incrvalue')
         if incrvalue is not None:
-            return self.exp.dereferencer.get_value(incrvalue)
+            return self.exp.dereferencer.get_value(incrvalue, field.width)
         if field.get_property('incrwidth'):
             return self.exp.hwif.get_implied_prop_input_identifier(field, "incrvalue")
         return "1'b1"
 
-    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> str:
+    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> Union[SVInt, str]:
         prop_value = field.get_property('incrsaturate')
         if prop_value is True:
-            return self.exp.dereferencer.get_value(2**field.width - 1)
-        return self.exp.dereferencer.get_value(prop_value)
+            return self.exp.dereferencer.get_value(2**field.width - 1, field.width)
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def counter_incrsaturates(self, field: 'FieldNode') -> bool:
         """
@@ -123,12 +128,12 @@ class FieldLogic:
         """
         return field.get_property('incrsaturate') is not False
 
-    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> str:
+    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> Union[SVInt, str]:
         prop_value = field.get_property('incrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use max
-            return self.exp.dereferencer.get_value(2**field.width - 1)
-        return self.exp.dereferencer.get_value(prop_value)
+            return self.exp.dereferencer.get_value(2**field.width - 1, field.width)
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def get_counter_decr_strobe(self, field: 'FieldNode') -> str:
         """
@@ -136,27 +141,27 @@ class FieldLogic:
         """
         prop_value = field.get_property('decr')
         if prop_value:
-            return self.exp.dereferencer.get_value(prop_value)
+            return str(self.exp.dereferencer.get_value(prop_value))
 
         # unset by the user, points to the implied input signal
         return self.exp.hwif.get_implied_prop_input_identifier(field, "decr")
 
-    def get_counter_decrvalue(self, field: 'FieldNode') -> str:
+    def get_counter_decrvalue(self, field: 'FieldNode') -> Union[SVInt, str]:
         """
         Return the string that represents the field's decrement value
         """
         decrvalue = field.get_property('decrvalue')
         if decrvalue is not None:
-            return self.exp.dereferencer.get_value(decrvalue)
+            return self.exp.dereferencer.get_value(decrvalue, field.width)
         if field.get_property('decrwidth'):
             return self.exp.hwif.get_implied_prop_input_identifier(field, "decrvalue")
         return "1'b1"
 
-    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> str:
+    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> Union[SVInt, str]:
         prop_value = field.get_property('decrsaturate')
         if prop_value is True:
-            return "'d0"
-        return self.exp.dereferencer.get_value(prop_value)
+            return f"{field.width}'d0"
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def counter_decrsaturates(self, field: 'FieldNode') -> bool:
         """
@@ -164,12 +169,12 @@ class FieldLogic:
         """
         return field.get_property('decrsaturate') is not False
 
-    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> str:
+    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> Union[SVInt, str]:
         prop_value = field.get_property('decrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use min
-            return "'d0"
-        return self.exp.dereferencer.get_value(prop_value)
+            return f"{field.width}'d0"
+        return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def get_swacc_identifier(self, field: 'FieldNode') -> str:
         """
@@ -270,6 +275,19 @@ class FieldLogic:
         # Not sw modifiable
         return "1'b0"
 
+    def get_parity_identifier(self, field: 'FieldNode') -> str:
+        """
+        Returns the identifier for the stored 'golden' parity value of the field
+        """
+        path = get_indexed_path(self.top_node, field)
+        return f"field_storage.{path}.parity"
+
+    def get_parity_error_identifier(self, field: 'FieldNode') -> str:
+        """
+        Returns the identifier for whether the field currently has a parity error
+        """
+        path = get_indexed_path(self.top_node, field)
+        return f"field_combo.{path}.parity_error"
 
     def has_next_q(self, field: 'FieldNode') -> bool:
         """

@@ -58,7 +58,7 @@ interface apb4_intf_driver #(
 
     semaphore txn_mutex = new(1);
 
-    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data);
+    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1);
         txn_mutex.get();
         ##0;
 
@@ -69,7 +69,7 @@ interface apb4_intf_driver #(
         cb.PPROT <= '0;
         cb.PADDR <= addr;
         cb.PWDATA <= data;
-        cb.PSTRB <= '1;
+        cb.PSTRB <= strb;
         @(cb);
 
         // active phase

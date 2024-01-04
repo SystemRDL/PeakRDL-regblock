@@ -1,0 +1,60 @@
+addrmap top {
+    default regwidth = 16;
+    default accesswidth = 8;
+
+    reg {
+        buffer_reads;
+        field {
+            sw=r; hw=w;
+            swacc;
+        } f[16];
+    } r1;
+
+    reg {
+        buffer_reads;
+        buffer_writes;
+        field {
+            sw=rw; hw=r;
+            swmod;
+        } f[16] = 0x4020;
+    } r2;
+
+    reg {
+        buffer_reads;
+        buffer_writes;
+        field {
+            sw=rw; hw=r;
+            swmod;
+            rclr;
+        } f[16] = 0x1030;
+    } r3;
+
+    reg {
+        buffer_reads;
+        buffer_writes;
+        field {
+            sw=rw; hw=r;
+            swacc;
+            swmod;
+        } f[16] = 0x1234;
+    } r4;
+
+    reg {
+        buffer_writes;
+        field {
+            sw=rw; hw=r;
+            swacc;
+            swmod;
+        } f[16] = 0xABCD;
+    } r5;
+
+    reg {
+        buffer_reads;
+        field {
+            sw=r; hw=rw;
+            we;
+            swmod;
+            rclr;
+        } f[16] = 0x1030;
+    } r6;
+};

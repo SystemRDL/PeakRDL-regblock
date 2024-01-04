@@ -2,20 +2,22 @@ from typing import TYPE_CHECKING
 import math
 
 from .generators import ReadbackAssignmentGenerator
-from ..utils import get_always_ff_event
 
 if TYPE_CHECKING:
-    from ..exporter import RegblockExporter
+    from ..exporter import RegblockExporter, DesignState
     from systemrdl.node import AddrmapNode
 
 class Readback:
-    def __init__(self, exp:'RegblockExporter', do_fanin_stage: bool):
+    def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
-        self.do_fanin_stage = do_fanin_stage
+
+    @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
 
     @property
     def top_node(self) -> 'AddrmapNode':
-        return self.exp.top_node
+        return self.exp.ds.top_node
 
     def get_implementation(self) -> str:
         gen = ReadbackAssignmentGenerator(self.exp)
@@ -25,17 +27,18 @@ class Readback:
         # Enabling the fanin stage doesnt make sense if readback fanin is
         # small. This also avoids pesky corner cases
         if array_size < 4:
-            self.do_fanin_stage = False
+            self.ds.retime_read_fanin = False
 
         context = {
             "array_assignments" : array_assignments,
             "array_size" : array_size,
-            "get_always_ff_event": lambda resetsignal : get_always_ff_event(self.exp.dereferencer, resetsignal),
+            'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
+            'get_resetsignal': self.exp.dereferencer.get_resetsignal,
             "cpuif": self.exp.cpuif,
-            "do_fanin_stage": self.do_fanin_stage,
+            "ds": self.ds,
         }
 
-        if self.do_fanin_stage:
+        if self.ds.retime_read_fanin:
             # If adding a fanin pipeline stage, goal is to try to
             # split the fanin path in the middle so that fanin into the stage
             # and the following are roughly balanced.

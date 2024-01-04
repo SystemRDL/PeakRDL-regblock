@@ -66,7 +66,7 @@ class CpuifTestMode:
         return self._get_file_paths("rtl_files")
 
 
-    def get_tb_inst(self, tb_cls: 'SimTestCase', exporter: 'RegblockExporter') -> str:
+    def get_tb_inst(self, testcase: 'SimTestCase', exporter: 'RegblockExporter') -> str:
         class_dir = self._get_class_dir_of_variable("tb_template")
         loader = jj.FileSystemLoader(class_dir)
         jj_env = jj.Environment(
@@ -77,7 +77,7 @@ class CpuifTestMode:
 
         context = {
             "cpuif": self,
-            "cls": tb_cls,
+            "testcase": testcase,
             "exporter": exporter,
             "type": type,
         }

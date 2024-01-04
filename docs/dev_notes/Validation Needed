@@ -78,7 +78,7 @@ X Illegal property references:
         next
             is this ever illegal?
 
-X If a node ispresent=true, and any of it's properties are a reference,
+X If a node ispresent=true, and any of its properties are a reference,
     then those references' ispresent shall also be true
     This is an explicit clause in the spec: 5.3.1-i
 
@@ -165,6 +165,10 @@ X Do not allow unaligned addresses
     X each reg needs to be aligned to its width
     X each regfile/addrmap/stride shall be aligned to the largest regwidth it encloses
 
+X Error if a property is a reference to something that is external, or enclosed
+  in an external component.
+  Limit this check to child nodes inside the export hierarchy
+
 ! async data signals
     Only supporting async signals if they are exclusively used in resets.
     Anything else declared as "async" shall emit a warning that it is ignored
@@ -172,10 +176,6 @@ X Do not allow unaligned addresses
 
 ! Error if a property references a non-signal component, or property reference from
     outside the export hierarchy
-
-! Error if a property is a reference to something that is external, or enclosed
-  in an external component.
-  Limit this check to child nodes inside the export hierarchy
 
 ! Add warning for sticky race condition
     stickybit and other similar situations generally should use hw precedence.

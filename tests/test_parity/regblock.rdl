@@ -1,0 +1,14 @@
+addrmap top {
+    default paritycheck;
+    default sw=rw;
+    default hw=na;
+
+    reg my_reg {
+        field {} f1[16] = 0;
+        field {} f2[8] = 0;
+        field {} f3 = 0;
+    };
+
+    my_reg r1 @ 0x000;
+    my_reg r2[8] @ 0x1000;
+};

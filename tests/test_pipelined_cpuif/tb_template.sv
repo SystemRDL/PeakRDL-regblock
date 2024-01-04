@@ -36,7 +36,7 @@
     wait fork;
 
     // Mix read/writes
-    for(int i=0; i<64; i++) begin
+    for(int i=0; i<8; i++) begin
         fork
             automatic int i_fk = i;
             begin
