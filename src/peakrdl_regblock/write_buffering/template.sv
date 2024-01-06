@@ -24,7 +24,7 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
             {%- endif %}
         end
         {%- endfor %}
-        {% if is_own_trigger %}
+        {%- if is_own_trigger %}
         {{wbuf_prefix}}.trigger_q <= {{wbuf.get_raw_trigger(node)}};
         {%- endif %}
     end

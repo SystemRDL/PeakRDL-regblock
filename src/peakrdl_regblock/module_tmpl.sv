@@ -135,12 +135,12 @@ module {{ds.module_name}} (
     always_comb begin
     {%- if ds.has_external_addressable %}
         automatic logic is_external = '0;
-    {% endif %}
+    {%- endif %}
         {{address_decode.get_implementation()|indent(8)}}
     {%- if ds.has_external_addressable %}
         decoded_strb_is_external = is_external;
         external_req = is_external;
-    {% endif %}
+    {%- endif %}
     end
 
     // Pass down signals to next stage
@@ -251,7 +251,7 @@ module {{ds.module_name}} (
     logic readback_err;
     logic readback_done;
     logic [{{cpuif.data_width-1}}:0] readback_data;
-    {{readback_implementation|indent}}
+{{readback_implementation|indent}}
 {% if ds.retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
@@ -283,3 +283,4 @@ module {{ds.module_name}} (
     assign cpuif_rd_err = readback_err;
 {%- endif %}
 endmodule
+{# (eof newline anchor) #}

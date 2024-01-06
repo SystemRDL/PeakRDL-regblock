@@ -8,3 +8,4 @@ package {{ds.package_name}};
 
     {{hwif.get_package_contents()|indent}}
 endpackage
+{# (eof newline anchor) #}
