@@ -33,7 +33,7 @@ Install from `PyPi`_ using pip
 
 Example
 -------
-The easiest way is to use the `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_:
+The easiest way to use PeakRDL-regblock is via the  `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_:
 
 .. code-block:: bash
 

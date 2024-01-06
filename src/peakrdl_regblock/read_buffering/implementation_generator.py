@@ -41,19 +41,19 @@ class RBufLogicGenerator(RDLForLoopGenerator):
         for field in node.fields():
             if bidx < field.low:
                 # zero padding before field
-                s.append(f"{data}[{field.low-1}:{bidx}] = '0;")
+                s.append(f"{data}[{field.low-1}:{bidx}] <= '0;")
 
             value = self.exp.dereferencer.get_value(field)
             if field.msb < field.lsb:
                 # Field gets bitswapped since it is in [low:high] orientation
                 value = f"{{<<{{{value}}}}}"
-            s.append(f"{data}[{field.high}:{field.low}] = {value};")
+            s.append(f"{data}[{field.high}:{field.low}] <= {value};")
 
             bidx = field.high + 1
 
         regwidth = node.get_property('regwidth')
         if bidx < regwidth:
             # zero padding after last field
-            s.append(f"{data}[{regwidth-1}:{bidx}] = '0;")
+            s.append(f"{data}[{regwidth-1}:{bidx}] <= '0;")
 
         return "\n".join(s)
