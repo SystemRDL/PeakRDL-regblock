@@ -19,6 +19,20 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
         - Type
         - Description
 
+    *   - cpuif
+        - addrmap
+        - string
+        - Specifies the CPU interface type.
+
+          See: :ref:`cpuif`.
+
+    *   - addrwidth
+        - addrmap
+        - longint unsigned
+        - Specifies the address with of the CPU interface.
+
+          See: :ref:`cpuif`.
+
     *   - buffer_reads
         - reg
         - boolean
