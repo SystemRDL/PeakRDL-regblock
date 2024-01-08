@@ -86,7 +86,6 @@ class Exporter(ExporterSubcommandPlugin):
         arg_group.add_argument(
             "--cpuif",
             choices=cpuifs.keys(),
-            default="apb3",
             help="Select the CPU interface protocol to use [apb3]"
         )
 
@@ -202,12 +201,25 @@ class Exporter(ExporterSubcommandPlugin):
         else:
             raise RuntimeError
 
+        # Get cpuif. Favor command-line over SystemRDL, defaults to apb3.
+        if options.cpuif is not None:
+            cpuif = cpuifs[options.cpuif]
+        elif top_node.get_property('cpuif') is not None:
+            cpuif_name = top_node.get_property('cpuif')
+            if cpuif_name not in cpuifs:
+                raise RuntimeError(f"error: unknown cpuif: {cpuif_name} (choose from: {' '.join(cpuifs.keys())})")
+            cpuif = cpuifs[cpuif_name]
+        else:
+            cpuif = cpuifs['apb3']
+
+        # Get cpuif addr_width. Favor command-line over SystemRDL.
+        addr_width = options.addr_width or top_node.get_property('addrwidth')
 
         x = RegblockExporter()
         x.export(
             top_node,
             options.output,
-            cpuif_cls=cpuifs[options.cpuif],
+            cpuif_cls=cpuif,
             module_name=options.module_name,
             package_name=options.package_name,
             reuse_hwif_typedefs=(options.type_style == "lexical"),
@@ -218,7 +230,7 @@ class Exporter(ExporterSubcommandPlugin):
             retime_external_mem=retime_external_mem,
             retime_external_addrmap=retime_external_addrmap,
             generate_hwif_report=options.hwif_report,
-            address_width=options.addr_width,
+            address_width=addr_width,
             default_reset_activelow=default_reset_activelow,
             default_reset_async=default_reset_async,
         )
