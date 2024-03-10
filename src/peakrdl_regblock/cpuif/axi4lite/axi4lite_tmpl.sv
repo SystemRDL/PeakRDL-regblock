@@ -12,7 +12,7 @@ logic [{{cpuif.data_width_bytes-1}}:0] axil_wstrb;
 logic axil_aw_accept;
 logic axil_resp_acked;
 
-// Transaction request accpetance
+// Transaction request acceptance
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
     if({{get_resetsignal(cpuif.reset)}}) begin
         axil_prev_was_rd <= '0;
