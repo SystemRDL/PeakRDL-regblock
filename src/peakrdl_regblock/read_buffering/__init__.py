@@ -37,8 +37,8 @@ class ReadBuffering:
         if isinstance(trigger, RegNode):
             # Trigger is a register.
             # trigger when lowermost address of the register is written
-            regwidth = node.get_property('regwidth')
-            accesswidth = node.get_property('accesswidth')
+            regwidth = trigger.get_property('regwidth')
+            accesswidth = trigger.get_property('accesswidth')
             strb_prefix = self.exp.dereferencer.get_access_strobe(trigger, reduce_substrobes=False)
 
             if accesswidth < regwidth:
