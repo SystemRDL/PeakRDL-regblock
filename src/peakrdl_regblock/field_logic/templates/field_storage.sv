@@ -61,8 +61,9 @@ always_ff @(posedge clk) begin
         {{field_logic.get_parity_identifier(node)}} <= ^{{field_logic.get_field_combo_identifier(node, "next")}};
         {%- endif %}
     end
-
+ end
     {%- if field_logic.has_next_q(node) %}
+always_ff @(posedge clk) begin
     {{field_logic.get_next_q_identifier(node)}} <= {{get_input_identifier(node)}};
-    {%- endif %}
 end
+    {%- endif %}
