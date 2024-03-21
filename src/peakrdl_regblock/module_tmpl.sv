@@ -134,7 +134,8 @@ module {{ds.module_name}} (
 
     always_comb begin
     {%- if ds.has_external_addressable %}
-        automatic logic is_external = '0;
+        automatic logic is_external;
+        is_external = '0;
     {%- endif %}
         {{address_decode.get_implementation()|indent(8)}}
     {%- if ds.has_external_addressable %}
@@ -186,7 +187,8 @@ module {{ds.module_name}} (
         if({{get_resetsignal(cpuif.reset)}}) begin
             parity_error <= '0;
         end else begin
-            automatic logic err = '0;
+            automatic logic err;
+            err = '0;
             {{parity.get_implementation()|indent(12)}}
             parity_error <= err;
         end
