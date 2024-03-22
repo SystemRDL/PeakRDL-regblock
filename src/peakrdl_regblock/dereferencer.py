@@ -222,6 +222,8 @@ class Dereferencer:
 
     @property
     def default_resetsignal_name(self) -> str:
+        if self.ds.rename_default_reset:
+            return self.ds.rename_default_reset
         s = "rst"
         if self.ds.default_reset_async:
             s = f"a{s}"
