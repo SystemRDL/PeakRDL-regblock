@@ -2,13 +2,18 @@ addrmap top {
     reg my_reg {
         field {sw=rw; hw=r;} whatever[32] = 0;
     };
+    reg my_reg_alt {
+        field {sw=r; hw=w;} whatever_a[3:2] = 0;
+        field {sw=w; hw=r;} whatever_b[4:4] = 0;
+        field {sw=rw; hw=r;} whatever_c[15:8] = 0;
+    };
     reg my_wide_reg {
         regwidth = 64;
         accesswidth = 32;
         field {sw=rw; hw=r;} whatever = 0;
     };
 
-    external my_reg ext_reg @ 0x00;
+    external my_reg_alt ext_reg @ 0x00;
     my_reg int_reg @ 0x04;
     external my_wide_reg wide_ext_reg @ 0x10;
     external my_reg ext_reg_array[32] @ 0x100 += 4;

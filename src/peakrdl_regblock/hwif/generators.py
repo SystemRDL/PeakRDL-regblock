@@ -20,8 +20,8 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
 
         self.hwif_report_stack = [hwif_name]
 
-    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None) -> None: # type: ignore
-        super().push_struct(type_name, inst_name, array_dimensions)
+    def push_struct(self, type_name: str, inst_name: str, array_dimensions: Optional[List[int]] = None, packed: bool = False) -> None: # type: ignore
+        super().push_struct(type_name, inst_name, array_dimensions, packed)
 
         if array_dimensions:
             array_suffix = "".join([f"[0:{dim-1}]" for dim in array_dimensions])
@@ -52,14 +52,14 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
     def __init__(self, hwif: 'Hwif') -> None:
         super().__init__(hwif, "hwif_in")
 
-    def get_typdef_name(self, node:'Node') -> str:
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
             hier_separator="__",
             array_suffix="x",
             empty_array_suffix="x"
         )
-        return f'{base}__in_t'
+        return f'{base}{suffix}__in_t'
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         # only emit the signal if design scanner detected it is actually being used
@@ -95,14 +95,47 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         super().enter_Reg(node)
         if node.external:
             width = min(self.hwif.ds.cpuif_data_width, node.get_property('regwidth'))
+            n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
             if node.has_sw_readable:
                 self.add_member("rd_ack")
-                self.add_member("rd_data", width)
+                self.add_external_reg_rd_data(node, width, n_subwords)
             if node.has_sw_writable:
                 self.add_member("wr_ack")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
+
+    def add_external_reg_rd_data(self, node: 'RegNode', width: int, n_subwords: int) -> None:
+        if n_subwords == 1:
+            # External reg is 1 sub-word. Add a packed struct to represent it
+            type_name = self.get_typdef_name(node, "__fields")
+            self.push_struct(type_name, "rd_data", packed=True)
+            current_bit = 0
+            for field in node.fields():
+                if not field.is_sw_readable:
+                    continue
+                if field.low > current_bit:
+                    # Add padding
+                    self.add_member(
+                        f"_reserved_{field.low - 1}_{current_bit}",
+                        field.low - current_bit
+                    )
+                self.add_member(
+                    kwf(field.inst_name),
+                    field.width
+                )
+                current_bit = field.high + 1
+
+            # Add end padding if needed
+            if current_bit != width:
+                self.add_member(
+                    f"_reserved_{width - 1}_{current_bit}",
+                    width - current_bit
+                )
+            self.pop_struct()
+        else:
+            # Multiple sub-words. Cannot generate a struct
+            self.add_member("rd_data", width)
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
@@ -150,14 +183,14 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
     def __init__(self, hwif: 'Hwif') -> None:
         super().__init__(hwif, "hwif_out")
 
-    def get_typdef_name(self, node:'Node') -> str:
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
             hier_separator="__",
             array_suffix="x",
             empty_array_suffix="x"
         )
-        return f'{base}__out_t'
+        return f'{base}{suffix}__out_t'
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("req")
@@ -193,11 +226,43 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             self.add_member("req", n_subwords)
             self.add_member("req_is_wr")
             if node.has_sw_writable:
-                self.add_member("wr_data", width)
-                self.add_member("wr_biten", width)
+                self.add_external_reg_wr_data("wr_data", node, width, n_subwords)
+                self.add_external_reg_wr_data("wr_biten", node, width, n_subwords)
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
+
+    def add_external_reg_wr_data(self, name: str, node: 'RegNode', width: int, n_subwords: int) -> None:
+        if n_subwords == 1:
+            # External reg is 1 sub-word. Add a packed struct to represent it
+            type_name = self.get_typdef_name(node, "__fields")
+            self.push_struct(type_name, name, packed=True)
+            current_bit = 0
+            for field in node.fields():
+                if not field.is_sw_writable:
+                    continue
+                if field.low > current_bit:
+                    # Add padding
+                    self.add_member(
+                        f"_reserved_{field.low - 1}_{current_bit}",
+                        field.low - current_bit
+                    )
+                self.add_member(
+                    kwf(field.inst_name),
+                    field.width
+                )
+                current_bit = field.high + 1
+
+            # Add end padding if needed
+            if current_bit != width:
+                self.add_member(
+                    f"_reserved_{width - 1}_{current_bit}",
+                    width - current_bit
+                )
+            self.pop_struct()
+        else:
+            # Multiple sub-words. Cannot generate a struct
+            self.add_member(name, width)
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
@@ -229,7 +294,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
 #-------------------------------------------------------------------------------
 class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
-    def get_typdef_name(self, node:'Node') -> str:
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         scope_path = node.get_global_type_name("__")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
@@ -242,10 +307,10 @@ class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
         else:
             extra_suffix = ""
 
-        return f'{scope_path}{extra_suffix}__in_t'
+        return f'{scope_path}{extra_suffix}{suffix}__in_t'
 
 class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
-    def get_typdef_name(self, node:'Node') -> str:
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         scope_path = node.get_global_type_name("__")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
@@ -258,7 +323,7 @@ class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
         else:
             extra_suffix = ""
 
-        return f'{scope_path}{extra_suffix}__out_t'
+        return f'{scope_path}{extra_suffix}{suffix}__out_t'
 
 #-------------------------------------------------------------------------------
 class EnumGenerator:
