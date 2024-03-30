@@ -288,11 +288,18 @@ class EnumGenerator:
         prefix = self._get_prefix(user_enum)
 
         lines = []
+        max_value = 1
         for enum_member in user_enum:
             lines.append(f"    {prefix}__{enum_member.name} = {SVInt(enum_member.value)}")
+            max_value = max(max_value, enum_member.value)
+
+        if max_value.bit_length() == 1:
+            datatype = "logic"
+        else:
+            datatype = f"logic [{max_value.bit_length() - 1}:0]"
 
         return (
-            "typedef enum {\n"
+            f"typedef enum {datatype} {{\n"
             + ",\n".join(lines)
             + f"\n}} {prefix}_e;"
         )
