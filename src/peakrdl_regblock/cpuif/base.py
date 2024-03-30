@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 import inspect
 import os
 
@@ -34,6 +34,13 @@ class CpuifBase:
     def port_declaration(self) -> str:
         raise NotImplementedError()
 
+    @property
+    def parameters(self) -> List[str]:
+        """
+        Optional list of additional parameters this CPU interface provides to
+        the module's definition
+        """
+        return []
 
     def _get_template_path_class_dir(self) -> str:
         """
