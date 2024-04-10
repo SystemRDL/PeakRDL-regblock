@@ -9,6 +9,7 @@ from . import sw_singlepulse
 from . import hw_write
 from . import hw_set_clr
 from . import hw_interrupts
+from . import hw_interrupts_with_write
 
 from ..utils import get_indexed_path
 from ..sv_int import SVInt
@@ -444,6 +445,16 @@ class FieldLogic:
 
         self.add_sw_conditional(sw_singlepulse.Singlepulse(self.exp), AssignmentPrecedence.SW_SINGLEPULSE)
 
+        self.add_hw_conditional(hw_interrupts_with_write.PosedgeStickybitWE(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.PosedgeStickybitWEL(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.NegedgeStickybitWE(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.NegedgeStickybitWEL(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.BothedgeStickybitWE(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.BothedgeStickybitWEL(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.StickyWE(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.StickyWEL(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.StickybitWE(self.exp), AssignmentPrecedence.HW_WRITE)
+        self.add_hw_conditional(hw_interrupts_with_write.StickybitWEL(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.PosedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.NegedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
         self.add_hw_conditional(hw_interrupts.BothedgeStickybit(self.exp), AssignmentPrecedence.HW_WRITE)
