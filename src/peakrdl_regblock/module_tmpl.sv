@@ -124,6 +124,7 @@ module {{ds.module_name}}
     //--------------------------------------------------------------------------
     {{address_decode.get_strobe_struct()|indent}}
     decoded_reg_strb_t decoded_reg_strb;
+    logic undecoded_addr_strb;
 {%- if ds.has_external_addressable %}
     logic decoded_strb_is_external;
 {% endif %}
@@ -136,11 +137,14 @@ module {{ds.module_name}}
     logic [{{cpuif.data_width-1}}:0] decoded_wr_biten;
 
     always_comb begin
+        automatic logic is_decoded;
+        is_decoded = '0;
     {%- if ds.has_external_addressable %}
         automatic logic is_external;
         is_external = '0;
     {%- endif %}
         {{address_decode.get_implementation()|indent(8)}}
+        undecoded_addr_strb = ~is_decoded & decoded_req;
     {%- if ds.has_external_addressable %}
         decoded_strb_is_external = is_external;
         external_req = is_external;
@@ -223,7 +227,11 @@ module {{ds.module_name}}
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
 {%- endif %}
     // Writes are always granted with no error response
+    {%- if ds.generate_cpuif_err %}
+    assign cpuif_wr_err = undecoded_addr_strb;
+    {%- else %}
     assign cpuif_wr_err = '0;
+    {%- endif %}
 
     //--------------------------------------------------------------------------
     // Readback
