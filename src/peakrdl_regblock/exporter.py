@@ -230,6 +230,9 @@ class DesignState:
         self.default_reset_activelow = kwargs.pop("default_reset_activelow", False) # type: bool
         self.default_reset_async = kwargs.pop("default_reset_async", False) # type: bool
 
+        # Generating a cpuif error
+        self.generate_cpuif_err = kwargs.pop("generate_cpuif_err", False) # type: bool
+
         #------------------------
         # Info about the design
         #------------------------

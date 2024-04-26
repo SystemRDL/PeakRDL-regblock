@@ -47,7 +47,11 @@ end
 always_comb begin
     automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
     readback_done = readback_done_r;
+    {%- if ds.generate_cpuif_err %}
+    readback_err = readback_done & undecoded_addr_strb;
+    {%- else %}
     readback_err = '0;
+    {%- endif %}
     readback_data_var = '0;
     for(int i=0; i<{{fanin_array_size}}; i++) readback_data_var |= readback_array_r[i];
     readback_data = readback_data_var;
@@ -63,7 +67,11 @@ always_comb begin
     {%- else %}
     readback_done = decoded_req & ~decoded_req_is_wr;
     {%- endif %}
+    {%- if ds.generate_cpuif_err %}
+    readback_err = readback_done & undecoded_addr_strb;
+    {%- else %}
     readback_err = '0;
+    {%- endif %}
     readback_data_var = '0;
     for(int i=0; i<{{array_size}}; i++) readback_data_var |= readback_array[i];
     readback_data = readback_data_var;
@@ -75,5 +83,9 @@ end
 {%- else %}
 assign readback_done = decoded_req & ~decoded_req_is_wr;
 assign readback_data = '0;
+{%- if ds.generate_cpuif_err %}
+assign readback_err = readback_done & undecoded_addr_strb;
+{%- else %}
 assign readback_err = '0;
+{%- endif %}
 {% endif %}
