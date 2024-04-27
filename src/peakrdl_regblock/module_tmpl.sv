@@ -140,11 +140,11 @@ module {{ds.module_name}}
 
     always_comb begin
         automatic logic is_decoded;
-        is_decoded = '0;
     {%- if ds.has_external_addressable %}
         automatic logic is_external;
         is_external = '0;
     {%- endif %}
+        is_decoded = '0;
         {{address_decode.get_implementation()|indent(8)}}
         undecoded_addr_strb = ~is_decoded & decoded_req;
     {%- if ds.has_external_addressable %}
