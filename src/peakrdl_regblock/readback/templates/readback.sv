@@ -29,12 +29,15 @@ end
 
 logic [{{cpuif.data_width-1}}:0] readback_array_r[{{fanin_array_size}}];
 logic readback_done_r;
+logic readback_err_r;
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
     if({{get_resetsignal(cpuif.reset)}}) begin
         for(int i=0; i<{{fanin_array_size}}; i++) readback_array_r[i] <= '0;
         readback_done_r <= '0;
+        readback_err_r <= '0;
     end else begin
         readback_array_r <= readback_array_c;
+        readback_err_r <= undecoded_addr_strb;
         {%- if ds.has_external_addressable %}
         readback_done_r <= decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
         {%- else %}
@@ -48,7 +51,7 @@ always_comb begin
     automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
     readback_done = readback_done_r;
     {%- if ds.generate_cpuif_err %}
-    readback_err = readback_done & undecoded_addr_strb;
+    readback_err = readback_err_r;
     {%- else %}
     readback_err = '0;
     {%- endif %}
@@ -68,7 +71,7 @@ always_comb begin
     readback_done = decoded_req & ~decoded_req_is_wr;
     {%- endif %}
     {%- if ds.generate_cpuif_err %}
-    readback_err = readback_done & undecoded_addr_strb;
+    readback_err = undecoded_addr_strb;
     {%- else %}
     readback_err = '0;
     {%- endif %}
@@ -84,7 +87,7 @@ end
 assign readback_done = decoded_req & ~decoded_req_is_wr;
 assign readback_data = '0;
 {%- if ds.generate_cpuif_err %}
-assign readback_err = readback_done & undecoded_addr_strb;
+assign readback_err = undecoded_addr_strb;
 {%- else %}
 assign readback_err = '0;
 {%- endif %}
