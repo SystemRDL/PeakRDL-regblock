@@ -136,7 +136,10 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
 
     def process_reg(self, node: RegNode) -> None:
         current_bit = 0
-        rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} && !decoded_req_is_wr)"
+        # Create per-register read enable
+        rd_strb = self.exp.dereferencer.get_access_strobe(node)
+        rd_en = f"{rd_strb.split('.')[-1]}_rd_en"
+        self.add_content(f"logic {rd_en} = {rd_strb} && !decoded_req_is_wr;")
         # Fields are sorted by ascending low bit
         for field in node.fields():
             if not field.is_sw_readable:
@@ -151,7 +154,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                 # Field gets bitswapped since it is in [low:high] orientation
                 value = do_bitswap(value)
 
-            self.add_content(f"assign readback_array[{self.current_offset_str}][{field.high}:{field.low}] = {rd_strb} ? {value} : '0;")
+            self.add_content(f"assign readback_array[{self.current_offset_str}][{field.high}:{field.low}] = {rd_en} ? {value} : '0;")
 
             current_bit = field.high + 1
 
