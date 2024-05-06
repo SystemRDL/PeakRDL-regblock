@@ -118,6 +118,9 @@ class RegblockExporter:
             If overriden to True, default reset is active-low instead of active-high.
         default_reset_async: bool
             If overriden to True, default reset is asynchronous instead of synchronous.
+        generate_cpuif_err: bool
+            If overriden to True: If the address is decoded incorrectly, the cpuif response
+            signal shows an error. For example: APB.PSLVERR = 1'b1, AXI4LITE.*RESP = 2'b10.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -226,6 +229,9 @@ class DesignState:
         # Default reset type
         self.default_reset_activelow = kwargs.pop("default_reset_activelow", False) # type: bool
         self.default_reset_async = kwargs.pop("default_reset_async", False) # type: bool
+
+        # Generating a cpuif error
+        self.generate_cpuif_err = kwargs.pop("generate_cpuif_err", False) # type: bool
 
         #------------------------
         # Info about the design

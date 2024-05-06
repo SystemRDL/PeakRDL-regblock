@@ -176,6 +176,8 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)})"
             s = f"{self.addr_decode.get_access_strobe(node)} = {rhs};"
             self.add_content(s)
+            # Add address decoding flag
+            self.add_content(f"is_decoded |= {self.addr_decode.get_access_strobe(node)};")
             if node.external:
                 readable = node.has_sw_readable
                 writable = node.has_sw_writable
@@ -195,6 +197,8 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
                 rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=(i*subword_stride))})"
                 s = f"{self.addr_decode.get_access_strobe(node)}[{i}] = {rhs};"
                 self.add_content(s)
+                # Add address decoding flag
+                self.add_content(f"is_decoded |= {self.addr_decode.get_access_strobe(node)}[{i}];")
                 if node.external:
                     readable = node.has_sw_readable
                     writable = node.has_sw_writable
