@@ -118,6 +118,8 @@ class RegblockExporter:
             If overriden to True, default reset is active-low instead of active-high.
         default_reset_async: bool
             If overriden to True, default reset is asynchronous instead of synchronous.
+        ext_strobe_assert_guard_macro: str
+            Sets the macro name for the assert block in the CPU Bus interface logic.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -242,6 +244,7 @@ class DesignState:
 
         self.has_external_block = False
         self.has_external_addressable = False
+        self.ext_strobe_assert_guard_macro = kwargs.pop("ext_strobe_assert_guard_macro", False)
 
         self.has_paritycheck = False
 

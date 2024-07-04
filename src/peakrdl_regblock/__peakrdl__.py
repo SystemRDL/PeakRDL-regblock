@@ -158,6 +158,14 @@ class Exporter(ExporterSubcommandPlugin):
             is active-high and synchronous [rst]"""
         )
 
+        arg_group.add_argument(
+            "--ext-strobe-assert-guard-macro",
+            default=None,
+            type=str,
+            metavar="NAME",
+            help="""Select the macro name for the assert block in CPU Bus interface logic"""
+        )
+
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         cpuifs = self.get_cpuifs()
@@ -221,4 +229,5 @@ class Exporter(ExporterSubcommandPlugin):
             address_width=options.addr_width,
             default_reset_activelow=default_reset_activelow,
             default_reset_async=default_reset_async,
+            ext_strobe_assert_guard_macro=options.ext_strobe_assert_guard_macro,
         )

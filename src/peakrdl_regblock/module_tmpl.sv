@@ -59,12 +59,28 @@ module {{ds.module_name}}
         end else begin
             if(external_req & ~external_wr_ack & ~external_rd_ack) external_pending <= '1;
             else if(external_wr_ack | external_rd_ack) external_pending <= '0;
+        end
+    end
+
+    {%- if ds.ext_strobe_assert_guard_macro %}
+    `ifdef {{ ds.ext_strobe_assert_guard_macro }}
+    {%- endif %}
+    initial forever begin
+        {%- if ds.default_reset_activelow %}
+        if({{default_resetsignal_name}}) begin
+        {%- else %}
+        if(~{{default_resetsignal_name}}) begin
+        {%- endif %}
             assert(!external_wr_ack || (external_pending | external_req))
                 else $error("An external wr_ack strobe was asserted when no external request was active");
             assert(!external_rd_ack || (external_pending | external_req))
                 else $error("An external rd_ack strobe was asserted when no external request was active");
         end
+        @(posedge clk);
     end
+    {%- if ds.ext_strobe_assert_guard_macro %}
+    `endif
+    {%- endif %}
 {%- endif %}
 {% if ds.min_read_latency == ds.min_write_latency %}
     // Read & write latencies are balanced. Stalls not required
