@@ -118,6 +118,10 @@ class RegblockExporter:
             If overriden to True, default reset is active-low instead of active-high.
         default_reset_async: bool
             If overriden to True, default reset is asynchronous instead of synchronous.
+        ext_strobe_assert_guard_macro: str
+            Sets the macro name for the assert block in the CPU Bus interface logic.
+        rename_default_reset: str
+            Select a new name for the reset signal. This parameter affects which name the reset signal has.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -226,6 +230,7 @@ class DesignState:
         # Default reset type
         self.default_reset_activelow = kwargs.pop("default_reset_activelow", False) # type: bool
         self.default_reset_async = kwargs.pop("default_reset_async", False) # type: bool
+        self.rename_default_reset = kwargs.pop("rename_default_reset", '') # type: str
 
         #------------------------
         # Info about the design
@@ -242,6 +247,7 @@ class DesignState:
 
         self.has_external_block = False
         self.has_external_addressable = False
+        self.ext_strobe_assert_guard_macro = kwargs.pop("ext_strobe_assert_guard_macro", False)
 
         self.has_paritycheck = False
 

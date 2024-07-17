@@ -51,20 +51,44 @@ module {{ds.module_name}}
 {%- if ds.has_external_addressable %}
     logic external_req;
     logic external_pending;
+    logic external_pending_next;
     logic external_wr_ack;
     logic external_rd_ack;
+    always_comb begin
+        external_pending_next = external_pending;
+        if(external_req & ~external_wr_ack & ~external_rd_ack)
+            external_pending_next = '1;
+        else if(external_wr_ack | external_rd_ack)
+            external_pending_next = '0;
+    end
+
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
             external_pending <= '0;
         end else begin
-            if(external_req & ~external_wr_ack & ~external_rd_ack) external_pending <= '1;
-            else if(external_wr_ack | external_rd_ack) external_pending <= '0;
+            external_pending <= external_pending_next;
+        end
+    end
+
+    {%- if ds.ext_strobe_assert_guard_macro %}
+    `ifdef {{ ds.ext_strobe_assert_guard_macro }}
+    {%- endif %}
+    initial forever begin
+        {%- if ds.default_reset_activelow %}
+        if({{default_resetsignal_name}}) begin
+        {%- else %}
+        if(~{{default_resetsignal_name}}) begin
+        {%- endif %}
             assert(!external_wr_ack || (external_pending | external_req))
                 else $error("An external wr_ack strobe was asserted when no external request was active");
             assert(!external_rd_ack || (external_pending | external_req))
                 else $error("An external rd_ack strobe was asserted when no external request was active");
         end
+        @(posedge clk);
     end
+    {%- if ds.ext_strobe_assert_guard_macro %}
+    `endif
+    {%- endif %}
 {%- endif %}
 {% if ds.min_read_latency == ds.min_write_latency %}
     // Read & write latencies are balanced. Stalls not required
@@ -77,15 +101,21 @@ module {{ds.module_name}}
     assign cpuif_req_stall_wr = '0;
     {%- endif %}
 {%- elif ds.min_read_latency > ds.min_write_latency %}
-    // Read latency > write latency. May need to delay next write that follows a read
     logic [{{ds.min_read_latency - ds.min_write_latency - 1}}:0] cpuif_req_stall_sr;
+    logic [{{ds.min_read_latency - ds.min_write_latency - 1}}:0] cpuif_req_stall_sr_next;
+    always_comb begin
+        if(cpuif_req && !cpuif_req_is_wr) begin
+            cpuif_req_stall_sr_next = '1;
+        end else begin
+            cpuif_req_stall_sr_next = (cpuif_req_stall_sr >> 'd1);
+        end
+    end
+    // Read latency > write latency. May need to delay next write that follows a read
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
             cpuif_req_stall_sr <= '0;
-        end else if(cpuif_req && !cpuif_req_is_wr) begin
-            cpuif_req_stall_sr <= '1;
         end else begin
-            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
+            cpuif_req_stall_sr <= cpuif_req_stall_sr_next;
         end
     end
     {%- if ds.has_external_addressable %}
@@ -96,15 +126,21 @@ module {{ds.module_name}}
     assign cpuif_req_stall_wr = cpuif_req_stall_sr[0];
     {%- endif %}
 {%- else %}
+    logic [{{ds.min_write_latency - ds.min_read_latency - 1}}:0] cpuif_req_stall_sr_next;
+    always_comb begin
+        if(cpuif_req && cpuif_req_is_wr) begin
+            cpuif_req_stall_sr_next = '1;
+        end else begin
+            cpuif_req_stall_sr_next = (cpuif_req_stall_sr >> 'd1);
+        end
+    end
     // Write latency > read latency. May need to delay next read that follows a write
     logic [{{ds.min_write_latency - ds.min_read_latency - 1}}:0] cpuif_req_stall_sr;
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
-            cpuif_req_stall_sr <= '0;
-        end else if(cpuif_req && cpuif_req_is_wr) begin
-            cpuif_req_stall_sr <= '1;
+            cpuif_req_stall_sr_next = '0;
         end else begin
-            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
+            cpuif_req_stall_sr <= cpuif_req_stall_sr_next;
         end
     end
     {%- if ds.has_external_addressable %}

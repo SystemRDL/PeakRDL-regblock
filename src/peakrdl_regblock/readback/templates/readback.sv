@@ -1,13 +1,13 @@
 {% if array_assignments is not none %}
 // Assign readback values to a flattened array
-logic [{{cpuif.data_width-1}}:0] readback_array[{{array_size}}];
+logic [{{cpuif.data_width-1}}:0] readback_array[{{array_size-1}}:0];
 {{array_assignments}}
 
 
 {%- if ds.retime_read_fanin %}
 
 // fanin stage
-logic [{{cpuif.data_width-1}}:0] readback_array_c[{{fanin_array_size}}];
+logic [{{cpuif.data_width-1}}:0] readback_array_c[{{fanin_array_size-1}}:0];
 for(genvar g=0; g<{{fanin_loop_iter}}; g++) begin
     always_comb begin
         automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
@@ -27,7 +27,7 @@ always_comb begin
 end
 {%- endif %}
 
-logic [{{cpuif.data_width-1}}:0] readback_array_r[{{fanin_array_size}}];
+logic [{{cpuif.data_width-1}}:0] readback_array_r[{{fanin_array_size-1}}:0];
 logic readback_done_r;
 always_ff {{get_always_ff_event(cpuif.reset)}} begin
     if({{get_resetsignal(cpuif.reset)}}) begin
