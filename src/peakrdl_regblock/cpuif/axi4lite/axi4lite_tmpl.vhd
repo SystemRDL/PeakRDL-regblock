@@ -169,12 +169,6 @@ process(all) begin
 end
 
 {%- else %}
-type axil_resp_buffer_t is record
-    is_wr : std_logic;
-    err : std_logic;
-    rdata : std_logic_vector({{cpuif.data_width-1}} downto 0);
-end record axil_resp_buffer_t;
-type axil_resp_buffer_array_t is array (integer range <>) of axil_resp_buffer_t;
 {%- if not is_pow2(cpuif.resp_buffer_size) %}
 -- axil_resp_buffer is intentionally padded to the next power of two despite
 -- only requiring {{cpuif.resp_buffer_size}} entries.

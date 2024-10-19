@@ -33,12 +33,15 @@ class AXI4Lite_Cpuif(CpuifBase):
             "signal axil_aw_accept : std_logic",
             "signal axil_resp_acked : std_logic",
         ]
-        if self.resp_buffer_size == 1:
+        if self.resp_buffer_size != 1:
             signals.extend([
+                "type axil_resp_buffer_t is record",
+                "    is_wr : std_logic;",
+                "    err : std_logic;",
+                "    rdata : std_logic_vector({{cpuif.data_width-1}} downto 0);",
+                "end record axil_resp_buffer_t;",
+                "type axil_resp_buffer_array_t is array (integer range <>) of axil_resp_buffer_t;",
                 "signal axil_resp_buffer : axil_resp_buffer_array_t({{roundup_pow2(cpuif.resp_buffer_size)-1}} downto 0);",
-            ])
-        else:
-            signals.extend([
                 "signal axil_resp_wptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);",
                 "signal axil_resp_rptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);",
             ])
