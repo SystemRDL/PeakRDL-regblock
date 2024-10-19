@@ -59,6 +59,12 @@ architecture rtl of {{ds.module_name}} is
     signal external_wr_ack : std_logic;
     signal external_rd_ack : std_logic;
     {%- endif %}
+
+    {%- if ds.min_read_latency > ds.min_write_latency %}
+    signal cpuif_req_stall_sr : std_logic_vector({{ds.min_read_latency - ds.min_write_latency - 1}} downto 0);
+    {%- elif ds.min_read_latency < ds.min_write_latency %}
+    signal cpuif_req_stall_sr : std_logic_vector({{ds.min_write_latency - ds.min_read_latency - 1}} downto 0);
+    {%- endif %}
 begin
 
     ----------------------------------------------------------------------------
@@ -67,71 +73,84 @@ begin
     {{cpuif.get_implementation() | indent}}
 
 {%- if ds.has_external_addressable %}
-    always_ff {{get_always_ff_event(cpuif.reset)}} begin
-        if({{get_resetsignal(cpuif.reset)}}) begin
-            external_pending <= '0;
-        end else begin
-            if(external_req & ~external_wr_ack & ~external_rd_ack) external_pending <= '1;
-            else if(external_wr_ack | external_rd_ack) external_pending <= '0;
-            assert(!external_wr_ack || (external_pending | external_req))
-                else $error("An external wr_ack strobe was asserted when no external request was active");
-            assert(!external_rd_ack || (external_pending | external_req))
-                else $error("An external rd_ack strobe was asserted when no external request was active");
-        end
-    end
+    process({{get_always_ff_event(cpuif.reset)}}) begin
+        if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
+            external_pending <= '0';
+        else if rising_edge(clk) then
+            if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
+                external_pending <= '0';
+            else
+                if external_req and not external_wr_ack and not external_rd_ack then
+                    external_pending <= '1';
+                else if external_wr_ack or external_rd_ack then
+                    external_pending <= '0';
+                end if;
+                assert not external_wr_ack or (external_pending or external_req)
+                    report "An external wr_ack strobe was asserted when no external request was active";
+                assert not external_rd_ack or (external_pending or external_req)
+                    report "An external rd_ack strobe was asserted when no external request was active";
+            end if;
+        end if;
+    end process;
 {%- endif %}
 {% if ds.min_read_latency == ds.min_write_latency %}
     -- Read & write latencies are balanced. Stalls not required
     {%- if ds.has_external_addressable %}
     -- except if external
-    assign cpuif_req_stall_rd = external_pending;
-    assign cpuif_req_stall_wr = external_pending;
+    cpuif_req_stall_rd <= external_pending;
+    cpuif_req_stall_wr <= external_pending;
     {%- else %}
-    assign cpuif_req_stall_rd = '0;
-    assign cpuif_req_stall_wr = '0;
+    cpuif_req_stall_rd <= '0';
+    cpuif_req_stall_wr <= '0';
     {%- endif %}
 {%- elif ds.min_read_latency > ds.min_write_latency %}
     -- Read latency > write latency. May need to delay next write that follows a read
-    logic [{{ds.min_read_latency - ds.min_write_latency - 1}}:0] cpuif_req_stall_sr;
-    always_ff {{get_always_ff_event(cpuif.reset)}} begin
-        if({{get_resetsignal(cpuif.reset)}}) begin
-            cpuif_req_stall_sr <= '0;
-        end else if(cpuif_req && !cpuif_req_is_wr) begin
-            cpuif_req_stall_sr <= '1;
-        end else begin
-            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
-        end
-    end
+    process({{get_always_ff_event(cpuif.reset)}}) begin
+        if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
+            cpuif_req_stall_sr <= '0';
+        else if rising_edge(clk) then
+            if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
+                cpuif_req_stall_sr <= '0';
+            else if cpuif_req and not cpuif_req_is_wr then
+                cpuif_req_stall_sr <= '1';
+            else
+                cpuif_req_stall_sr <= "0" & cpuif_req_stall_sr(cpuif_req_stall_sr'high downto 1);
+            end if;
+        end if;
+    end process;
     {%- if ds.has_external_addressable %}
-    assign cpuif_req_stall_rd = external_pending;
-    assign cpuif_req_stall_wr = cpuif_req_stall_sr[0] | external_pending;
+    cpuif_req_stall_rd <= external_pending;
+    cpuif_req_stall_wr <= cpuif_req_stall_sr(0) or external_pending;
     {%- else %}
-    assign cpuif_req_stall_rd = '0;
-    assign cpuif_req_stall_wr = cpuif_req_stall_sr[0];
+    cpuif_req_stall_rd <= '0';
+    cpuif_req_stall_wr <= cpuif_req_stall_sr(0);
     {%- endif %}
 {%- else %}
     -- Write latency > read latency. May need to delay next read that follows a write
-    logic [{{ds.min_write_latency - ds.min_read_latency - 1}}:0] cpuif_req_stall_sr;
-    always_ff {{get_always_ff_event(cpuif.reset)}} begin
-        if({{get_resetsignal(cpuif.reset)}}) begin
-            cpuif_req_stall_sr <= '0;
-        end else if(cpuif_req && cpuif_req_is_wr) begin
-            cpuif_req_stall_sr <= '1;
-        end else begin
-            cpuif_req_stall_sr <= (cpuif_req_stall_sr >> 'd1);
-        end
-    end
+    process({{get_always_ff_event(cpuif.reset)}}) begin
+        if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
+            cpuif_req_stall_sr <= '0';
+        else if rising_edge(clk) then
+            if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
+                cpuif_req_stall_sr <= '0';
+            else if cpuif_req and cpuif_req_is_wr then
+                cpuif_req_stall_sr <= '1';
+            else
+                cpuif_req_stall_sr <= "0" & cpuif_req_stall_sr(cpuif_req_stall_sr'high downto 1);
+            end if;
+        end if;
+    end process;
     {%- if ds.has_external_addressable %}
-    assign cpuif_req_stall_rd = cpuif_req_stall_sr[0] | external_pending;
-    assign cpuif_req_stall_wr = external_pending;
+    cpuif_req_stall_rd <= cpuif_req_stall_sr(0) or external_pending;
+    cpuif_req_stall_wr <= external_pending;
     {%- else %}
-    assign cpuif_req_stall_rd = cpuif_req_stall_sr[0];
-    assign cpuif_req_stall_wr = '0;
+    cpuif_req_stall_rd <= cpuif_req_stall_sr(0);
+    cpuif_req_stall_wr <= '0';
     {%- endif %}
 {%- endif %}
-    assign cpuif_req_masked = cpuif_req
-                            & !(!cpuif_req_is_wr & cpuif_req_stall_rd)
-                            & !(cpuif_req_is_wr & cpuif_req_stall_wr);
+    cpuif_req_masked <= cpuif_req
+                        and not (not cpuif_req_is_wr and cpuif_req_stall_rd)
+                        and not (cpuif_req_is_wr and cpuif_req_stall_wr);
 
     ----------------------------------------------------------------------------
     -- Address Decode
