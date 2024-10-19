@@ -1,7 +1,3 @@
-----------------------------------------------------------------------------
--- AXI4-Lite bus interface
-----------------------------------------------------------------------------
-
 -- Max Outstanding Transactions: {{cpuif.max_outstanding}}
 
 {%- macro axil_req_reset() %}
@@ -17,18 +13,10 @@
 {%- endmacro %}
 -- Transaction request acceptance
 process({{get_always_ff_event(cpuif.reset)}}) begin
-    {%- if async_reset %}
-    if {{get_resetsignal(cpuif.reset)}} then -- async reset
-    {%- else %}
-    if false then -- async reset
-    {%- endif %}
+    if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
         {{- axil_req_reset() }}
     else if rising_edge(clk) then
-        {%- if not async_reset %}
-        if {{get_resetsignal(cpuif.reset)}} then -- sync reset
-        {%- else %}
-        if false then -- sync reset
-        {%- endif %}
+        if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
             {{- axil_req_reset() | indent }}
         else
             -- AR* acceptance register
@@ -134,18 +122,10 @@ end
 -- AXI4-Lite Response Logic
 {%- if cpuif.resp_buffer_size == 1 %}
 process({{get_always_ff_event(cpuif.reset)}}) begin
-    {%- if async_reset %}
-    if {{get_resetsignal(cpuif.reset)}} then -- async reset
-    {%- else %}
-    if false then -- async reset
-    {%- endif %}
+    if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
         {{- axil_resp_reset() }}
     else if rising_edge(clk) then
-        {%- if not async_reset %}
-        if {{get_resetsignal(cpuif.reset)}} then -- sync reset
-        {%- else %}
-        if false then -- sync reset
-        {%- endif %}
+        if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
             {{- axil_resp_reset() | indent }}
         else
             if {{cpuif.signal("rvalid")}} and {{cpuif.signal("rready")}} then
@@ -212,18 +192,10 @@ type axil_resp_buffer_array_t is array (integer range <>) of axil_resp_buffer_t;
         axil_resp_rptr <= 0;
 {%- endmacro %}
 process({{get_always_ff_event(cpuif.reset)}}) begin
-    {%- if async_reset %}
-    if {{get_resetsignal(cpuif.reset)}} then -- async reset
-    {%- else %}
-    if false then -- async reset
-    {%- endif %}
+    if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
         {{- axil_resp_buffer_reset() }}
     else if rising_edge(clk) then
-        {%- if not async_reset %}
-        if {{get_resetsignal(cpuif.reset)}} then -- sync reset
-        {%- else %}
-        if false then -- sync reset
-        {%- endif %}
+        if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
             {{- axil_resp_buffer_reset() | indent }}
         else
             -- Store responses in buffer until AXI response channel accepts them

@@ -230,11 +230,13 @@ class Dereferencer:
         return s
 
 
-    def get_resetsignal(self, obj: Optional[SignalNode] = None) -> str:
+    def get_resetsignal(self, obj: Optional[SignalNode] = None, asynch=True) -> str:
         """
-        Returns a normalized active-high reset signal
+        Returns a normalized active-high reset signal, or 'false' if the sync/async input doesn't match the reset type
         """
         if isinstance(obj, SignalNode):
+            if asynch != obj.get_property('async'):
+                return 'false'
             s = self.get_value(obj)
             if obj.get_property('activehigh'):
                 return str(s)
@@ -242,6 +244,8 @@ class Dereferencer:
                 return f"not {s}"
 
         # No explicit reset signal specified. Fall back to default reset signal
+        if asynch != self.ds.default_reset_async:
+            return 'false'
         s = self.default_resetsignal_name
         if self.ds.default_reset_activelow:
             s = f"not {s}"
