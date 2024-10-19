@@ -1,16 +1,8 @@
+----------------------------------------------------------------------------
+-- AXI4-Lite bus interface
+----------------------------------------------------------------------------
+
 -- Max Outstanding Transactions: {{cpuif.max_outstanding}}
-signal axil_n_in_flight : unsigned({{clog2(cpuif.max_outstanding+1)-1}} downto 0);
-signal axil_prev_was_rd : std_logic;
-signal axil_arvalid : std_logic;
-signal axil_araddr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
-signal axil_ar_accept : std_logic;
-signal axil_awvalid : std_logic;
-signal axil_awaddr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
-signal axil_wvalid : std_logic;
-signal axil_wdata : std_logic_vector({{cpuif.data_width-1}} downto 0);
-signal axil_wstrb : std_logic_vector({{cpuif.data_width_bytes-1}} downto 0);
-signal axil_aw_accept : std_logic;
-signal axil_resp_acked : std_logic;
 
 {%- macro axil_req_reset() %}
         axil_prev_was_rd <= '0';
@@ -37,9 +29,7 @@ process({{get_always_ff_event(cpuif.reset)}}) begin
         {%- else %}
         if false then -- sync reset
         {%- endif %}
-            {%- filter indent(width=4) %}
-            {{- axil_req_reset() }}
-            {%- endfilter %}
+            {{- axil_req_reset() | indent }}
         else
             -- AR* acceptance register
             if axil_ar_accept then
@@ -156,9 +146,7 @@ process({{get_always_ff_event(cpuif.reset)}}) begin
         {%- else %}
         if false then -- sync reset
         {%- endif %}
-            {%- filter indent(width=4) %}
-            {{- axil_resp_reset() }}
-            {%- endfilter %}
+            {{- axil_resp_reset() | indent }}
         else
             if {{cpuif.signal("rvalid")}} and {{cpuif.signal("rready")}} then
                 {{cpuif.signal("rvalid")}} <= '0';
@@ -207,16 +195,12 @@ type axil_resp_buffer_t is record
     rdata : std_logic_vector({{cpuif.data_width-1}} downto 0);
 end record axil_resp_buffer_t;
 type axil_resp_buffer_array_t is array (integer range <>) of axil_resp_buffer_t;
-signal axil_resp_buffer : axil_resp_buffer_array_t({{roundup_pow2(cpuif.resp_buffer_size)-1}} downto 0);
 {%- if not is_pow2(cpuif.resp_buffer_size) %}
 -- axil_resp_buffer is intentionally padded to the next power of two despite
 -- only requiring {{cpuif.resp_buffer_size}} entries.
 -- This is to avoid quirks in some tools that cannot handle indexing into a non-power-of-2 array.
 -- Unused entries are expected to be optimized away
 {% endif %}
-
-signal axil_resp_wptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);
-signal axil_resp_rptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);
 
 {%- macro axil_resp_buffer_reset() %}
         for i in 0 to {{cpuif.resp_buffer_size-1}} loop
@@ -240,9 +224,7 @@ process({{get_always_ff_event(cpuif.reset)}}) begin
         {%- else %}
         if false then -- sync reset
         {%- endif %}
-            {%- filter indent(width=4) %}
-            {{- axil_resp_buffer_reset() }}
-            {%- endfilter %}
+            {{- axil_resp_buffer_reset() | indent }}
         else
             -- Store responses in buffer until AXI response channel accepts them
             if cpuif_rd_ack or cpuif_wr_ack then

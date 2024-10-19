@@ -188,8 +188,8 @@ class RegblockExporter:
         stream = template.stream(context)
         stream.dump(package_file_path)
 
-        module_file_path = os.path.join(output_dir, self.ds.module_name + ".sv")
-        template = self.jj_env.get_template("module_tmpl.sv")
+        module_file_path = os.path.join(output_dir, self.ds.module_name + ".vhd")
+        template = self.jj_env.get_template("module_tmpl.vhd")
         stream = template.stream(context)
         stream.dump(module_file_path)
 

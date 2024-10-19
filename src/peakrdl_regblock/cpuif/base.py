@@ -35,6 +35,10 @@ class CpuifBase:
         raise NotImplementedError()
 
     @property
+    def signal_declaration(self) -> str:
+        raise NotImplementedError()
+
+    @property
     def parameters(self) -> List[str]:
         """
         Optional list of additional parameters this CPU interface provides to
