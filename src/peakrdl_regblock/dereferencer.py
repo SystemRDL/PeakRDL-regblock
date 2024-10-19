@@ -239,26 +239,19 @@ class Dereferencer:
             if obj.get_property('activehigh'):
                 return str(s)
             else:
-                return f"~{s}"
+                return f"not {s}"
 
         # No explicit reset signal specified. Fall back to default reset signal
         s = self.default_resetsignal_name
         if self.ds.default_reset_activelow:
-            s = f"~{s}"
+            s = f"not {s}"
         return s
 
     def get_always_ff_event(self, resetsignal: Optional[SignalNode] = None) -> str:
         if resetsignal is None:
             # No explicit reset signal specified. Fall back to default reset signal
             if self.ds.default_reset_async:
-                if self.ds.default_reset_activelow:
-                    return f"@(posedge clk or negedge {self.default_resetsignal_name})"
-                else:
-                    return f"@(posedge clk or posedge {self.default_resetsignal_name})"
-            else:
-                return "@(posedge clk)"
-        elif resetsignal.get_property('async') and resetsignal.get_property('activehigh'):
-            return f"@(posedge clk or posedge {self.get_value(resetsignal)})"
-        elif resetsignal.get_property('async') and not resetsignal.get_property('activehigh'):
-            return f"@(posedge clk or negedge {self.get_value(resetsignal)})"
-        return "@(posedge clk)"
+                return f"clk, {self.default_resetsignal_name}"
+        elif resetsignal.get_property('async'):
+            return f"clk, {self.get_value(resetsignal)}"
+        return "clk"

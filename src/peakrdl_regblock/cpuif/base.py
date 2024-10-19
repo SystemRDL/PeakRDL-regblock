@@ -64,6 +64,7 @@ class CpuifBase:
 
         context = {
             "cpuif": self,
+            "async_reset": self.reset.get_property('async') if self.reset is not None else self.exp.ds.default_reset_async,
             "get_always_ff_event": self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
             "clog2": clog2,

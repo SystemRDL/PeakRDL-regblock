@@ -1,0 +1,314 @@
+-- Max Outstanding Transactions: {{cpuif.max_outstanding}}
+signal axil_n_in_flight : unsigned({{clog2(cpuif.max_outstanding+1)-1}} downto 0);
+signal axil_prev_was_rd : std_logic;
+signal axil_arvalid : std_logic;
+signal axil_araddr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
+signal axil_ar_accept : std_logic;
+signal axil_awvalid : std_logic;
+signal axil_awaddr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
+signal axil_wvalid : std_logic;
+signal axil_wdata : std_logic_vector({{cpuif.data_width-1}} downto 0);
+signal axil_wstrb : std_logic_vector({{cpuif.data_width_bytes-1}} downto 0);
+signal axil_aw_accept : std_logic;
+signal axil_resp_acked : std_logic;
+
+{%- macro axil_req_reset() %}
+        axil_prev_was_rd <= '0';
+        axil_arvalid <= '0';
+        axil_araddr <= (others => '0');
+        axil_awvalid <= '0';
+        axil_awaddr <= (others => '0');
+        axil_wvalid <= '0';
+        axil_wdata <= (others => '0');
+        axil_wstrb <= (others => '0');
+        axil_n_in_flight <= (others => '0');
+{%- endmacro %}
+-- Transaction request acceptance
+process({{get_always_ff_event(cpuif.reset)}}) begin
+    {%- if async_reset %}
+    if {{get_resetsignal(cpuif.reset)}} then -- async reset
+    {%- else %}
+    if false then -- async reset
+    {%- endif %}
+        {{- axil_req_reset() }}
+    else if rising_edge(clk) then
+        {%- if not async_reset %}
+        if {{get_resetsignal(cpuif.reset)}} then -- sync reset
+        {%- else %}
+        if false then -- sync reset
+        {%- endif %}
+            {%- filter indent(width=4) %}
+            {{- axil_req_reset() }}
+            {%- endfilter %}
+        else
+            -- AR* acceptance register
+            if axil_ar_accept then
+                axil_prev_was_rd <= '1';
+                axil_arvalid <= '0';
+            end if;
+            if {{cpuif.signal("arvalid")}} and {{cpuif.signal("arready")}} then
+                axil_arvalid <= '1';
+                axil_araddr <= {{cpuif.signal("araddr")}};
+            end if;
+
+            -- AW* & W* acceptance registers
+            if axil_aw_accept  then
+                axil_prev_was_rd <= '0';
+                axil_awvalid <= '0';
+                axil_wvalid <= '0';
+            end if;
+            if {{cpuif.signal("awvalid")}} and {{cpuif.signal("awready")}} then
+                axil_awvalid <= '1';
+                axil_awaddr <= {{cpuif.signal("awaddr")}};
+            end if;
+            if {{cpuif.signal("wvalid")}} and {{cpuif.signal("wready")}} then
+                axil_wvalid <= '1';
+                axil_wdata <= {{cpuif.signal("wdata")}};
+                axil_wstrb <= {{cpuif.signal("wstrb")}};
+            end if;
+
+            -- Keep track of in-flight transactions
+            if (axil_ar_accept or axil_aw_accept) and not axil_resp_acked then
+                axil_n_in_flight <= axil_n_in_flight + 1;
+            else if not (axil_ar_accept or axil_aw_accept) and axil_resp_acked then
+                axil_n_in_flight <= axil_n_in_flight - 1;
+            end if;
+        end if;
+    end if;
+end process;
+
+process(all) begin
+    {{cpuif.signal("arready")}} <= not axil_arvalid or axil_ar_accept;
+    {{cpuif.signal("awready")}} <= not axil_awvalid or axil_aw_accept;
+    {{cpuif.signal("wready")}} <= not axil_wvalid or axil_aw_accept;
+end process;
+
+-- Request dispatch
+process(all) begin
+    cpuif_wr_data <= axil_wdata;
+    for i in 0 to {{cpuif.data_width_bytes-1}} loop
+        cpuif_wr_biten(i*8 + 7 downto i*8 + 7) <= (7 downto 0 => axil_wstrb[i]);
+    end loop;
+    cpuif_req <= '0';
+    cpuif_req_is_wr <= '0';
+    cpuif_addr <= (others => '0');
+    axil_ar_accept <= '0';
+    axil_aw_accept <= '0';
+
+    if axil_n_in_flight < to_unsigned({{cpuif.max_outstanding}}, {{clog2(cpuif.max_outstanding+1)}}) begin
+        -- Can safely issue more transactions without overwhelming response buffer
+        if axil_arvalid and not axil_prev_was_rd then
+            cpuif_req <= '1';
+            cpuif_req_is_wr <= '0';
+            {%- if cpuif.data_width_bytes == 1 %}
+            cpuif_addr <= axil_araddr;
+            {%- else %}
+            cpuif_addr <= ({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}} => axil_araddr({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}}), others => '0')
+            {%- endif %}
+            if not cpuif_reg_stall_rd then
+                axil_ar_accept <= '1';
+            end if;
+        else if axil_awvalid and axil_wvalid then
+            cpuif_req <= '1';
+            cpuif_req_is_wr <= '1';
+            {%- if cpuif.data_width_bytes == 1 %}
+            cpuif_addr <= axil_awaddr;
+            {%- else %}
+            cpuif_addr <= ({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}} => axil_awaddr({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}}), others => '0')
+            {%- endif %}
+            if not cpuif_reg_stall_wr then
+                axil_aw_accept <= '1';
+            end if;
+        else if axil_arvalid then
+            cpuif_req <= '1';
+            cpuif_req_is_wr <= '0';
+            {%- if cpuif.data_width_bytes == 1 %}
+            cpuif_addr <= axil_araddr;
+            {%- else %}
+            cpuif_addr <= ({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}} => axil_araddr({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}}), others => '0')
+            {%- endif %}
+            if not cpuif_reg_stall_rd then
+                axil_ar_accept <= '1';
+            end if;
+        end
+    end
+end
+
+{%- macro axil_resp_reset() %}
+        {{cpuif.signal("rvalid")}} <= '0';
+        {{cpuif.signal("rresp")}} <= (others => '0');
+        {{cpuif.signal("rdata")}} <= (others => '0');
+        {{cpuif.signal("bvalid")}} <= '0';
+        {{cpuif.signal("bresp")}} <= (others => '0');
+{%- endmacro %}
+-- AXI4-Lite Response Logic
+{%- if cpuif.resp_buffer_size == 1 %}
+process({{get_always_ff_event(cpuif.reset)}}) begin
+    {%- if async_reset %}
+    if {{get_resetsignal(cpuif.reset)}} then -- async reset
+    {%- else %}
+    if false then -- async reset
+    {%- endif %}
+        {{- axil_resp_reset() }}
+    else if rising_edge(clk) then
+        {%- if not async_reset %}
+        if {{get_resetsignal(cpuif.reset)}} then -- sync reset
+        {%- else %}
+        if false then -- sync reset
+        {%- endif %}
+            {%- filter indent(width=4) %}
+            {{- axil_resp_reset() }}
+            {%- endfilter %}
+        else
+            if {{cpuif.signal("rvalid")}} and {{cpuif.signal("rready")}} then
+                {{cpuif.signal("rvalid")}} <= '0';
+            end
+
+            if {{cpuif.signal("bvalid")}} and {{cpuif.signal("bready")}} then
+                {{cpuif.signal("bvalid")}} <= '0';
+            end
+
+            if cpuif_rd_ack then
+                {{cpuif.signal("rvalid")}} <= '1';
+                {{cpuif.signal("rdata")}} <= cpuif_rd_data;
+                if cpuif_rd_err then
+                    {{cpuif.signal("rresp")}} <= "10"; -- SLVERR
+                else
+                    {{cpuif.signal("rresp")}} <= "00"; -- OKAY
+                end if;
+            end
+
+            if cpuif_wr_ack then
+                {{cpuif.signal("bvalid")}} <= '1';
+                if cpuif_wr_err then
+                    {{cpuif.signal("bresp")}} <= "10"; -- SLVERR
+                else
+                    {{cpuif.signal("bresp")}} <= "00"; -- OKAY
+                end if;
+            end if;
+        end if;
+    end if;
+end process;
+
+process(all) begin
+    axil_resp_acked <= '0';
+    if {{cpuif.signal("rvalid")}} and {{cpuif.signal("rready")}} then
+        axil_resp_acked <= '1';
+    end if;
+    if {{cpuif.signal("bvalid")}} and {{cpuif.signal("bready")}} then
+        axil_resp_acked <= '1';
+    end if;
+end
+
+{%- else %}
+type axil_resp_buffer_t is record
+    is_wr : std_logic;
+    err : std_logic;
+    rdata : std_logic_vector({{cpuif.data_width-1}} downto 0);
+end record axil_resp_buffer_t;
+type axil_resp_buffer_array_t is array (integer range <>) of axil_resp_buffer_t;
+signal axil_resp_buffer : axil_resp_buffer_array_t({{roundup_pow2(cpuif.resp_buffer_size)-1}} downto 0);
+{%- if not is_pow2(cpuif.resp_buffer_size) %}
+-- axil_resp_buffer is intentionally padded to the next power of two despite
+-- only requiring {{cpuif.resp_buffer_size}} entries.
+-- This is to avoid quirks in some tools that cannot handle indexing into a non-power-of-2 array.
+-- Unused entries are expected to be optimized away
+{% endif %}
+
+signal axil_resp_wptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);
+signal axil_resp_rptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);
+
+{%- macro axil_resp_buffer_reset() %}
+        for i in 0 to {{cpuif.resp_buffer_size-1}} loop
+            axil_resp_buffer(i).is_wr <= '0';
+            axil_resp_buffer(i).err <= '0';
+            axil_resp_buffer(i).rdata <= (others => '0');
+        end loop;
+        axil_resp_wptr <= 0;
+        axil_resp_rptr <= 0;
+{%- endmacro %}
+process({{get_always_ff_event(cpuif.reset)}}) begin
+    {%- if async_reset %}
+    if {{get_resetsignal(cpuif.reset)}} then -- async reset
+    {%- else %}
+    if false then -- async reset
+    {%- endif %}
+        {{- axil_resp_buffer_reset() }}
+    else if rising_edge(clk) then
+        {%- if not async_reset %}
+        if {{get_resetsignal(cpuif.reset)}} then -- sync reset
+        {%- else %}
+        if false then -- sync reset
+        {%- endif %}
+            {%- filter indent(width=4) %}
+            {{- axil_resp_buffer_reset() }}
+            {%- endfilter %}
+        else
+            -- Store responses in buffer until AXI response channel accepts them
+            if cpuif_rd_ack or cpuif_wr_ack then
+                if cpuif_rd_ack then
+                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr <= (others => '0');
+                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err <= cpuif_rd_err;
+                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).rdata <= cpuif_rd_data;
+
+                else if cpuif_wr_ack then
+                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr <= '1';
+                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err <= cpuif_wr_err;
+                end if;
+                {%- if is_pow2(cpuif.resp_buffer_size) %}
+                axil_resp_wptr <= axil_resp_wptr + 1;
+                {%- else %}
+                if axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) = {{cpuif.resp_buffer_size-1}} then
+                    axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) <= (others => '0');
+                    axil_resp_wptr({{clog2(cpuif.resp_buffer_size)}}) <= not axil_resp_wptr({{clog2(cpuif.resp_buffer_size)}});
+                else
+                    axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) <= axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) + 1;
+                end if;
+                {%- endif %}
+            end if;
+
+            -- Advance read pointer when acknowledged
+            if axil_resp_acked then
+                {%- if is_pow2(cpuif.resp_buffer_size) %}
+                axil_resp_rptr <= axil_resp_rptr + 1;
+                {%- else %}
+                if axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) = {{cpuif.resp_buffer_size-1}} then
+                    axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) <= (others => '0');
+                    axil_resp_rptr({{clog2(cpuif.resp_buffer_size)}}) <= not axil_resp_rptr({{clog2(cpuif.resp_buffer_size)}});
+                else
+                    axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) <= axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0) + 1;
+                end if;
+                {%- endif %}
+            end if;
+        end if;
+    end if;
+end process;
+
+process(all) begin
+    axil_resp_acked <= '0;
+    {{cpuif.signal("bvalid")}} <= '0';
+    {{cpuif.signal("rvalid")}} <= '0';
+    if axil_resp_rptr /= axil_resp_wptr then
+        if axil_resp_buffer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr then
+            {{cpuif.signal("bvalid")}} <= '1';
+            if {{cpuif.signal("bready")}} then
+                axil_resp_acked <= '1';
+            end if;
+        else
+            {{cpuif.signal("rvalid")}} <= '1';
+            if {{cpuif.signal("rready")}} then
+                axil_resp_acked <= '1';
+            end if;
+        end if;
+    end if;
+
+    {{cpuif.signal("rdata")}} <= axil_resp_buffer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).rdata;
+    if axil_resp_buffer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err then
+        {{cpuif.signal("bresp")}} <= "10";
+        {{cpuif.signal("rresp")}} <= "10";
+    else
+        {{cpuif.signal("bresp")}} <= "00";
+        {{cpuif.signal("rresp")}} <= "00";
+    end if;
+end process;
+{%- endif %}

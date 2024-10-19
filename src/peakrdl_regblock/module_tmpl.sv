@@ -30,24 +30,24 @@ module {{ds.module_name}}
     //--------------------------------------------------------------------------
     // CPU Bus interface logic
     //--------------------------------------------------------------------------
-    logic cpuif_req;
-    logic cpuif_req_is_wr;
-    logic [{{cpuif.addr_width-1}}:0] cpuif_addr;
-    logic [{{cpuif.data_width-1}}:0] cpuif_wr_data;
-    logic [{{cpuif.data_width-1}}:0] cpuif_wr_biten;
-    logic cpuif_req_stall_wr;
-    logic cpuif_req_stall_rd;
+    cpuif_req : std_logic;
+    cpuif_req_is_wr : std_logic;
+    cpuif_addr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
+    cpuif_wr_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    cpuif_wr_biten : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    cpuif_req_stall_wr : std_logic;
+    cpuif_req_stall_rd : std_logic;
 
-    logic cpuif_rd_ack;
-    logic cpuif_rd_err;
-    logic [{{cpuif.data_width-1}}:0] cpuif_rd_data;
+    cpuif_rd_ack : std_logic;
+    cpuif_rd_err : std_logic;
+    cpuif_rd_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
 
-    logic cpuif_wr_ack;
-    logic cpuif_wr_err;
+    cpuif_wr_ack : std_logic;
+    cpuif_wr_err : std_logic;
 
     {{cpuif.get_implementation()|indent}}
 
-    logic cpuif_req_masked;
+    cpuif_req_masked : std_logic;
 {%- if ds.has_external_addressable %}
     logic external_req;
     logic external_pending;

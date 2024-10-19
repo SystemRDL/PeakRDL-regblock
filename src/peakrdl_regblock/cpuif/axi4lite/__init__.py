@@ -1,14 +1,34 @@
 from ..base import CpuifBase
 
 class AXI4Lite_Cpuif(CpuifBase):
-    template_path = "axi4lite_tmpl.sv"
+    template_path = "axi4lite_tmpl.vhd"
 
     @property
     def port_declaration(self) -> str:
-        return "axi4lite_intf.slave s_axil"
+        return "\n".join([
+            "s_axil_i : in axi4lite_slave_in_intf(",
+           f"    AWADDR({self.addr_width-1} downto 0),",
+           f"    WDATA({self.data_width-1} downto 0),",
+           f"    WSTRB({self.data_width_bytes-1} downto 0),",
+           f"    ARADDR({self.addr_width-1} downto 0)",
+            ");",
+            "s_axil_o : out axi4lite_slave_out_intf(",
+           f"    RDATA({self.data_width-1} downto 0)",
+            ");",
+        ])
 
     def signal(self, name:str) -> str:
-        return "s_axil." + name.upper()
+        name = name.upper()
+        if name.startswith(("B", "R")):
+            if name.endswith("READY"):
+                return "s_axil_i." + name
+            else:
+                return "s_axil_o." + name
+        else:
+            if name.endswith("READY"):
+                return "s_axil_o." + name
+            else:
+                return "s_axil_i." + name
 
     @property
     def regblock_latency(self) -> int:
@@ -37,31 +57,31 @@ class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
     @property
     def port_declaration(self) -> str:
         lines = [
-            "output logic " + self.signal("awready"),
-            "input wire " + self.signal("awvalid"),
-            f"input wire [{self.addr_width-1}:0] " + self.signal("awaddr"),
-            "input wire [2:0] " + self.signal("awprot"),
+            "s_axil_awready : out std_logic;",
+            "s_axil_awvalid : in std_logic;",
+           f"s_axil_awaddr : in std_logic_vector({self.addr_width-1} downto 0);",
+            "s_axil_awprot : in std_logic_vector(2 downto 0);",
 
-            "output logic " + self.signal("wready"),
-            "input wire " + self.signal("wvalid"),
-            f"input wire [{self.data_width-1}:0] " + self.signal("wdata"),
-            f"input wire [{self.data_width_bytes-1}:0]" + self.signal("wstrb"),
+            "s_axil_wready : out std_logic;",
+            "s_axil_wvalid : in std_logic;",
+           f"s_axil_wdata : in std_logic_vector({self.data_width-1} downto 0);",
+           f"s_axil_wstrb : in std_logic_vector({self.data_width_bytes-1} downto 0);",
 
-            "input wire " + self.signal("bready"),
-            "output logic " + self.signal("bvalid"),
-            "output logic [1:0] " + self.signal("bresp"),
+            "s_axil_bready : in std_logic;",
+            "s_axil_bvalid : out std_logic;",
+            "s_axil_bresp : out std_logic_vector(1 downto 0);",
 
-            "output logic " + self.signal("arready"),
-            "input wire " + self.signal("arvalid"),
-            f"input wire [{self.addr_width-1}:0] " + self.signal("araddr"),
-            "input wire [2:0] " + self.signal("arprot"),
+            "s_axil_arready : out std_logic;",
+            "s_axil_arvalid : in std_logic;",
+           f"s_axil_araddr : in std_logic_vector({self.addr_width-1} downto 0);",
+            "s_axil_arprot : in std_logic_vector(2 downto 0);",
 
-            "input wire " + self.signal("rready"),
-            "output logic " + self.signal("rvalid"),
-            f"output logic [{self.data_width-1}:0] " + self.signal("rdata"),
-            "output logic [1:0] " + self.signal("rresp"),
+            "s_axil_rready : in std_logic;",
+            "s_axil_rvalid : out std_logic;",
+           f"s_axil_rdata : out std_logic_vector({self.data_width-1} downto 0);",
+            "s_axil_rresp : out std_logic_vector(1 downto 0);",
         ]
-        return ",\n".join(lines)
+        return "\n".join(lines)
 
     def signal(self, name:str) -> str:
         return "s_axil_" + name
