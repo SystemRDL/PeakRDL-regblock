@@ -98,12 +98,12 @@ class Hwif:
         lines = []
         if self.has_input_struct:
             type_name = f"{self.top_node.inst_name}__in_t"
-            lines.append(f"input {self.ds.package_name}::{type_name} hwif_in")
+            lines.append(f"hwif_in : in {type_name};")
         if self.has_output_struct:
             type_name = f"{self.top_node.inst_name}__out_t"
-            lines.append(f"output {self.ds.package_name}::{type_name} hwif_out")
+            lines.append(f"hwif_out : out {type_name}")
 
-        return ",\n".join(lines)
+        return "\n".join(lines)
 
     #---------------------------------------------------------------------------
     # hwif utility functions
@@ -151,7 +151,7 @@ class Hwif:
                 return self.exp.dereferencer.get_value(next_value, width)
             # Otherwise, use inferred
             path = get_indexed_path(self.top_node, obj)
-            return "hwif_in." + path + ".next"
+            return "hwif_in." + path + ".next_q"
         elif isinstance(obj, SignalNode):
             if obj.get_path() in self.ds.out_of_hier_signals:
                 return kwf(obj.inst_name)

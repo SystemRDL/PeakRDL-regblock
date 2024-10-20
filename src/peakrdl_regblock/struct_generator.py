@@ -29,15 +29,19 @@ class _AnonymousStruct(_StructBase):
 
     def __str__(self) -> str:
         if self.array_dimensions:
-            suffix = "[" + "][".join((str(n) for n in self.array_dimensions)) + "]"
-        else:
-            suffix = ""
-
-        return (
-            "struct {\n"
+            suffix = "(" + ")(".join(("natural range <>" for _ in self.array_dimensions)) + ")"
+            return (
+            f"{self.inst_name} is record\n"
             + super().__str__()
-            + f"\n}} {self.inst_name}{suffix};"
-        )
+            + f"\nend record;\n"
+            + f"{self.inst_name}_array is array{suffix} of {self.inst_name};"
+            )
+        else:
+            return (
+            f"{self.inst_name} is record\n"
+            + super().__str__()
+            + f"\nend record;\n"
+            )
 
 
 class _TypedefStruct(_StructBase):
@@ -49,27 +53,30 @@ class _TypedefStruct(_StructBase):
         self.packed = packed
 
     def __str__(self) -> str:
-        if self.packed:
+        if self.array_dimensions:
+            suffix = "(" + ")(".join(("natural range <>" for _ in self.array_dimensions)) + ")"
             return (
-                "typedef struct packed {\n"
+                f"type {self.type_name} is record\n"
                 + super().__str__()
-                + f"\n}} {self.type_name};"
+                + f"\nend record;\n"
+                + f"type {self.type_name}_array is array{suffix} of {self.type_name};"
             )
         else:
             return (
-                "typedef struct {\n"
+                f"type {self.type_name} is record\n"
                 + super().__str__()
-                + f"\n}} {self.type_name};"
+                + f"\nend record;"
             )
 
     @property
     def instantiation(self) -> str:
         if self.array_dimensions:
-            suffix = "[" + "][".join((str(n) for n in self.array_dimensions)) + "]"
+            suffix = "_array(" + ")(".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
+
         else:
             suffix = ""
 
-        return f"{self.type_name} {self.inst_name}{suffix};"
+        return f"{self.inst_name} : {self.type_name}{suffix};"
 
 #-------------------------------------------------------------------------------
 
@@ -90,14 +97,19 @@ class StructGenerator:
 
     def add_member(self, name: str, width: int = 1, array_dimensions: Optional[List[int]] = None) -> None:
         if array_dimensions:
-            suffix = "[" + "][".join((str(n) for n in array_dimensions)) + "]"
+            suffix = "_array(" + ")(".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
+
         else:
             suffix = ""
 
-        if width == 1:
-            m = f"logic {name}{suffix};"
+        if width == 1 and not suffix:
+            m = f"{name} : std_logic;"
+        elif width == 1 and len(self.array_dimensions) > 1: # Requires a type to be declared (not implemented)
+            m = f"{name} : std_logic{suffix};" #TODO create type
+        elif width == 1 and len(self.array_dimensions) == 1: # Convert to a std_logic_vector
+            m = f"{name} : std_logic_vector({self.array_dimensions[0] - 1} downto 0);"
         else:
-            m = f"logic [{width-1}:0] {name}{suffix};"
+            m = f"{name} : std_logic_vector{suffix}({width - 1} downto 0);" #TODO create type
         self.current_struct.children.append(m)
 
 
