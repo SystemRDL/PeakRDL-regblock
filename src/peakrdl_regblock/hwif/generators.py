@@ -24,7 +24,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().push_struct(type_name, inst_name, array_dimensions, packed)
 
         if array_dimensions:
-            array_suffix = "".join([f"[0:{dim-1}]" for dim in array_dimensions])
+            array_suffix = "".join([f"({dim-1} downto 0)" for dim in array_dimensions])
             segment = inst_name + array_suffix
         else:
             segment = inst_name
@@ -38,7 +38,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().add_member(name, width)
 
         if width > 1:
-            suffix = f"[{width-1}:0]"
+            suffix = f"({width-1} downto 0)"
         else:
             suffix = ""
 
@@ -144,7 +144,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         # Provide input to field's next value if it is writable by hw, and it
         # was not overridden by the 'next' property
         if node.is_hw_writable and node.get_property('next') is None:
-            self.add_member("next", node.width)
+            self.add_member("next_q", node.width)
 
         # Generate implied inputs
         for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:
@@ -355,16 +355,14 @@ class EnumGenerator:
         lines = []
         max_value = 1
         for enum_member in user_enum:
-            lines.append(f"    {prefix}__{enum_member.name} = {SVInt(enum_member.value)}")
             max_value = max(max_value, enum_member.value)
 
         if max_value.bit_length() == 1:
-            datatype = "logic"
+            datatype = "std_logic := '{0}'"
         else:
-            datatype = f"logic [{max_value.bit_length() - 1}:0]"
+            datatype = f'std_logic_vector({max_value.bit_length() - 1} downto 0) := {max_value.bit_length()}x"{{0}}"'
 
-        return (
-            f"typedef enum {datatype} {{\n"
-            + ",\n".join(lines)
-            + f"\n}} {prefix}_e;"
-        )
+        for enum_member in user_enum:
+            lines.append(f"constant {prefix}__{enum_member.name} : {datatype.format(enum_member.value,'x')};")
+
+        return "\n".join(lines)
