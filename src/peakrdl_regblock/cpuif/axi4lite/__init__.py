@@ -1,4 +1,5 @@
 from ..base import CpuifBase
+from ...utils import clog2, roundup_pow2
 
 class AXI4Lite_Cpuif(CpuifBase):
     template_path = "axi4lite_tmpl.vhd"
@@ -20,30 +21,30 @@ class AXI4Lite_Cpuif(CpuifBase):
     @property
     def signal_declaration(self) -> str:
         signals = [
-            "signal axil_n_in_flight : unsigned({{clog2(cpuif.max_outstanding+1)-1}} downto 0)",
-            "signal axil_prev_was_rd : std_logic",
-            "signal axil_arvalid : std_logic",
-            "signal axil_araddr : std_logic_vector({{cpuif.addr_width-1}} downto 0)",
-            "signal axil_ar_accept : std_logic",
-            "signal axil_awvalid : std_logic",
-            "signal axil_awaddr : std_logic_vector({{cpuif.addr_width-1}} downto 0)",
-            "signal axil_wvalid : std_logic",
-            "signal axil_wdata : std_logic_vector({{cpuif.data_width-1}} downto 0)",
-            "signal axil_wstrb : std_logic_vector({{cpuif.data_width_bytes-1}} downto 0)",
-            "signal axil_aw_accept : std_logic",
-            "signal axil_resp_acked : std_logic",
+           f"signal axil_n_in_flight : unsigned({clog2(self.max_outstanding+1)-1} downto 0);",
+            "signal axil_prev_was_rd : std_logic;",
+            "signal axil_arvalid : std_logic;",
+           f"signal axil_araddr : std_logic_vector({self.addr_width-1} downto 0);",
+            "signal axil_ar_accept : std_logic;",
+            "signal axil_awvalid : std_logic;",
+           f"signal axil_awaddr : std_logic_vector({self.addr_width-1} downto 0);",
+            "signal axil_wvalid : std_logic;",
+           f"signal axil_wdata : std_logic_vector({self.data_width-1} downto 0);",
+           f"signal axil_wstrb : std_logic_vector({self.data_width_bytes-1} downto 0);",
+            "signal axil_aw_accept : std_logic;",
+            "signal axil_resp_acked : std_logic;",
         ]
         if self.resp_buffer_size != 1:
             signals.extend([
                 "type axil_resp_buffer_t is record",
                 "    is_wr : std_logic;",
                 "    err : std_logic;",
-                "    rdata : std_logic_vector({{cpuif.data_width-1}} downto 0);",
+               f"    rdata : std_logic_vector({self.data_width-1} downto 0);",
                 "end record axil_resp_buffer_t;",
                 "type axil_resp_buffer_array_t is array (integer range <>) of axil_resp_buffer_t;",
-                "signal axil_resp_buffer : axil_resp_buffer_array_t({{roundup_pow2(cpuif.resp_buffer_size)-1}} downto 0);",
-                "signal axil_resp_wptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);",
-                "signal axil_resp_rptr : unsigned({{clog2(cpuif.resp_buffer_size)}} downto 0);",
+               f"signal axil_resp_buffer : axil_resp_buffer_array_t({roundup_pow2(self.resp_buffer_size)-1} downto 0);",
+               f"signal axil_resp_wptr : unsigned({clog2(self.resp_buffer_size)} downto 0);",
+               f"signal axil_resp_rptr : unsigned({clog2(self.resp_buffer_size)} downto 0);",
             ])
         return "\n".join(signals)
 
