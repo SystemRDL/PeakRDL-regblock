@@ -4,14 +4,14 @@ from systemrdl.node import FieldNode, RegNode
 from systemrdl.walker import WalkerAction
 
 from .utils import get_indexed_path
-from .struct_generator import RDLStructGenerator
+from .struct_generator import RDLFlatStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
 from .sv_int import SVInt
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
-    from systemrdl.node import AddrmapNode, AddressableNode
+    from systemrdl.node import Node, AddrmapNode, AddressableNode
     from systemrdl.node import RegfileNode, MemNode
 
 class AddressDecode:
@@ -23,7 +23,7 @@ class AddressDecode:
         return self.exp.ds.top_node
 
     def get_strobe_struct(self) -> str:
-        struct_gen = DecodeStructGenerator()
+        struct_gen = DecodeStructGenerator(self)
         s = struct_gen.get_struct(self.top_node, "decoded_reg_strb_t")
         assert s is not None # guaranteed to have at least one reg
         return s
@@ -70,7 +70,20 @@ class AddressDecode:
         return "decoded_reg_strb." + path
 
 
-class DecodeStructGenerator(RDLStructGenerator):
+class DecodeStructGenerator(RDLFlatStructGenerator):
+
+    def __init__(self, address_decode: 'AddressDecode') -> None:
+        super().__init__()
+        self.top_node = address_decode.top_node
+
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
+        base = node.get_rel_path(
+            self.top_node.parent,
+            hier_separator="__",
+            array_suffix="",
+            empty_array_suffix=""
+        )
+        return f'{base}{suffix}__strb_t'
 
     def _enter_external_block(self, node: 'AddressableNode') -> None:
         self.add_member(
