@@ -98,6 +98,7 @@ architecture rtl of {{ds.module_name}} is
     signal readback_err : std_logic;
     signal readback_done : std_logic;
     signal readback_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    {{ readback.signal_declaration | indent }}
 begin
 
     ----------------------------------------------------------------------------
@@ -328,7 +329,7 @@ begin
         external_rd_ack <= '0';
         {%- endif %}
 {%- endmacro %}
-{{readback_implementation|indent}}
+{{readback.get_implementation()|indent}}
 {% if ds.retime_read_response %}
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset

@@ -16,23 +16,23 @@ class Body:
         return s
 
 class LoopBody(Body):
-    def __init__(self, dim: int, iterator: str, i_type: str) -> None:
+    def __init__(self, dim: int, iterator: str, loop_type: str) -> None:
         super().__init__()
         self.dim = dim
         self.iterator = iterator
-        self.i_type = i_type
+        self.loop_type = loop_type
 
     def __str__(self) -> str:
         s = super().__str__()
         return (
-            f"for({self.i_type} {self.iterator}=0; {self.iterator}<{self.dim}; {self.iterator}++) begin\n"
+            f"for {self.iterator} in 0 to {self.dim-1} {self.loop_type}\n"
             + textwrap.indent(s, "    ")
-            + "\nend"
+            + f"\nend {self.loop_type};"
         )
 
 
 class ForLoopGenerator:
-    i_type = "int"
+    loop_type = "loop"
     loop_body_cls = LoopBody
 
     def __init__(self) -> None:
@@ -45,7 +45,7 @@ class ForLoopGenerator:
 
     def push_loop(self, dim: int) -> None:
         i = f"i{self._loop_level}"
-        b = self.loop_body_cls(dim, i, self.i_type)
+        b = self.loop_body_cls(dim, i, self.loop_type)
         self._stack.append(b)
         self._loop_level += 1
 
