@@ -30,5 +30,5 @@ class ParityErrorReduceGenerator(RDLForLoopGenerator):
     def enter_Field(self, node: 'FieldNode') -> None:
         if node.get_property('paritycheck') and node.implements_storage:
             self.add_content(
-                f"err |= {self.exp.field_logic.get_parity_error_identifier(node)};"
+                f"err := err or {self.exp.field_logic.get_parity_error_identifier(node)};"
             )
