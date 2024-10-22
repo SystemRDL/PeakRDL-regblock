@@ -4,14 +4,14 @@ from systemrdl.node import FieldNode, RegNode
 from systemrdl.walker import WalkerAction
 
 from .utils import get_indexed_path
-from .struct_generator import RDLStructGenerator
+from .struct_generator import RDLFlatStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
-from .sv_int import SVInt
+from .sv_int import VhdlInt
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
-    from systemrdl.node import AddrmapNode, AddressableNode
+    from systemrdl.node import Node, AddrmapNode, AddressableNode
     from systemrdl.node import RegfileNode, MemNode
 
 class AddressDecode:
@@ -23,7 +23,7 @@ class AddressDecode:
         return self.exp.ds.top_node
 
     def get_strobe_struct(self) -> str:
-        struct_gen = DecodeStructGenerator()
+        struct_gen = DecodeStructGenerator(self)
         s = struct_gen.get_struct(self.top_node, "decoded_reg_strb_t")
         assert s is not None # guaranteed to have at least one reg
         return s
@@ -36,7 +36,7 @@ class AddressDecode:
 
     def get_access_strobe(self, node: Union[RegNode, FieldNode], reduce_substrobes: bool=True) -> str:
         """
-        Returns the Verilog string that represents the register/field's access strobe.
+        Returns the VHDL string that represents the register/field's access strobe.
         """
         if isinstance(node, FieldNode):
             field = node
@@ -50,13 +50,13 @@ class AddressDecode:
                 sidx_hi = field.msb // accesswidth
                 sidx_lo = field.lsb // accesswidth
                 if sidx_hi == sidx_lo:
-                    suffix = f"[{sidx_lo}]"
+                    suffix = f"({sidx_lo})"
                 else:
-                    suffix = f"[{sidx_hi}:{sidx_lo}]"
+                    suffix = f"({sidx_hi} downto {sidx_lo})"
                 path += suffix
 
                 if sidx_hi != sidx_lo and reduce_substrobes:
-                    return "|decoded_reg_strb." + path
+                    return "or decoded_reg_strb." + path
 
         else:
             path = get_indexed_path(self.top_node, node)
@@ -70,7 +70,20 @@ class AddressDecode:
         return "decoded_reg_strb." + path
 
 
-class DecodeStructGenerator(RDLStructGenerator):
+class DecodeStructGenerator(RDLFlatStructGenerator):
+
+    def __init__(self, address_decode: 'AddressDecode') -> None:
+        super().__init__()
+        self.top_node = address_decode.top_node
+
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
+        base = node.get_rel_path(
+            self.top_node.parent,
+            hier_separator="__",
+            array_suffix="",
+            empty_array_suffix=""
+        )
+        return f'{base}{suffix}__strb_t'
 
     def _enter_external_block(self, node: 'AddressableNode') -> None:
         self.add_member(
@@ -150,21 +163,20 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             # Is an external block
             addr_str = self._get_address_str(node)
             strb = self.addr_decode.get_external_block_access_strobe(node)
-            rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {SVInt(node.size - 1, self.addr_decode.exp.ds.addr_width)})"
-            self.add_content(f"{strb} = {rhs};")
-            self.add_content(f"is_external |= {rhs};")
+            rhs = f"cpuif_req_masked and (cpuif_addr >= {addr_str}) and (cpuif_addr <= {addr_str} + {VhdlInt(node.size - 1)})"
+            self.add_content(f"{strb} <= {rhs};")
+            self.add_content(f"is_external := is_external or ({rhs});")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
 
 
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
-        a = str(SVInt(
+        a = str(VhdlInt(
             node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
-            self.addr_decode.exp.ds.addr_width
         ))
         for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*{SVInt(stride, self.addr_decode.exp.ds.addr_width)}"
+            a += f" + i{i}*{VhdlInt(stride)}"
         return a
 
 
@@ -173,18 +185,18 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         accesswidth = node.get_property('accesswidth')
 
         if regwidth == accesswidth:
-            rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)})"
-            s = f"{self.addr_decode.get_access_strobe(node)} = {rhs};"
+            rhs = f"cpuif_req_masked and (cpuif_addr = {self._get_address_str(node)})"
+            s = f"{self.addr_decode.get_access_strobe(node)} <= {rhs};"
             self.add_content(s)
             if node.external:
                 readable = node.has_sw_readable
                 writable = node.has_sw_writable
                 if readable and writable:
-                    self.add_content(f"is_external |= {rhs};")
+                    self.add_content(f"is_external := is_external or ({rhs});")
                 elif readable and not writable:
-                    self.add_content(f"is_external |= {rhs} & !cpuif_req_is_wr;")
+                    self.add_content(f"is_external := is_external or ({rhs}) and not cpuif_req_is_wr;")
                 elif not readable and writable:
-                    self.add_content(f"is_external |= {rhs} & cpuif_req_is_wr;")
+                    self.add_content(f"is_external := is_external or ({rhs}) and cpuif_req_is_wr;")
                 else:
                     raise RuntimeError
         else:
@@ -192,18 +204,18 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             n_subwords = regwidth // accesswidth
             subword_stride = accesswidth // 8
             for i in range(n_subwords):
-                rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=(i*subword_stride))})"
-                s = f"{self.addr_decode.get_access_strobe(node)}[{i}] = {rhs};"
+                rhs = f"cpuif_req_masked and (cpuif_addr = {self._get_address_str(node, subword_offset=(i*subword_stride))})"
+                s = f"{self.addr_decode.get_access_strobe(node)}({i}) <= {rhs};"
                 self.add_content(s)
                 if node.external:
                     readable = node.has_sw_readable
                     writable = node.has_sw_writable
                     if readable and writable:
-                        self.add_content(f"is_external |= {rhs};")
+                        self.add_content(f"is_external := is_external or ({rhs});")
                     elif readable and not writable:
-                        self.add_content(f"is_external |= {rhs} & !cpuif_req_is_wr;")
+                        self.add_content(f"is_external := is_external or ({rhs}) and not cpuif_req_is_wr;")
                     elif not readable and writable:
-                        self.add_content(f"is_external |= {rhs} & cpuif_req_is_wr;")
+                        self.add_content(f"is_external := is_external or ({rhs}) and cpuif_req_is_wr;")
                     else:
                         raise RuntimeError
 
