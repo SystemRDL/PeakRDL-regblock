@@ -143,24 +143,21 @@ class RegblockExporter:
         # Construct exporter components
         self.cpuif = cpuif_cls(self)
         self.hwif = Hwif(self, hwif_report_file=hwif_report_file)
-        self.readback = Readback(self)
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
         self.write_buffering = WriteBuffering(self)
         self.read_buffering = ReadBuffering(self)
         self.dereferencer = Dereferencer(self)
+        # Construct readback last.
+        # Readback has the capability to disable retiming if the fanin is tiny.
+        # This is done at initialization and requires knowledge of the rest of the design.
+        self.readback = Readback(self)
         ext_write_acks = ExternalWriteAckGenerator(self)
         ext_read_acks = ExternalReadAckGenerator(self)
         parity = ParityErrorReduceGenerator(self)
 
         # Validate that there are no unsupported constructs
         DesignValidator(self).do_validate()
-
-        # Compute readback implementation early.
-        # Readback has the capability to disable retiming if the fanin is tiny.
-        # This affects the rest of the design's implementation, and must be known
-        # before any other templates are rendered
-        readback_implementation = self.readback.get_implementation()
 
         # Build Jinja template context
         context = {
@@ -172,7 +169,7 @@ class RegblockExporter:
             "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
-            "readback_implementation": readback_implementation,
+            "readback": self.readback,
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
             "parity": parity,
