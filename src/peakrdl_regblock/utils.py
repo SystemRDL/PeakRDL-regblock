@@ -11,7 +11,7 @@ def get_indexed_path(top_node: Node, target_node: Node) -> str:
     """
     TODO: Add words about indexing and why i'm doing this. Copy from logbook
     """
-    path = target_node.get_rel_path(top_node, empty_array_suffix="[!]")
+    path = target_node.get_rel_path(top_node, empty_array_suffix="(!)")
 
     # replace unknown indexes with incrementing iterators i0, i1, ...
     class ReplaceUnknown:
@@ -71,9 +71,9 @@ def do_slice(value: Union[SVInt, str], high: int, low: int) -> Union[SVInt, str]
     if isinstance(value, str):
         # If string, assume this is an identifier. Append bit-slice
         if high == low:
-            return f"{value}[{low}]"
+            return f"{value}({low})"
         else:
-            return f"{value}[{high}:{low}]"
+            return f"{value}({high} downto {low})"
     else:
         # it is an SVInt literal. Slice it down
         mask = (1 << (high + 1)) - 1

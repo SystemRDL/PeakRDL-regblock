@@ -36,7 +36,7 @@ architecture rtl of {{ds.module_name}} is
     ----------------------------------------------------------------------------
     signal cpuif_req : std_logic;
     signal cpuif_req_is_wr : std_logic;
-    signal cpuif_addr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
+    signal cpuif_addr : unsigned({{cpuif.addr_width-1}} downto 0);
     signal cpuif_wr_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
     signal cpuif_wr_biten : std_logic_vector({{cpuif.data_width-1}} downto 0);
     signal cpuif_req_stall_wr : std_logic;
@@ -190,17 +190,14 @@ begin
     -- Address Decode
     ----------------------------------------------------------------------------
     process(all)
+        {%- if ds.has_external_addressable %}
+        variable is_external: std_logic := '0';
+        {%- endif %}
     begin
-    {%- if ds.has_external_addressable %}
-        -- TODO
-        automatic logic is_external;
-        is_external = '0;
-    {%- endif %}
         {{address_decode.get_implementation()|indent(8)}}
     {%- if ds.has_external_addressable %}
-        -- TODO
-        decoded_strb_is_external = is_external;
-        external_req = is_external;
+        decoded_strb_is_external <= is_external;
+        external_req <= is_external;
     {%- endif %}
     end
 
