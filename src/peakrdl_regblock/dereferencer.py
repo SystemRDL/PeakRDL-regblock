@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Dereferencer:
     """
     This class provides an interface to convert conceptual SystemRDL references
-    into Verilog identifiers
+    into VHDL identifiers
     """
     def __init__(self, exp:'RegblockExporter'):
         self.exp = exp
@@ -40,10 +40,10 @@ class Dereferencer:
 
     def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> Union[SVInt, str]:
         """
-        Returns the Verilog string that represents the readable value associated
+        Returns the VHDL string that represents the readable value associated
         with the object.
 
-        If given a simple scalar value, then the corresponding Verilog literal is returned.
+        If given a simple scalar value, then the corresponding VHDL literal is returned.
 
         If obj references a structural systemrdl object, then the corresponding Verilog
         expression is returned that represents its value.
@@ -99,13 +99,13 @@ class Dereferencer:
         # Wrap with the appropriate Verilog reduction operator
         if prop_name == "anded":
             val = self.get_value(field)
-            return f"&({val})"
+            return f"(and {val})"
         elif prop_name == "ored":
             val = self.get_value(field)
-            return f"|({val})"
+            return f"(or {val})"
         elif prop_name == "xored":
             val = self.get_value(field)
-            return f"^({val})"
+            return f"(xor {val})"
 
         # references that directly access a property value
         if prop_name in {
@@ -210,13 +210,13 @@ class Dereferencer:
 
     def get_access_strobe(self, obj: Union[RegNode, FieldNode], reduce_substrobes: bool=True) -> str:
         """
-        Returns the Verilog string that represents the register's access strobe
+        Returns the VHDL string that represents the register's access strobe
         """
         return self.address_decode.get_access_strobe(obj, reduce_substrobes)
 
     def get_external_block_access_strobe(self, obj: 'AddressableNode') -> str:
         """
-        Returns the Verilog string that represents the external block's access strobe
+        Returns the VHDL string that represents the external block's access strobe
         """
         return self.address_decode.get_external_block_access_strobe(obj)
 
