@@ -15,7 +15,7 @@
 process({{get_always_ff_event(cpuif.reset)}}) begin
     if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
         {{- axil_req_reset() }}
-    else if rising_edge(clk) then
+    elsif rising_edge(clk) then
         if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
             {{- axil_req_reset() | indent }}
         else
@@ -48,7 +48,7 @@ process({{get_always_ff_event(cpuif.reset)}}) begin
             -- Keep track of in-flight transactions
             if (axil_ar_accept or axil_aw_accept) and not axil_resp_acked then
                 axil_n_in_flight <= axil_n_in_flight + 1;
-            else if not (axil_ar_accept or axil_aw_accept) and axil_resp_acked then
+            elsif not (axil_ar_accept or axil_aw_accept) and axil_resp_acked then
                 axil_n_in_flight <= axil_n_in_flight - 1;
             end if;
         end if;
@@ -86,7 +86,7 @@ process(all) begin
             if not cpuif_reg_stall_rd then
                 axil_ar_accept <= '1';
             end if;
-        else if axil_awvalid and axil_wvalid then
+        elsif axil_awvalid and axil_wvalid then
             cpuif_req <= '1';
             cpuif_req_is_wr <= '1';
             {%- if cpuif.data_width_bytes == 1 %}
@@ -97,7 +97,7 @@ process(all) begin
             if not cpuif_reg_stall_wr then
                 axil_aw_accept <= '1';
             end if;
-        else if axil_arvalid then
+        elsif axil_arvalid then
             cpuif_req <= '1';
             cpuif_req_is_wr <= '0';
             {%- if cpuif.data_width_bytes == 1 %}
@@ -124,7 +124,7 @@ end
 process({{get_always_ff_event(cpuif.reset)}}) begin
     if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
         {{- axil_resp_reset() }}
-    else if rising_edge(clk) then
+    elsif rising_edge(clk) then
         if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
             {{- axil_resp_reset() | indent }}
         else
@@ -188,7 +188,7 @@ end
 process({{get_always_ff_event(cpuif.reset)}}) begin
     if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
         {{- axil_resp_buffer_reset() }}
-    else if rising_edge(clk) then
+    elsif rising_edge(clk) then
         if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
             {{- axil_resp_buffer_reset() | indent }}
         else
@@ -199,7 +199,7 @@ process({{get_always_ff_event(cpuif.reset)}}) begin
                     axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err <= cpuif_rd_err;
                     axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).rdata <= cpuif_rd_data;
 
-                else if cpuif_wr_ack then
+                elsif cpuif_wr_ack then
                     axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr <= '1';
                     axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err <= cpuif_wr_err;
                 end if;
