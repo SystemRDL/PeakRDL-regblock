@@ -5,21 +5,31 @@ from collections import OrderedDict
 from systemrdl.walker import WalkerAction
 from systemrdl.node import RegNode, RegfileNode, MemNode, AddrmapNode
 
-from ..struct_generator import RDLStructGenerator
+from ..struct_generator import RDLFlatStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
     from . import FieldLogic
-    from systemrdl.node import FieldNode, AddressableNode
+    from systemrdl.node import Node, FieldNode, AddressableNode
     from .bases import SVLogic
 
-class CombinationalStructGenerator(RDLStructGenerator):
+class CombinationalStructGenerator(RDLFlatStructGenerator):
 
     def __init__(self, field_logic: 'FieldLogic'):
         super().__init__()
         self.field_logic = field_logic
+        self.top_node = field_logic.exp.ds.top_node
+
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
+        base = node.get_rel_path(
+            self.top_node.parent,
+            hier_separator="__",
+            array_suffix="",
+            empty_array_suffix=""
+        )
+        return f'{base}{suffix}__combo_t'
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
@@ -44,8 +54,9 @@ class CombinationalStructGenerator(RDLStructGenerator):
                 else:
                     extra_combo_signals[signal.name] = signal
 
-        self.push_struct(kwf(node.inst_name))
-        self.add_member("next", node.width)
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, kwf(node.inst_name))
+        self.add_member("next_q", node.width)
         self.add_member("load_next")
         for signal in extra_combo_signals.values():
             self.add_member(signal.name, signal.width)
@@ -72,11 +83,21 @@ class CombinationalStructGenerator(RDLStructGenerator):
             self.add_member('underflow')
 
 
-class FieldStorageStructGenerator(RDLStructGenerator):
+class FieldStorageStructGenerator(RDLFlatStructGenerator):
 
     def __init__(self, field_logic: 'FieldLogic') -> None:
         super().__init__()
         self.field_logic = field_logic
+        self.top_node = field_logic.exp.ds.top_node
+
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
+        base = node.get_rel_path(
+            self.top_node.parent,
+            hier_separator="__",
+            array_suffix="",
+            empty_array_suffix=""
+        )
+        return f'{base}{suffix}__storage_t'
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
@@ -86,7 +107,8 @@ class FieldStorageStructGenerator(RDLStructGenerator):
         return WalkerAction.Continue
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        self.push_struct(kwf(node.inst_name))
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, kwf(node.inst_name))
 
         if node.implements_storage:
             self.add_member("value", node.width)

@@ -45,7 +45,7 @@ class FieldLogic:
         if s is None:
             return ""
 
-        return s + "\nfield_storage_t field_storage;"
+        return "-- Field Storage Signals\n" + s + "\nsignal field_storage : field_storage_t;"
 
     def get_combo_struct(self) -> str:
         struct_gen = CombinationalStructGenerator(self)
@@ -55,7 +55,7 @@ class FieldLogic:
         if s is None:
             return ""
 
-        return s + "\nfield_combo_t field_combo;"
+        return "-- Field Combinational Signals\n" + s + "\nsignal field_combo : field_combo_t;"
 
     def get_implementation(self) -> str:
         gen = FieldLogicGenerator(self)

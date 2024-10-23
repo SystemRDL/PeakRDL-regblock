@@ -91,6 +91,13 @@ architecture rtl of {{ds.module_name}} is
     {%- endif %}
 
     ----------------------------------------------------------------------------
+    -- Field Logic Signals
+    ----------------------------------------------------------------------------
+    {{field_logic.get_combo_struct()|indent}}
+
+    {{field_logic.get_storage_struct()|indent}}
+
+    ----------------------------------------------------------------------------
     -- Readback Signals
     ----------------------------------------------------------------------------
     {%- if ds.has_external_addressable %}
@@ -234,10 +241,6 @@ begin
     ----------------------------------------------------------------------------
     -- Field logic
     ----------------------------------------------------------------------------
-    {{field_logic.get_combo_struct()|indent}}
-
-    {{field_logic.get_storage_struct()|indent}}
-
     {{field_logic.get_implementation()|indent}}
 
 {%- if ds.has_paritycheck %}
