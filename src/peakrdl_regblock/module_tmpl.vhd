@@ -201,7 +201,7 @@ begin
         decoded_strb_is_external <= is_external;
         external_req <= is_external;
     {%- endif %}
-    end
+    end process;
 
     -- Pass down signals to next stage
     process(all) begin
