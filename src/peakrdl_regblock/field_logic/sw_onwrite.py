@@ -22,7 +22,7 @@ class _OnWrite(NextStateConditional):
             if field.get_property('swwe') or field.get_property('swwel'):
                 # dereferencer will wrap swwel complement if necessary
                 qualifier = self.exp.dereferencer.get_field_propref_value(field, 'swwe')
-                return f"{wstrb} && {qualifier}"
+                return f"({wstrb}) and {qualifier}"
 
             return wstrb
         else:
@@ -32,9 +32,9 @@ class _OnWrite(NextStateConditional):
             if field.get_property('swwe') or field.get_property('swwel'):
                 # dereferencer will wrap swwel complement if necessary
                 qualifier = self.exp.dereferencer.get_field_propref_value(field, 'swwe')
-                return f"{strb} && decoded_req_is_wr && {qualifier}"
+                return f"{strb} and decoded_req_is_wr and {qualifier}"
 
-            return f"{strb} && decoded_req_is_wr"
+            return f"{strb} and decoded_req_is_wr"
 
     def _wbus_bitslice(self, field: 'FieldNode', subword_idx: int = 0) -> str:
         # Get the source bitslice range from the internal cpuif's data bus
@@ -74,7 +74,7 @@ class _OnWrite(NextStateConditional):
                 high = bus_width - 1 - high
                 low, high = high, low
 
-        return f"[{high}:{low}]"
+        return f"({high} downto {low})"
 
     def _wr_data(self, field: 'FieldNode', subword_idx: int=0) -> str:
         if field.parent.get_property('buffer_writes'):
@@ -127,8 +127,8 @@ class _OnWrite(NextStateConditional):
         D = self._wr_data(field, sidx)
         S = self._wr_biten(field, sidx)
         lines = [
-            f"next_c = {self.get_onwrite_rhs(R, D, S)};",
-            "load_next_c = '1;",
+            f"next_c := {self.get_onwrite_rhs(R, D, S)};",
+            "load_next_c := '1';",
         ]
         return lines
 
@@ -142,51 +142,55 @@ class WriteOneSet(_OnWrite):
     onwritetype = OnWriteType.woset
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"{reg} | ({data} & {strb})"
+        return f"{reg} or ({data} and {strb})"
 
 class WriteOneClear(_OnWrite):
     comment = "SW write 1 clear"
     onwritetype = OnWriteType.woclr
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"{reg} & ~({data} & {strb})"
+        return f"{reg} and not ({data} and {strb})"
 
 class WriteOneToggle(_OnWrite):
     comment = "SW write 1 toggle"
     onwritetype = OnWriteType.wot
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"{reg} ^ ({data} & {strb})"
+        return f"{reg} xor ({data} and {strb})"
 
 class WriteZeroSet(_OnWrite):
     comment = "SW write 0 set"
     onwritetype = OnWriteType.wzs
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"{reg} | (~{data} & {strb})"
+        return f"{reg} or (not {data} and {strb})"
 
 class WriteZeroClear(_OnWrite):
     comment = "SW write 0 clear"
     onwritetype = OnWriteType.wzc
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"{reg} & ({data} | ~{strb})"
+        return f"{reg} and ({data} or not {strb})"
 
 class WriteZeroToggle(_OnWrite):
     comment = "SW write 0 toggle"
     onwritetype = OnWriteType.wzt
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"{reg} ^ (~{data} & {strb})"
+        return f"{reg} xor (not {data} and {strb})"
 
 class WriteClear(_OnWrite):
     comment = "SW write clear"
     onwritetype = OnWriteType.wclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
+        if field.width == 1:
+            next_c_assign = "next_c := '0';"
+        else:
+            next_c_assign = "next_c := (others => '0');"
         return [
-            "next_c = '0;",
-            "load_next_c = '1;",
+            next_c_assign,
+            "load_next_c := '1';",
         ]
 
 class WriteSet(_OnWrite):
@@ -194,9 +198,13 @@ class WriteSet(_OnWrite):
     onwritetype = OnWriteType.wset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
+        if field.width == 1:
+            next_c_assign = "next_c := '1';"
+        else:
+            next_c_assign = "next_c := (others => '1');"
         return [
-            "next_c = '1;",
-            "load_next_c = '1;",
+            next_c_assign,
+            "load_next_c := '1';",
         ]
 
 class Write(_OnWrite):
@@ -204,4 +212,4 @@ class Write(_OnWrite):
     onwritetype = None
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
-        return f"({reg} & ~{strb}) | ({data} & {strb})"
+        return f"({reg} and not {strb}) or ({data} and {strb})"

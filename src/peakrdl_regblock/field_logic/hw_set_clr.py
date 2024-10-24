@@ -26,16 +26,19 @@ class HWSet(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
-            next_val = f"{R} | ~{M}"
+            next_val = f"{R} or not {M}"
         elif hwenable is not None:
             E = self.exp.dereferencer.get_value(hwenable)
-            next_val = f"{R} | {E}"
+            next_val = f"{R} or {E}"
         else:
-            next_val = "'1"
+            if field.width == 1:
+                next_val = "'1'"
+            else:
+                next_val = "(others => '1')"
 
         return [
-            f"next_c = {next_val};",
-            "load_next_c = '1;",
+            f"next_c := {next_val};",
+            "load_next_c := '1;",
         ]
 
 
@@ -59,14 +62,17 @@ class HWClear(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
-            next_val = f"{R} & {M}"
+            next_val = f"{R} and {M}"
         elif hwenable is not None:
             E = self.exp.dereferencer.get_value(hwenable)
-            next_val = f"{R} & ~{E}"
+            next_val = f"{R} and not {E}"
         else:
-            next_val = "'0"
+            if field.width == 1:
+                next_val = "'0'"
+            else:
+                next_val = "(others => '0')"
 
         return [
-            f"next_c = {next_val};",
-            "load_next_c = '1;",
+            f"next_c := {next_val};",
+            "load_next_c := '1;",
         ]

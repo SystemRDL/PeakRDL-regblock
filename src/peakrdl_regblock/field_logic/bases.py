@@ -59,9 +59,9 @@ class NextStateConditional:
     """
     Decribes a single conditional action that determines the next state of a field
     Provides information to generate the following content:
-        if(<conditional>) begin
+        if <conditional> then
             <assignments>
-        end
+        end if;
     """
 
     # Assign to True if predicate can never evaluate to false.
@@ -77,7 +77,7 @@ class NextStateConditional:
     def is_match(self, field: 'FieldNode') -> bool:
         """
         Returns True if this conditional is relevant to the field. If so,
-        it instructs the FieldBuider that Verilog for this conditional shall
+        it instructs the FieldBuider that VHDL for this conditional shall
         be emitted
         """
         raise NotImplementedError
@@ -96,8 +96,8 @@ class NextStateConditional:
         """
         Returns a list of rendered assignment strings
         This will basically always be two:
-            <field>.next = <next value>
-            <field>.load_next = '1;
+            next_c := <next value>;
+            load_next_c := '1';
         """
 
     def get_extra_combo_signals(self, field: 'FieldNode') -> List[SVLogic]:

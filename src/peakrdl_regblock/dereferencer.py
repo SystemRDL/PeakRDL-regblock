@@ -127,7 +127,7 @@ class Dereferencer:
             prop_value = field.get_property(prop_name)
             if prop_value is None:
                 # unset by the user, points to the implied internal signal
-                return self.field_logic.get_field_combo_identifier(field, "next")
+                return self.field_logic.get_field_combo_identifier(field, "next_q")
             else:
                 return self.get_value(prop_value, width)
 
@@ -161,12 +161,12 @@ class Dereferencer:
                 prop_value = field.get_property(complementary_pairs[prop_name])
                 if prop_value is True:
                     # Points to inferred hwif input
-                    return f"!({self.hwif.get_implied_prop_input_identifier(field, complementary_pairs[prop_name])})"
+                    return f"not ({self.hwif.get_implied_prop_input_identifier(field, complementary_pairs[prop_name])})"
                 elif prop_value is False:
                     # This should never happen, as this is checked by the compiler's validator
                     raise RuntimeError
                 else:
-                    return f"!({self.get_value(prop_value)})"
+                    return f"not ({self.get_value(prop_value)})"
             else:
                 return self.get_value(prop_value, width)
 

@@ -28,16 +28,16 @@ class AlwaysWrite(NextStateConditional):
         R = self.exp.field_logic.get_storage_identifier(field)
         if hwmask is not None:
             M = self.exp.dereferencer.get_value(hwmask)
-            next_val = f"{I} & ~{M} | {R} & {M}"
+            next_val = f"({I} and not {M}) or ({R} and {M})"
         elif hwenable is not None:
             E = self.exp.dereferencer.get_value(hwenable)
-            next_val = f"{I} & {E} | {R} & ~{E}"
+            next_val = f"({I} and {E}) or ({R} and not {E})"
         else:
             next_val = I
 
         return [
-            f"next_c = {next_val};",
-            "load_next_c = '1;",
+            f"next_c := {next_val};",
+            "load_next_c := '1';",
         ]
 
 class WEWrite(AlwaysWrite):

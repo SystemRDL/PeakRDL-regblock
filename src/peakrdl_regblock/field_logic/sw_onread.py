@@ -20,7 +20,7 @@ class _OnRead(NextStateConditional):
         else:
             # is regular register
             strb = self.exp.dereferencer.get_access_strobe(field)
-            return f"{strb} && !decoded_req_is_wr"
+            return f"{strb} and not decoded_req_is_wr"
 
 
 class ClearOnRead(_OnRead):
@@ -28,10 +28,12 @@ class ClearOnRead(_OnRead):
     onreadtype = OnReadType.rclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        return [
-            "next_c = '0;",
-            "load_next_c = '1;",
-        ]
+        if field.width == 1:
+            lines = ["next_c := '0';"]
+        else:
+            lines = ["next_c := (others => '0');"]
+        lines.append("load_next_c := '1';")
+        return lines
 
 
 class SetOnRead(_OnRead):
@@ -39,7 +41,11 @@ class SetOnRead(_OnRead):
     onreadtype = OnReadType.rset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
+        if field.width == 1:
+            next_c_assign = "next_c := '1';"
+        else:
+            next_c_assign = "next_c := (others => '1');"
         return [
-            "next_c = '1;",
-            "load_next_c = '1;",
+            next_c_assign,
+            "load_next_c := '1';",
         ]
