@@ -1,3 +1,6 @@
+library ieee;
+context ieee.ieee_std_context;
+
 package axi4lite_intf_pkg is
 
   type axi4lite_slave_in_intf is record

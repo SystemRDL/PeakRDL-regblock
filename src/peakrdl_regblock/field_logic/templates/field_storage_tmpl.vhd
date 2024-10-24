@@ -14,14 +14,14 @@ begin
     {%- for signal in extra_combo_signals %}
     {{field_logic.get_field_combo_identifier(node, signal.name)}} <= {{signal.default_assignment}};
     {%- endfor %}
-    {% for conditional in conditionals %}
-    {%- if not loop.first %} els{% endif %}if {{conditional.get_predicate(node)}} then -- {{conditional.comment}}
+    {%- for conditional in conditionals %}
+    {% if not loop.first %}els{% endif %}if {{conditional.get_predicate(node)}} then -- {{conditional.comment}}
         {%- for assignment in conditional.get_assignments(node) %}
         {{assignment|indent}}
         {%- endfor %}
     {%- endfor %}
     {%- if unconditional %}
-    {%- if conditionals %} else -- {{unconditional.comment}}
+    {% if conditionals %}else -- {{unconditional.comment}}
         {%- for assignment in unconditional.get_assignments(node) %}
         {{assignment|indent}}
         {%- endfor %}
@@ -60,6 +60,7 @@ end process;
 {%- endmacro %}
 process({{get_always_ff_event(resetsignal)}}) begin
     {%- if reset is not none %}
+    -- TODO: this reset logic isn't working right
     {%- macro field_reset() %}
         {{field_logic.get_storage_identifier(node)}} <= {{reset}};
         {%- if node.get_property('paritycheck') %}

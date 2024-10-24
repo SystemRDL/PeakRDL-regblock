@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List
 from systemrdl.rdltypes import OnWriteType
 
 from .bases import NextStateConditional
+from ..sv_int import VhdlVectorInt
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
@@ -184,12 +185,9 @@ class WriteClear(_OnWrite):
     onwritetype = OnWriteType.wclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        if field.width == 1:
-            next_c_assign = "next_c := '0';"
-        else:
-            next_c_assign = "next_c := (others => '0');"
+        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
         return [
-            next_c_assign,
+            f"next_c := {zero};",
             "load_next_c := '1';",
         ]
 
@@ -198,12 +196,9 @@ class WriteSet(_OnWrite):
     onwritetype = OnWriteType.wset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        if field.width == 1:
-            next_c_assign = "next_c := '1';"
-        else:
-            next_c_assign = "next_c := (others => '1');"
+        ones = VhdlVectorInt((1 << field.width) - 1, field.width, allow_std_logic=True)
         return [
-            next_c_assign,
+            f"next_c := {ones};",
             "load_next_c := '1';",
         ]
 

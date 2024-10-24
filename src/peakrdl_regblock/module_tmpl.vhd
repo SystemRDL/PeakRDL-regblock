@@ -3,6 +3,9 @@
 library ieee;
 context ieee.ieee_std_context;
 
+use work.{{ds.module_name}}_pkg.all;
+-- TODO: need CPUIF package
+
 entity {{ds.module_name}} is
     {%- if cpuif.parameters %}
     generic (
