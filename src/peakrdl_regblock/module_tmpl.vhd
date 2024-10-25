@@ -43,7 +43,7 @@ architecture rtl of {{ds.module_name}} is
     ----------------------------------------------------------------------------
     signal cpuif_req : std_logic;
     signal cpuif_req_is_wr : std_logic;
-    signal cpuif_addr : unsigned({{cpuif.addr_width-1}} downto 0);
+    signal cpuif_addr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
     signal cpuif_wr_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
     signal cpuif_wr_biten : std_logic_vector({{cpuif.data_width-1}} downto 0);
     signal cpuif_req_stall_wr : std_logic;
@@ -204,6 +204,13 @@ begin
     -- Address Decode
     ----------------------------------------------------------------------------
     process(all)
+        -- overload "=" in this scope to avoid lots of type casts
+        function "="(L: std_logic_vector; R: integer) return std_logic is
+            variable result : std_logic;
+        begin
+            result := '1' when unsigned(L) = R else '0';
+            return result;
+        end;
         {%- if ds.has_external_addressable %}
         variable is_external: std_logic;
         {%- endif %}
