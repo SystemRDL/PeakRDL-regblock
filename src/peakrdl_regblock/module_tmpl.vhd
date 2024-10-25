@@ -4,7 +4,9 @@ library ieee;
 context ieee.ieee_std_context;
 
 use work.{{ds.module_name}}_pkg.all;
--- TODO: need CPUIF package
+{%- if cpuif.package_name %}
+use work.{{cpuif.package_name}}.all;
+{%- endif %}
 
 entity {{ds.module_name}} is
     {%- if cpuif.parameters %}

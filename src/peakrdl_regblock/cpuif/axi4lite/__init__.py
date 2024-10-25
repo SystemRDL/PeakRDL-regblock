@@ -48,6 +48,9 @@ class AXI4Lite_Cpuif(CpuifBase):
             ])
         return "\n".join(signals)
 
+    @property
+    def package_name(self) -> str:
+        return "axi4lite_intf_pkg"
 
     def signal(self, name:str) -> str:
         name = name.upper()
