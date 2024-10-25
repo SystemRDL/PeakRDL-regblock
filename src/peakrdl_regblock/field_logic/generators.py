@@ -132,10 +132,10 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "field_logic/templates/field_storage_tmpl.vhd"
         )
         self.external_reg_template = self.exp.jj_env.get_template(
-            "field_logic/templates/external_reg.sv"
+            "field_logic/templates/external_reg_tmpl.vhd"
         )
         self.external_block_template = self.exp.jj_env.get_template(
-            "field_logic/templates/external_block.sv"
+            "field_logic/templates/external_block_tmpl.vhd"
         )
         self.intr_fields = [] # type: List[FieldNode]
         self.halt_fields = [] # type: List[FieldNode]

@@ -1,4 +1,4 @@
-{%- import 'field_logic/templates/counter_macros.sv' as counter_macros with context %}
+{%- import 'field_logic/templates/counter_macros_tmpl.vhd' as counter_macros with context %}
 -- Field: {{node.get_path()}}
 process(all)
     {%- if node.width == 1 %}
