@@ -203,9 +203,12 @@ begin
     ----------------------------------------------------------------------------
     process(all)
         {%- if ds.has_external_addressable %}
-        variable is_external: std_logic := '0';
+        variable is_external: std_logic;
         {%- endif %}
     begin
+    {%- if ds.has_external_addressable %}
+        is_external := '0';
+    {%- endif %}
         {{address_decode.get_implementation()|indent(8)}}
     {%- if ds.has_external_addressable %}
         decoded_strb_is_external <= is_external;
@@ -251,16 +254,16 @@ begin
     ----------------------------------------------------------------------------
     -- Parity Error
     ----------------------------------------------------------------------------
-    process({{get_always_ff_event(cpuif.reset)}}) begin
+    process({{get_always_ff_event(cpuif.reset)}})
+        variable err: std_logic;
+    begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             parity_error <= '0';
         elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 parity_error <= '0';
             else
-                -- TODO
-                automatic logic err;
-                err = '0;
+                err := '0';
                 {{parity.get_implementation()|indent(12)}}
                 parity_error <= err;
             end if;
@@ -282,10 +285,10 @@ begin
     -- Write response
     ----------------------------------------------------------------------------
 {%- if ds.has_external_addressable %}
-    process(all) begin
-        -- TODO
-        automatic logic wr_ack;
-        wr_ack = '0';
+    process(all)
+        variable wr_ack: std_logic;
+    begin
+        wr_ack := '0';
         {{ext_write_acks.get_implementation()|indent(8)}}
         external_wr_ack = wr_ack;
     end process;
@@ -300,10 +303,10 @@ begin
     -- Readback
     ----------------------------------------------------------------------------
 {%- if ds.has_external_addressable %}
-    process(all) begin
-        -- TODO
-        automatic logic rd_ack;
-        rd_ack = '0';
+    process(all)
+        variable rd_ack: std_logic;
+    begin
+        rd_ack := '0';
         {{ext_read_acks.get_implementation()|indent(8)}}
         readback_external_rd_ack_c = rd_ack;
     end process;
