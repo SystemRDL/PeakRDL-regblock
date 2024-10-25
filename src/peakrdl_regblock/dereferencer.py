@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Union, Optional
 from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
 
-from .sv_int import SVInt
+from .vhdl_int import VhdlVectorInt
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter, DesignState
@@ -38,7 +38,7 @@ class Dereferencer:
     def top_node(self) -> AddrmapNode:
         return self.exp.ds.top_node
 
-    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> Union[SVInt, str]:
+    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> Union[VhdlVectorInt, str]:
         """
         Returns the VHDL string that represents the readable value associated
         with the object.
@@ -52,7 +52,7 @@ class Dereferencer:
         """
         if isinstance(obj, int):
             # Is a simple scalar value
-            return SVInt(obj, width)
+            return VhdlVectorInt(obj, width, allow_std_logic=True)
 
         if isinstance(obj, FieldNode):
             if obj.implements_storage:
@@ -94,7 +94,7 @@ class Dereferencer:
         field: FieldNode,
         prop_name: str,
         width: Optional[int] = None,
-    ) -> Union[SVInt, str]:
+    ) -> Union[VhdlVectorInt, str]:
         # Value reduction properties.
         # Wrap with the appropriate Verilog reduction operator
         if prop_name == "anded":

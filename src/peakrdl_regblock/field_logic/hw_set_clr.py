@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
-from ..sv_int import VhdlVectorInt
 from .bases import NextStateConditional
+from ..vhdl_int import VhdlVectorInt
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode

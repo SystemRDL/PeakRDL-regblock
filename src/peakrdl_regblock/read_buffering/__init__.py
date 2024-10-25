@@ -5,7 +5,6 @@ from systemrdl.node import AddrmapNode, RegNode, SignalNode
 from .storage_generator import RBufStorageStructGenerator
 from .implementation_generator import RBufLogicGenerator
 from ..utils import get_indexed_path
-from ..sv_int import SVInt
 
 if TYPE_CHECKING:
     from ..exporter import RegblockExporter

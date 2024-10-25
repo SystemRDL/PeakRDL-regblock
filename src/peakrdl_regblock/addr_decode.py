@@ -7,7 +7,7 @@ from .utils import get_indexed_path
 from .struct_generator import RDLFlatStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
-from .sv_int import VhdlInt
+from .vhdl_int import VhdlInt
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter

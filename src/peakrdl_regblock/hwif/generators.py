@@ -5,7 +5,6 @@ from systemrdl.walker import WalkerAction
 
 from ..struct_generator import RDLFlatStructGenerator
 from ..identifier_filter import kw_filter as kwf
-from ..sv_int import SVInt
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, AddressableNode, RegfileNode

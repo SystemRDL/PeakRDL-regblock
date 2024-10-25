@@ -5,7 +5,7 @@ from systemrdl.rdltypes import PropertyReference
 
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
-from ..sv_int import SVInt
+from ..vhdl_int import VhdlVectorInt
 
 from .generators import InputStructGenerator_Hier, OutputStructGenerator_Hier
 from .generators import InputStructGenerator_TypeScope, OutputStructGenerator_TypeScope
@@ -132,7 +132,7 @@ class Hwif:
         self,
         obj: Union[FieldNode, SignalNode, PropertyReference],
         width: Optional[int] = None,
-    ) -> Union[SVInt, str]:
+    ) -> Union[VhdlVectorInt, str]:
         """
         Returns the identifier string that best represents the input object.
 
