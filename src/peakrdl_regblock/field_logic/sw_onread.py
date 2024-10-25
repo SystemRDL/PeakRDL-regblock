@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, List
 
 from systemrdl.rdltypes import OnReadType
 
+from ..sv_int import VhdlVectorInt
 from .bases import NextStateConditional
 
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ class _OnRead(NextStateConditional):
         else:
             # is regular register
             strb = self.exp.dereferencer.get_access_strobe(field)
-            return f"{strb} && !decoded_req_is_wr"
+            return f"{strb} and not decoded_req_is_wr"
 
 
 class ClearOnRead(_OnRead):
@@ -28,9 +29,10 @@ class ClearOnRead(_OnRead):
     onreadtype = OnReadType.rclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
+        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
         return [
-            "next_c = '0;",
-            "load_next_c = '1;",
+            f"next_c := {zero};",
+            "load_next_c := '1';",
         ]
 
 
@@ -39,7 +41,8 @@ class SetOnRead(_OnRead):
     onreadtype = OnReadType.rset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
+        ones = VhdlVectorInt((1 << field.width) - 1, field.width, allow_std_logic=True)
         return [
-            "next_c = '1;",
-            "load_next_c = '1;",
+            f"next_c := {ones};",
+            "load_next_c := '1';",
         ]

@@ -3,6 +3,9 @@
 library ieee;
 context ieee.ieee_std_context;
 
+use work.{{ds.module_name}}_pkg.all;
+-- TODO: need CPUIF package
+
 entity {{ds.module_name}} is
     {%- if cpuif.parameters %}
     generic (
@@ -91,6 +94,13 @@ architecture rtl of {{ds.module_name}} is
     {%- endif %}
 
     ----------------------------------------------------------------------------
+    -- Field Logic Signals
+    ----------------------------------------------------------------------------
+    {{field_logic.get_combo_struct()|indent}}
+
+    {{field_logic.get_storage_struct()|indent}}
+
+    ----------------------------------------------------------------------------
     -- Readback Signals
     ----------------------------------------------------------------------------
     {%- if ds.has_external_addressable %}
@@ -112,13 +122,13 @@ begin
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             external_pending <= '0';
-        else if rising_edge(clk) then
+        elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 external_pending <= '0';
             else
                 if external_req and not external_wr_ack and not external_rd_ack then
                     external_pending <= '1';
-                else if external_wr_ack or external_rd_ack then
+                elsif external_wr_ack or external_rd_ack then
                     external_pending <= '0';
                 end if;
                 assert not external_wr_ack or (external_pending or external_req)
@@ -144,10 +154,10 @@ begin
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             cpuif_req_stall_sr <= '0';
-        else if rising_edge(clk) then
+        elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 cpuif_req_stall_sr <= '0';
-            else if cpuif_req and not cpuif_req_is_wr then
+            elsif cpuif_req and not cpuif_req_is_wr then
                 cpuif_req_stall_sr <= '1';
             else
                 cpuif_req_stall_sr <= "0" & cpuif_req_stall_sr(cpuif_req_stall_sr'high downto 1);
@@ -166,10 +176,10 @@ begin
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             cpuif_req_stall_sr <= '0';
-        else if rising_edge(clk) then
+        elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 cpuif_req_stall_sr <= '0';
-            else if cpuif_req and cpuif_req_is_wr then
+            elsif cpuif_req and cpuif_req_is_wr then
                 cpuif_req_stall_sr <= '1';
             else
                 cpuif_req_stall_sr <= "0" & cpuif_req_stall_sr(cpuif_req_stall_sr'high downto 1);
@@ -204,7 +214,7 @@ begin
         decoded_strb_is_external <= is_external;
         external_req <= is_external;
     {%- endif %}
-    end
+    end process;
 
     -- Pass down signals to next stage
     process(all) begin
@@ -233,13 +243,10 @@ begin
 
     {{write_buffering.get_implementation()|indent}}
 {%- endif %}
+
     ----------------------------------------------------------------------------
     -- Field logic
     ----------------------------------------------------------------------------
-    {{field_logic.get_combo_struct()|indent}}
-
-    {{field_logic.get_storage_struct()|indent}}
-
     {{field_logic.get_implementation()|indent}}
 
 {%- if ds.has_paritycheck %}
@@ -252,7 +259,7 @@ begin
     begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             parity_error <= '0';
-        else if rising_edge(clk) then
+        elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 parity_error <= '0';
             else
@@ -308,7 +315,7 @@ begin
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             readback_external_rd_ack <= '0';
-        else if rising_edge(clk) then
+        elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 readback_external_rd_ack <= '0';
             else
@@ -336,7 +343,7 @@ begin
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
             {{- readback_retime_reset() }}
-        else if rising_edge(clk) then
+        elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
                 {{- readback_retime_reset() | indent }}
             else

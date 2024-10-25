@@ -45,7 +45,7 @@ class FieldLogic:
         if s is None:
             return ""
 
-        return s + "\nfield_storage_t field_storage;"
+        return "-- Field Storage Signals\n" + s + "\nsignal field_storage : field_storage_t;"
 
     def get_combo_struct(self) -> str:
         struct_gen = CombinationalStructGenerator(self)
@@ -55,7 +55,7 @@ class FieldLogic:
         if s is None:
             return ""
 
-        return s + "\nfield_combo_t field_combo;"
+        return "-- Field Combinational Signals\n" + s + "\nsignal field_combo : field_combo_t;"
 
     def get_implementation(self) -> str:
         gen = FieldLogicGenerator(self)
@@ -69,7 +69,7 @@ class FieldLogic:
     #---------------------------------------------------------------------------
     def get_storage_identifier(self, field: 'FieldNode') -> str:
         """
-        Returns the Verilog string that represents the storage register element
+        Returns the VHDL string that represents the storage register element
         for the referenced field
         """
         assert field.implements_storage
@@ -78,7 +78,7 @@ class FieldLogic:
 
     def get_next_q_identifier(self, field: 'FieldNode') -> str:
         """
-        Returns the Verilog string that represents the storage register element
+        Returns the VHDL string that represents the storage register element
         for the delayed 'next' input value
         """
         assert field.implements_storage
@@ -87,7 +87,7 @@ class FieldLogic:
 
     def get_field_combo_identifier(self, field: 'FieldNode', name: str) -> str:
         """
-        Returns a Verilog string that represents a field's internal combinational
+        Returns a VHDL string that represents a field's internal combinational
         signal.
         """
         assert field.implements_storage
@@ -96,7 +96,7 @@ class FieldLogic:
 
     def get_counter_incr_strobe(self, field: 'FieldNode') -> str:
         """
-        Return the Verilog string that represents the field's incr strobe signal.
+        Return the VHDL string that represents the field's incr strobe signal.
         """
         prop_value = field.get_property('incr')
         if prop_value:
@@ -114,7 +114,7 @@ class FieldLogic:
             return self.exp.dereferencer.get_value(incrvalue, field.width)
         if field.get_property('incrwidth'):
             return self.exp.hwif.get_implied_prop_input_identifier(field, "incrvalue")
-        return "1'b1"
+        return "1"
 
     def get_counter_incrsaturate_value(self, field: 'FieldNode') -> Union[SVInt, str]:
         prop_value = field.get_property('incrsaturate')
@@ -137,7 +137,7 @@ class FieldLogic:
 
     def get_counter_decr_strobe(self, field: 'FieldNode') -> str:
         """
-        Return the Verilog string that represents the field's incr strobe signal.
+        Return the VHDL string that represents the field's incr strobe signal.
         """
         prop_value = field.get_property('decr')
         if prop_value:
@@ -155,12 +155,12 @@ class FieldLogic:
             return self.exp.dereferencer.get_value(decrvalue, field.width)
         if field.get_property('decrwidth'):
             return self.exp.hwif.get_implied_prop_input_identifier(field, "decrvalue")
-        return "1'b1"
+        return "1"
 
     def get_counter_decrsaturate_value(self, field: 'FieldNode') -> Union[SVInt, str]:
         prop_value = field.get_property('decrsaturate')
         if prop_value is True:
-            return f"{field.width}'d0"
+            return self.exp.dereferencer.get_value(0)
         return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def counter_decrsaturates(self, field: 'FieldNode') -> bool:
@@ -173,7 +173,7 @@ class FieldLogic:
         prop_value = field.get_property('decrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use min
-            return f"{field.width}'d0"
+            return self.exp.dereferencer.get_value(0)
         return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def get_swacc_identifier(self, field: 'FieldNode') -> str:
@@ -185,15 +185,15 @@ class FieldLogic:
         if buffer_reads and buffer_writes:
             rstrb = self.exp.read_buffering.get_trigger(field.parent)
             wstrb = self.exp.write_buffering.get_write_strobe(field)
-            return f"{rstrb} || {wstrb}"
+            return f"({rstrb}) or ({wstrb})"
         elif buffer_reads and not buffer_writes:
             strb = self.exp.dereferencer.get_access_strobe(field)
             rstrb = self.exp.read_buffering.get_trigger(field.parent)
-            return f"{rstrb} || ({strb} && decoded_req_is_wr)"
+            return f"({rstrb}) or ({strb} and decoded_req_is_wr)"
         elif not buffer_reads and buffer_writes:
             strb = self.exp.dereferencer.get_access_strobe(field)
             wstrb = self.exp.write_buffering.get_write_strobe(field)
-            return f"{wstrb} || ({strb} && !decoded_req_is_wr)"
+            return f"({wstrb}) or ({strb} and not decoded_req_is_wr)"
         else:
             strb = self.exp.dereferencer.get_access_strobe(field)
             return strb
@@ -208,7 +208,7 @@ class FieldLogic:
             return rstrb
         else:
             strb = self.exp.dereferencer.get_access_strobe(field)
-            return f"{strb} && !decoded_req_is_wr"
+            return f"{strb} and not decoded_req_is_wr"
 
     def get_wr_swacc_identifier(self, field: 'FieldNode') -> str:
         """
@@ -220,7 +220,7 @@ class FieldLogic:
             return wstrb
         else:
             strb = self.exp.dereferencer.get_access_strobe(field)
-            return f"{strb} && decoded_req_is_wr"
+            return f"{strb} and decoded_req_is_wr"
 
     def get_swmod_identifier(self, field: 'FieldNode') -> str:
         """
@@ -241,7 +241,7 @@ class FieldLogic:
             else:
                 # Unbuffered. Use decoder strobe directly
                 astrb = self.exp.dereferencer.get_access_strobe(field)
-                return f"{astrb} && decoded_req_is_wr"
+                return f"{astrb} and decoded_req_is_wr"
 
         if w_modifiable and r_modifiable:
             # assert swmod on both sw read and write
@@ -250,14 +250,14 @@ class FieldLogic:
                 if buffer_reads:
                     rstrb = self.exp.read_buffering.get_trigger(field.parent)
                 else:
-                    rstrb = f"{astrb} && !decoded_req_is_wr"
+                    rstrb = f"{astrb} and not decoded_req_is_wr"
 
                 if buffer_writes:
                     wstrb = self.exp.write_buffering.get_write_strobe(field)
                 else:
-                    wstrb = f"{astrb} && decoded_req_is_wr"
+                    wstrb = f"{astrb} and decoded_req_is_wr"
 
-                return f"{wstrb} || {rstrb}"
+                return f"({wstrb}) or ({rstrb})"
             else:
                 # Unbuffered. Use decoder strobe directly
                 astrb = self.exp.dereferencer.get_access_strobe(field)
@@ -269,11 +269,11 @@ class FieldLogic:
             if buffer_reads:
                 rstrb = self.exp.read_buffering.get_trigger(field.parent)
             else:
-                rstrb = f"{astrb} && !decoded_req_is_wr"
+                rstrb = f"{astrb} and not decoded_req_is_wr"
             return rstrb
 
         # Not sw modifiable
-        return "1'b0"
+        return "0"
 
     def get_parity_identifier(self, field: 'FieldNode') -> str:
         """

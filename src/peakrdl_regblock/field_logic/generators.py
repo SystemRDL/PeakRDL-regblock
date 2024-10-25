@@ -5,21 +5,31 @@ from collections import OrderedDict
 from systemrdl.walker import WalkerAction
 from systemrdl.node import RegNode, RegfileNode, MemNode, AddrmapNode
 
-from ..struct_generator import RDLStructGenerator
+from ..struct_generator import RDLFlatStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
 
 if TYPE_CHECKING:
     from . import FieldLogic
-    from systemrdl.node import FieldNode, AddressableNode
+    from systemrdl.node import Node, FieldNode, AddressableNode
     from .bases import SVLogic
 
-class CombinationalStructGenerator(RDLStructGenerator):
+class CombinationalStructGenerator(RDLFlatStructGenerator):
 
     def __init__(self, field_logic: 'FieldLogic'):
         super().__init__()
         self.field_logic = field_logic
+        self.top_node = field_logic.exp.ds.top_node
+
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
+        base = node.get_rel_path(
+            self.top_node.parent,
+            hier_separator="__",
+            array_suffix="",
+            empty_array_suffix=""
+        )
+        return f'{base}{suffix}__combo_t'
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
@@ -44,8 +54,9 @@ class CombinationalStructGenerator(RDLStructGenerator):
                 else:
                     extra_combo_signals[signal.name] = signal
 
-        self.push_struct(kwf(node.inst_name))
-        self.add_member("next", node.width)
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, kwf(node.inst_name))
+        self.add_member("next_q", node.width)
         self.add_member("load_next")
         for signal in extra_combo_signals.values():
             self.add_member(signal.name, signal.width)
@@ -72,11 +83,21 @@ class CombinationalStructGenerator(RDLStructGenerator):
             self.add_member('underflow')
 
 
-class FieldStorageStructGenerator(RDLStructGenerator):
+class FieldStorageStructGenerator(RDLFlatStructGenerator):
 
     def __init__(self, field_logic: 'FieldLogic') -> None:
         super().__init__()
         self.field_logic = field_logic
+        self.top_node = field_logic.exp.ds.top_node
+
+    def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
+        base = node.get_rel_path(
+            self.top_node.parent,
+            hier_separator="__",
+            array_suffix="",
+            empty_array_suffix=""
+        )
+        return f'{base}{suffix}__storage_t'
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
@@ -86,7 +107,8 @@ class FieldStorageStructGenerator(RDLStructGenerator):
         return WalkerAction.Continue
 
     def enter_Field(self, node: 'FieldNode') -> None:
-        self.push_struct(kwf(node.inst_name))
+        type_name = self.get_typdef_name(node)
+        self.push_struct(type_name, kwf(node.inst_name))
 
         if node.implements_storage:
             self.add_member("value", node.width)
@@ -100,20 +122,20 @@ class FieldStorageStructGenerator(RDLStructGenerator):
 
 
 class FieldLogicGenerator(RDLForLoopGenerator):
-    i_type = "genvar"
+    loop_type = "generate"
     def __init__(self, field_logic: 'FieldLogic') -> None:
         super().__init__()
         self.field_logic = field_logic
         self.exp = field_logic.exp
         self.ds = self.exp.ds
         self.field_storage_template = self.exp.jj_env.get_template(
-            "field_logic/templates/field_storage.sv"
+            "field_logic/templates/field_storage_tmpl.vhd"
         )
         self.external_reg_template = self.exp.jj_env.get_template(
-            "field_logic/templates/external_reg.sv"
+            "field_logic/templates/external_reg_tmpl.vhd"
         )
         self.external_block_template = self.exp.jj_env.get_template(
-            "field_logic/templates/external_block.sv"
+            "field_logic/templates/external_block_tmpl.vhd"
         )
         self.intr_fields = [] # type: List[FieldNode]
         self.halt_fields = [] # type: List[FieldNode]
@@ -165,20 +187,20 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 F = self.exp.dereferencer.get_value(field)
                 if enable:
                     E = self.exp.dereferencer.get_value(enable)
-                    s = f"|({F} & {E})"
+                    s = f"(or ({F} and {E}))"
                 elif mask:
                     M = self.exp.dereferencer.get_value(mask)
-                    s = f"|({F} & ~{M})"
+                    s = f"(or ({F} and not {M}))"
                 else:
-                    s = f"|{F}"
+                    s = f"(or {F})"
                 strs.append(s)
 
             self.add_content(
-                f"assign {self.exp.hwif.get_implied_prop_output_identifier(node, 'intr')} ="
+                f"{self.exp.hwif.get_implied_prop_output_identifier(node, 'intr')} <="
             )
             self.add_content(
                 "    "
-                + "\n    || ".join(strs)
+                + "\n    or ".join(strs)
                 + ";"
             )
 
@@ -191,20 +213,20 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 F = self.exp.dereferencer.get_value(field)
                 if enable:
                     E = self.exp.dereferencer.get_value(enable)
-                    s = f"|({F} & {E})"
+                    s = f"(or ({F} and {E}))"
                 elif mask:
                     M = self.exp.dereferencer.get_value(mask)
-                    s = f"|({F} & ~{M})"
+                    s = f"(or ({F} and not {M}))"
                 else:
-                    s = f"|{F}"
+                    s = f"(or {F})"
                 strs.append(s)
 
             self.add_content(
-                f"assign {self.exp.hwif.get_implied_prop_output_identifier(node, 'halt')} ="
+                f"{self.exp.hwif.get_implied_prop_output_identifier(node, 'halt')} <="
             )
             self.add_content(
                 "    "
-                + "\n    || ".join(strs)
+                + "\n    or ".join(strs)
                 + ";"
             )
 
@@ -258,7 +280,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             output_identifier = self.exp.hwif.get_output_identifier(node)
             value = self.exp.dereferencer.get_value(node)
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
 
         # Inferred logical reduction outputs
@@ -266,19 +288,19 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "anded")
             value = self.exp.dereferencer.get_field_propref_value(node, "anded")
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('ored'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "ored")
             value = self.exp.dereferencer.get_field_propref_value(node, "ored")
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('xored'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "xored")
             value = self.exp.dereferencer.get_field_propref_value(node, "xored")
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
 
         # Software access strobes
@@ -286,25 +308,25 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swmod")
             value = self.field_logic.get_swmod_identifier(node)
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('swacc'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "swacc")
             value = self.field_logic.get_swacc_identifier(node)
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('rd_swacc'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "rd_swacc")
             value = self.field_logic.get_rd_swacc_identifier(node)
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('wr_swacc'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "wr_swacc")
             value = self.field_logic.get_wr_swacc_identifier(node)
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
 
         # Counter thresholds
@@ -312,13 +334,13 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "incrthreshold")
             value = self.field_logic.get_field_combo_identifier(node, 'incrthreshold')
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('decrthreshold') is not False: # (explicitly not False. Not 0)
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "decrthreshold")
             value = self.field_logic.get_field_combo_identifier(node, 'decrthreshold')
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
 
         # Counter events
@@ -326,13 +348,13 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "overflow")
             value = self.field_logic.get_field_combo_identifier(node, 'overflow')
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
         if node.get_property('underflow'):
             output_identifier = self.exp.hwif.get_implied_prop_output_identifier(node, "underflow")
             value = self.field_logic.get_field_combo_identifier(node, 'underflow')
             self.add_content(
-                f"assign {output_identifier} = {value};"
+                f"{output_identifier} <= {value};"
             )
 
 
@@ -342,7 +364,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
 
         width = min(self.exp.cpuif.data_width, node.get_property('regwidth'))
         if width != self.exp.cpuif.data_width:
-            bslice = f"[{width - 1}:0]"
+            bslice = f"({width - 1} downto 0)"
         else:
             bslice = ""
 
