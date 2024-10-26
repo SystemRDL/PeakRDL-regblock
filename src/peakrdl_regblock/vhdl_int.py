@@ -22,7 +22,7 @@ class VhdlVectorInt:
     If allow_std_logic is true and the width is 1, a std_logic literal will
     be produced (`'0'` or `'1'`)
     """
-    def __init__(self, value: int, width: Optional[int] = None, allow_std_logic=False) -> None:
+    def __init__(self, value: int, width: Optional[int] = None, allow_std_logic: bool = False) -> None:
         self.value = value
         self.width = width
         self.allow_std_logic = allow_std_logic

@@ -9,7 +9,6 @@
     {%- endif %}
 {%- endmacro %}
 process({{get_always_ff_event(resetsignal)}}) begin
-    -- TODO: double check this reset logic
     if {{get_resetsignal(resetsignal, asynch=True)}} then -- async reset
         {{- ext_reg_reset() }}
     elsif rising_edge(clk) then

@@ -9,7 +9,6 @@
     {{prefix}}.wr_biten <= '0;
 {%- endmacro %}
 process({{get_always_ff_event(resetsignal)}}) begin
-    -- TODO: double check this reset logic
     if {{get_resetsignal(resetsignal, asynch=True)}} then -- async reset
         {{- ext_block_reset() | indent }}
     elsif rising_edge(clk) then

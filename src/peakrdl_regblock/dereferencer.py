@@ -230,7 +230,7 @@ class Dereferencer:
         return s
 
 
-    def get_resetsignal(self, obj: Optional[SignalNode] = None, asynch=True) -> str:
+    def get_resetsignal(self, obj: Optional[SignalNode] = None, asynch: bool = True) -> str:
         """
         Returns a normalized active-high reset signal, or 'false' if the sync/async input doesn't match the reset type
         """

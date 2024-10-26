@@ -60,7 +60,6 @@ end process;
 {%- endmacro %}
 process({{get_always_ff_event(resetsignal)}}) begin
     {%- if reset is not none %}
-    -- TODO: this reset logic isn't working right
     {%- macro field_reset() %}
         {{field_logic.get_storage_identifier(node)}} <= {{reset}};
         {%- if node.get_property('paritycheck') %}
