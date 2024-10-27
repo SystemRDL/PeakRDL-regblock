@@ -64,8 +64,8 @@ end process;
 -- Request dispatch
 process(all) begin
     cpuif_wr_data <= axil_wdata;
-    for i in 0 to {{cpuif.data_width_bytes-1}} loop
-        cpuif_wr_biten(i*8 + 7 downto i*8 + 7) <= (7 downto 0 => axil_wstrb(i));
+    for i in axil_wstrb'RANGE loop
+        cpuif_wr_biten(i*8 + 7 downto i*8 + 7) <= (others => axil_wstrb(i));
     end loop;
     cpuif_req <= '0';
     cpuif_req_is_wr <= '0';
@@ -177,7 +177,7 @@ end
 {% endif %}
 
 {%- macro axil_resp_buffer_reset() %}
-        for i in 0 to {{cpuif.resp_buffer_size-1}} loop
+        for i in axil_resp_buffer'RANGE loop
             axil_resp_buffer(i).is_wr <= '0';
             axil_resp_buffer(i).err <= '0';
             axil_resp_buffer(i).rdata <= (others => '0');

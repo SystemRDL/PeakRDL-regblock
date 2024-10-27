@@ -93,8 +93,8 @@ architecture rtl of {{ds.module_name}} is
     signal decoded_wr_biten : std_logic_vector({{cpuif.data_width-1}} downto 0);
 
     {%- if ds.has_writable_msb0_fields %}
-    decoded_wr_data_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
-    decoded_wr_biten_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    signal decoded_wr_data_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    signal decoded_wr_biten_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
     {%- endif %}
 
     ----------------------------------------------------------------------------
@@ -115,6 +115,23 @@ architecture rtl of {{ds.module_name}} is
     signal readback_done : std_logic;
     signal readback_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
     {{ readback.signal_declaration | indent }}
+
+    -- Utility functions
+    function bitswap(vec: in std_logic_vector) return std_logic_vector is
+        variable result: std_logic_vector(vec'RANGE);
+        alias swapped: std_logic_vector(vec'REVERSE_RANGE) is vec;
+    begin
+        for i in swapped'RANGE loop
+            result(i) := swapped(i);
+        end loop;
+        return result;
+    end function;
+
+    function bitswap(logic: in std_logic) return std_logic is
+    begin
+        return logic;
+    end function;
+
 begin
 
     ----------------------------------------------------------------------------
@@ -238,10 +255,8 @@ begin
         decoded_wr_biten <= cpuif_wr_biten;
     {%- if ds.has_writable_msb0_fields %}
         -- bitswap for use by fields with msb0 ordering
-        for i in 0 to {{cpuif.data_width-1}} loop
-            decoded_wr_data_bswap(i) <= decoded_wr_data({{cpuif.data_width-1}}-i);
-            decoded_wr_biten_bswap(i) <= decoded_wr_biten({{cpuif.data_width-1}}-i);
-        end loop;
+        decoded_wr_data_bswap <= bitswap(decoded_wr_data);
+        decoded_wr_biten_bswap <= bitswap(decoded_wr_biten);
     {%- endif %}
     end process;
 

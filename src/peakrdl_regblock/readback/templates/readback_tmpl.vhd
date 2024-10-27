@@ -76,7 +76,7 @@ begin
     {%- endif %}
     readback_err <= '0';
     readback_data_var := (others => '0');
-    for i in 0 to {{array_size-1}} loop
+    for i in readback_array'RANGE loop
         readback_data_var := readback_data_var or readback_array(i);
     end loop;
     readback_data <= readback_data_var;
