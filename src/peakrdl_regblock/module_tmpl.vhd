@@ -174,12 +174,12 @@ begin
     -- Read latency > write latency. May need to delay next write that follows a read
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
-            cpuif_req_stall_sr <= '0';
+            cpuif_req_stall_sr <= (others => '0');
         elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
-                cpuif_req_stall_sr <= '0';
+                cpuif_req_stall_sr <= (others => '0');
             elsif cpuif_req and not cpuif_req_is_wr then
-                cpuif_req_stall_sr <= '1';
+                cpuif_req_stall_sr <= (others => '0');
             else
                 cpuif_req_stall_sr <= "0" & cpuif_req_stall_sr(cpuif_req_stall_sr'high downto 1);
             end if;
