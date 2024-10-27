@@ -6,7 +6,7 @@
 {%- if ds.retime_read_fanin %}
 
 -- fanin stage
-for g in 0 to {{fanin_loop_iter-1}} generate
+gen_fanin: for g in 0 to {{fanin_loop_iter-1}} generate
     process (all)
         variable readback_data_var : std_logic_vector({{cpuif.data_width-1}} downto 0);
     begin
@@ -28,7 +28,7 @@ begin
         readback_data_var := readback_data_var or readback_array(i);
     end loop;
     readback_array_c({{fanin_array_size-1}}) <= readback_data_var;
-end
+end process;
 {%- endif %}
 
 process({{get_always_ff_event(cpuif.reset)}}) begin

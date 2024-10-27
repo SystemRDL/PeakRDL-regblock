@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 
 from systemrdl.node import RegNode, AddressableNode
 from systemrdl.walker import WalkerAction
@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     from ..exporter import RegblockExporter
 
 class ReadbackLoopBody(LoopBody):
-    def __init__(self, dim: int, iterator: str, i_type: str) -> None:
-        super().__init__(dim, iterator, i_type)
+    def __init__(self, dim: int, iterator: str, i_type: str, label: Union[str, None] = None) -> None:
+        super().__init__(dim, iterator, i_type, label)
         self.n_regs = 0
 
     def __str__(self) -> str:
@@ -27,7 +27,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
     loop_body_cls = ReadbackLoopBody
 
     def __init__(self, exp:'RegblockExporter') -> None:
-        super().__init__()
+        super().__init__("gen_readback_")
         self.exp = exp
 
         # The readback array collects all possible readback values into a flat
@@ -61,8 +61,8 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
             offset_parts.append(f"i{i}*$i{i}sz")
         return " + ".join(offset_parts)
 
-    def push_loop(self, dim: int) -> None:
-        super().push_loop(dim)
+    def push_loop(self, dim: int, label: Union[str, None] = None) -> None:
+        super().push_loop(dim, label)
         self.start_offset_stack.append(self.current_offset)
         self.dim_stack.append(dim)
 

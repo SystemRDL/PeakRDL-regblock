@@ -124,7 +124,7 @@ class FieldStorageStructGenerator(RDLFlatStructGenerator):
 class FieldLogicGenerator(RDLForLoopGenerator):
     loop_type = "generate"
     def __init__(self, field_logic: 'FieldLogic') -> None:
-        super().__init__()
+        super().__init__("gen_field_logic_")
         self.field_logic = field_logic
         self.exp = field_logic.exp
         self.ds = self.exp.ds
