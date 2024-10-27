@@ -3,10 +3,12 @@
 library ieee;
 context ieee.ieee_std_context;
 
-use work.{{ds.module_name}}_pkg.all;
+library regblock;
+use regblock.{{ds.module_name}}_pkg.all;
 {%- if cpuif.package_name %}
-use work.{{cpuif.package_name}}.all;
+use regblock.{{cpuif.package_name}}.all;
 {%- endif %}
+use regblock.arrays.all;
 
 entity {{ds.module_name}} is
     {%- if cpuif.parameters %}

@@ -22,6 +22,8 @@ def get_indexed_path(top_node: Node, target_node: Node) -> str:
             self.i += 1
             return s
     path = re.sub(r'!', ReplaceUnknown(), path)
+    # change multidimensonal indices from (x)(y)(z) to (x, y, z)
+    path = re.sub(r'\)\(', ', ', path)
 
     # Sanitize any SV keywords
     def kw_filter_repl(m: Match) -> str:
@@ -88,8 +90,8 @@ def do_slice(value: Union[VhdlVectorInt, str], high: int, low: int, reduce=True)
 
 def do_bitswap(value: Union[VhdlVectorInt, str]) -> Union[VhdlVectorInt, str]:
     if isinstance(value, str):
-        # If string, assume this is an identifier. Wrap in a streaming operator
-        return "{<<{" + value + "}}"
+        # If string, assume this is an identifier. Wrap in a function
+        return f"bitswap({value})"
     else:
         # it is an VhdlVectorInt literal. bitswap it
         assert value.width is not None # width must be known!

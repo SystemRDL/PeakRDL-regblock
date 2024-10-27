@@ -29,7 +29,7 @@ class _AnonymousStruct(_StructBase):
 
     def __str__(self) -> str:
         if self.array_dimensions:
-            suffix = "(" + ")(".join(("natural range <>" for _ in self.array_dimensions)) + ")"
+            suffix = "(" + ", ".join(("natural range <>" for _ in self.array_dimensions)) + ")"
             return (
             f"{self.inst_name} is record\n"
             + super().__str__()
@@ -54,7 +54,7 @@ class _TypedefStruct(_StructBase):
 
     def __str__(self) -> str:
         if self.array_dimensions:
-            suffix = "(" + ")(".join(("natural range <>" for _ in self.array_dimensions)) + ")"
+            suffix = "(" + ", ".join(("natural range <>" for _ in self.array_dimensions)) + ")"
             return (
                 f"type {self.type_name} is record\n"
                 + super().__str__()
@@ -71,7 +71,7 @@ class _TypedefStruct(_StructBase):
     @property
     def instantiation(self) -> str:
         if self.array_dimensions:
-            suffix = "_array(" + ")(".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
+            suffix = "_array(" + ", ".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
 
         else:
             suffix = ""
@@ -97,19 +97,15 @@ class StructGenerator:
 
     def add_member(self, name: str, width: int = 1, array_dimensions: Optional[List[int]] = None) -> None:
         if array_dimensions:
-            suffix = "_array(" + ")(".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
-
+            suffix = f"_array{len(array_dimensions)}(" + ", ".join(("0 to " + str(n - 1) for n in array_dimensions)) + ")"
         else:
             suffix = ""
 
-        if width == 1 and not suffix:
-            m = f"{name} : std_logic;"
-        elif width == 1 and len(self.array_dimensions) > 1: # Requires a type to be declared (not implemented)
-            m = f"{name} : std_logic{suffix};" #TODO create type
-        elif width == 1 and len(self.array_dimensions) == 1: # Convert to a std_logic_vector
-            m = f"{name} : std_logic_vector({self.array_dimensions[0] - 1} downto 0);"
-        else:
-            m = f"{name} : std_logic_vector{suffix}({width - 1} downto 0);" #TODO create type
+        if width == 1:
+            m = f"{name} : std_logic{suffix};"
+        else: # width > 1
+            m = f"{name} : std_logic_vector{suffix}(0 to {width - 1});"
+
         self.current_struct.children.append(m)
 
 
