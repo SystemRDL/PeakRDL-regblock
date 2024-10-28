@@ -65,7 +65,7 @@ end process;
 process(all) begin
     cpuif_wr_data <= axil_wdata;
     for i in axil_wstrb'RANGE loop
-        cpuif_wr_biten(i*8 + 7 downto i*8 + 7) <= (others => axil_wstrb(i));
+        cpuif_wr_biten(i*8 + 7 downto i*8) <= (others => axil_wstrb(i));
     end loop;
     cpuif_req <= '0';
     cpuif_req_is_wr <= '0';

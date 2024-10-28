@@ -90,6 +90,10 @@ class AXI4Lite_Cpuif(CpuifBase):
 
 class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
     @property
+    def package_name(self) -> str:
+        return ""
+
+    @property
     def port_declaration(self) -> str:
         lines = [
             "s_axil_awready : out std_logic;",
