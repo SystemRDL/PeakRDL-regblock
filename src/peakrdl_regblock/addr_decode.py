@@ -7,7 +7,7 @@ from .utils import get_indexed_path
 from .struct_generator import RDLFlatStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
-from .vhdl_int import VhdlInt
+from .vhdl_int import VhdlInt, VhdlIntType
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
@@ -174,9 +174,10 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
         a = str(VhdlInt(
             node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
+            kind=VhdlIntType.INTEGER_HEX,
         ))
         for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*{VhdlInt(stride)}"
+            a += f" + i{i}*{VhdlInt(stride, kind=VhdlIntType.INTEGER_HEX)}"
         return a
 
 

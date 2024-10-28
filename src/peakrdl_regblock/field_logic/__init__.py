@@ -11,7 +11,7 @@ from . import hw_set_clr
 from . import hw_interrupts
 
 from ..utils import get_indexed_path
-from ..vhdl_int import VhdlVectorInt
+from ..vhdl_int import VhdlInt
 
 from .generators import CombinationalStructGenerator, FieldStorageStructGenerator, FieldLogicGenerator
 
@@ -105,7 +105,7 @@ class FieldLogic:
         # unset by the user, points to the implied input signal
         return self.exp.hwif.get_implied_prop_input_identifier(field, "incr")
 
-    def get_counter_incrvalue(self, field: 'FieldNode') -> Union[VhdlVectorInt, str]:
+    def get_counter_incrvalue(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         """
         Return the string that represents the field's increment value
         """
@@ -116,7 +116,7 @@ class FieldLogic:
             return self.exp.hwif.get_implied_prop_input_identifier(field, "incrvalue")
         return "1"
 
-    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> Union[VhdlVectorInt, str]:
+    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('incrsaturate')
         if prop_value is True:
             return self.exp.dereferencer.get_value(2**field.width - 1, field.width)
@@ -128,7 +128,7 @@ class FieldLogic:
         """
         return field.get_property('incrsaturate') is not False
 
-    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> Union[VhdlVectorInt, str]:
+    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('incrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use max
@@ -146,7 +146,7 @@ class FieldLogic:
         # unset by the user, points to the implied input signal
         return self.exp.hwif.get_implied_prop_input_identifier(field, "decr")
 
-    def get_counter_decrvalue(self, field: 'FieldNode') -> Union[VhdlVectorInt, str]:
+    def get_counter_decrvalue(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         """
         Return the string that represents the field's decrement value
         """
@@ -157,7 +157,7 @@ class FieldLogic:
             return self.exp.hwif.get_implied_prop_input_identifier(field, "decrvalue")
         return "1"
 
-    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> Union[VhdlVectorInt, str]:
+    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('decrsaturate')
         if prop_value is True:
             return self.exp.dereferencer.get_value(0)
@@ -169,7 +169,7 @@ class FieldLogic:
         """
         return field.get_property('decrsaturate') is not False
 
-    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> Union[VhdlVectorInt, str]:
+    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('decrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use min

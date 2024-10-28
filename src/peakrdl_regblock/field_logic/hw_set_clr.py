@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, List
 
 from .bases import NextStateConditional
-from ..vhdl_int import VhdlVectorInt
+from ..vhdl_int import VhdlInt, VhdlIntType
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
@@ -32,7 +32,7 @@ class HWSet(NextStateConditional):
             E = self.exp.dereferencer.get_value(hwenable)
             next_val = f"{R} or {E}"
         else:
-            next_val = VhdlVectorInt((1 << field.width) - 1, field.width, allow_std_logic=True)
+            next_val = VhdlInt((1 << field.width) - 1, field.width, VhdlIntType.AGGREGATE)
 
         return [
             f"next_c := {next_val};",
@@ -65,7 +65,7 @@ class HWClear(NextStateConditional):
             E = self.exp.dereferencer.get_value(hwenable)
             next_val = f"{R} and not {E}"
         else:
-            next_val = VhdlVectorInt(0, field.width, allow_std_logic=True)
+            next_val = VhdlInt(0, field.width, VhdlIntType.AGGREGATE)
 
         return [
             f"next_c := {next_val};",
