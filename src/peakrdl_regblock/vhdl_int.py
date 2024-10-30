@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Self
 from enum import Enum
 
 
@@ -54,7 +54,7 @@ class VhdlInt:
         elif self.kind == VhdlIntType.BIT_STRING_UNSIGNED:
             return f'{width}Ux"{self.value:X}"'
         elif self.kind == VhdlIntType.AGGREGATE:
-            if width == 1 and self.allow_std_logic:
+            if self.width == 1 and self.allow_std_logic:
                 return f"'{self.value}'"
             else:
                 if self.value == 0:
@@ -63,3 +63,43 @@ class VhdlInt:
                     return "(others => '1')"
                 else:
                     raise ValueError(f"AGGREGATE type VhdlInt only supports all zeros or all ones (got {self.value})")
+
+    @classmethod
+    def ones(cls, width: Optional[int] = None, allow_std_logic: bool = True) -> Self:
+        """All ones aggregate "(others => '1')"
+
+        May be reduced to '1' if allow_std_logic is True.
+        """
+        return cls(1, width, kind=VhdlIntType.AGGREGATE, allow_std_logic=allow_std_logic)
+
+    @classmethod
+    def zeros(cls, width: Optional[int] = None, allow_std_logic: bool = True) -> Self:
+        """All zeros aggregate "(others => '0')"
+
+        May be reduced to '0' if allow_std_logic is True.
+        """
+        return cls(0, width, kind=VhdlIntType.AGGREGATE, allow_std_logic=allow_std_logic)
+
+    @classmethod
+    def integer(cls, value: int) -> Self:
+        """Decimal integer literal, such as "30"
+        """
+        return cls(value, kind=VhdlIntType.INTEGER)
+
+    @classmethod
+    def integer_hex(cls, value: int) -> Self:
+        """Hexadecimal integer literal, such as "16#1E#"
+        """
+        return cls(value, kind=VhdlIntType.INTEGER_HEX)
+
+    @classmethod
+    def bit_string(cls, value: int, width: Optional[int] = None, allow_std_logic: bool = True) -> Self:
+        """Bit string literal, such as 5x"1E"
+        """
+        return cls(value, width=width, kind=VhdlIntType.BIT_STRING, allow_std_logic=allow_std_logic)
+
+    @classmethod
+    def unsigned(cls, value: int, width: Optional[int] = None, allow_std_logic: bool = True) -> Self:
+        """Unsigned string literal, such as 5Ux"1E"
+        """
+        return cls(value, width=width, kind=VhdlIntType.BIT_STRING_UNSIGNED, allow_std_logic=allow_std_logic)
