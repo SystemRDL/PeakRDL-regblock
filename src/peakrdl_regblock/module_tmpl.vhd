@@ -8,7 +8,7 @@ use regblock_lib.{{ds.module_name}}_pkg.all;
 {%- if cpuif.package_name %}
 use regblock_lib.{{cpuif.package_name}}.all;
 {%- endif %}
-use regblock_lib.arrays.all;
+use regblock_lib.reg_utils.all;
 
 entity {{ds.module_name}} is
     {%- if cpuif.parameters %}
@@ -115,22 +115,6 @@ architecture rtl of {{ds.module_name}} is
     signal readback_done : std_logic;
     signal readback_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
     {{ readback.signal_declaration | indent }}
-
-    -- Utility functions
-    function bitswap(vec: in std_logic_vector) return std_logic_vector is
-        variable result: std_logic_vector(vec'RANGE);
-        alias swapped: std_logic_vector(vec'REVERSE_RANGE) is vec;
-    begin
-        for i in swapped'RANGE loop
-            result(i) := swapped(i);
-        end loop;
-        return result;
-    end function;
-
-    function bitswap(logic: in std_logic) return std_logic is
-    begin
-        return logic;
-    end function;
 
 begin
 
