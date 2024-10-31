@@ -34,7 +34,9 @@ begin
     {%- endfor %}
     {%- endif %}
     {%- else %}
+    {%- if conditionals %}
     end if;
+    {%- endif %}
     {%- endif %}
 
     {%- if node.is_up_counter %}

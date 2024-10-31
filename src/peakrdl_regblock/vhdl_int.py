@@ -40,7 +40,7 @@ class VhdlInt:
             raise ValueError(f"Can't represent {value} using only {width} bits")
 
     def __str__(self) -> str:
-        width = self.width if self.width is not None else self.value.bit_length()
+        width = max(1, self.width if self.width is not None else self.value.bit_length())
 
         if self.kind == VhdlIntType.INTEGER:
             return str(self.value)
@@ -62,7 +62,7 @@ class VhdlInt:
                 elif self.value == (1 << width) - 1:
                     return "(others => '1')"
                 else:
-                    raise ValueError(f"AGGREGATE type VhdlInt only supports all zeros or all ones (got {self.value})")
+                    raise ValueError(f"AGGREGATE type VhdlInt only supports all zeros or all ones (got {self.value}, width {self.width})")
 
     @classmethod
     def ones(cls, width: Optional[int] = None, allow_std_logic: bool = True) -> Self:
@@ -70,7 +70,8 @@ class VhdlInt:
 
         May be reduced to '1' if allow_std_logic is True.
         """
-        return cls(1, width, kind=VhdlIntType.AGGREGATE, allow_std_logic=allow_std_logic)
+        value = 2**width - 1 if width is not None else 1
+        return cls(value, width, kind=VhdlIntType.AGGREGATE, allow_std_logic=allow_std_logic)
 
     @classmethod
     def zeros(cls, width: Optional[int] = None, allow_std_logic: bool = True) -> Self:
