@@ -227,7 +227,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                     f_low = field.width - 1 - f_low
                     f_high = field.width - 1 - f_high
                     f_low, f_high = f_high, f_low
-                    value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low), reduce=False)
+                    value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False))
                 else:
                     value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False)
 

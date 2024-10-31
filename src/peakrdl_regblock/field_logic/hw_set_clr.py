@@ -69,5 +69,5 @@ class HWClear(NextStateConditional):
 
         return [
             f"next_c := {next_val};",
-            "load_next_c := '1;",
+            "load_next_c := '1';",
         ]

@@ -104,7 +104,7 @@ class StructGenerator:
         if width == 1:
             m = f"{name} : std_logic{suffix};"
         else: # width > 1
-            m = f"{name} : std_logic_vector{suffix}(0 to {width - 1});"
+            m = f"{name} : std_logic_vector{suffix}({width - 1} downto 0);"
 
         self.current_struct.children.append(m)
 
