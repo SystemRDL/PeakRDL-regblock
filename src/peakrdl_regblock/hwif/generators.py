@@ -97,44 +97,12 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
             if node.has_sw_readable:
                 self.add_member("rd_ack")
-                self.add_external_reg_rd_data(node, width, n_subwords)
+                self.add_member("rd_data", width)
             if node.has_sw_writable:
                 self.add_member("wr_ack")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
-
-    def add_external_reg_rd_data(self, node: 'RegNode', width: int, n_subwords: int) -> None:
-        if n_subwords == 1:
-            # External reg is 1 sub-word. Add a packed struct to represent it
-            type_name = self.get_typdef_name(node, "__fields")
-            self.push_struct(type_name, "rd_data", packed=True)
-            current_bit = 0
-            for field in node.fields():
-                if not field.is_sw_readable:
-                    continue
-                if field.low > current_bit:
-                    # Add padding
-                    self.add_member(
-                        f"_reserved_{field.low - 1}_{current_bit}",
-                        field.low - current_bit
-                    )
-                self.add_member(
-                    kwf(field.inst_name),
-                    field.width
-                )
-                current_bit = field.high + 1
-
-            # Add end padding if needed
-            if current_bit != width:
-                self.add_member(
-                    f"_reserved_{width - 1}_{current_bit}",
-                    width - current_bit
-                )
-            self.pop_struct()
-        else:
-            # Multiple sub-words. Cannot generate a struct
-            self.add_member("rd_data", width)
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
@@ -225,43 +193,11 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             self.add_member("req", n_subwords)
             self.add_member("req_is_wr")
             if node.has_sw_writable:
-                self.add_external_reg_wr_data("wr_data", node, width, n_subwords)
-                self.add_external_reg_wr_data("wr_biten", node, width, n_subwords)
+                self.add_member("wr_data", width)
+                self.add_member("wr_biten", width)
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
-
-    def add_external_reg_wr_data(self, name: str, node: 'RegNode', width: int, n_subwords: int) -> None:
-        if n_subwords == 1:
-            # External reg is 1 sub-word. Add a packed struct to represent it
-            type_name = self.get_typdef_name(node, "__fields")
-            self.push_struct(type_name, name, packed=True)
-            current_bit = 0
-            for field in node.fields():
-                if not field.is_sw_writable:
-                    continue
-                if field.low > current_bit:
-                    # Add padding
-                    self.add_member(
-                        f"_reserved_{field.low - 1}_{current_bit}",
-                        field.low - current_bit
-                    )
-                self.add_member(
-                    kwf(field.inst_name),
-                    field.width
-                )
-                current_bit = field.high + 1
-
-            # Add end padding if needed
-            if current_bit != width:
-                self.add_member(
-                    f"_reserved_{width - 1}_{current_bit}",
-                    width - current_bit
-                )
-            self.pop_struct()
-        else:
-            # Multiple sub-words. Cannot generate a struct
-            self.add_member(name, width)
 
     def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
