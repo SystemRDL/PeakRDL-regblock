@@ -26,7 +26,7 @@ class ExternalWriteAckGenerator(RDLForLoopGenerator):
 
         if node.external:
             if not isinstance(node, RegNode) or node.has_sw_writable:
-                self.add_content(f"wr_ack |= {self.exp.hwif.get_external_wr_ack(node)};")
+                self.add_content(f"wr_ack := wr_ack or {self.exp.hwif.get_external_wr_ack(node)};")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue
@@ -48,7 +48,7 @@ class ExternalReadAckGenerator(RDLForLoopGenerator):
 
         if node.external:
             if not isinstance(node, RegNode) or node.has_sw_readable:
-                self.add_content(f"rd_ack |= {self.exp.hwif.get_external_rd_ack(node)};")
+                self.add_content(f"rd_ack := rd_ack or {self.exp.hwif.get_external_rd_ack(node)};")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue

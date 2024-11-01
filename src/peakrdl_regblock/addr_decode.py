@@ -163,7 +163,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             # Is an external block
             addr_str = self._get_address_str(node)
             strb = self.addr_decode.get_external_block_access_strobe(node)
-            rhs = f"cpuif_req_masked and (cpuif_addr >= {addr_str}) and (cpuif_addr <= {addr_str} + {VhdlInt(node.size - 1)})"
+            rhs = f"cpuif_req_masked and to_std_logic(to_unsigned(cpuif_addr) >= {addr_str} and to_unsigned(cpuif_addr) <= {addr_str} + {VhdlInt.integer_hex(node.size - 1)})"
             self.add_content(f"{strb} <= {rhs};")
             self.add_content(f"is_external := is_external or ({rhs});")
             return WalkerAction.SkipDescendants

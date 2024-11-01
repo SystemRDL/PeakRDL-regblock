@@ -300,7 +300,7 @@ begin
     begin
         wr_ack := '0';
         {{ext_write_acks.get_implementation()|indent(8)}}
-        external_wr_ack = wr_ack;
+        external_wr_ack <= wr_ack;
     end process;
     cpuif_wr_ack <= external_wr_ack or (decoded_req and decoded_req_is_wr and not decoded_strb_is_external);
 {%- else %}
@@ -318,7 +318,7 @@ begin
     begin
         rd_ack := '0';
         {{ext_read_acks.get_implementation()|indent(8)}}
-        readback_external_rd_ack_c = rd_ack;
+        readback_external_rd_ack_c <= rd_ack;
     end process;
 
     {%- if ds.retime_read_fanin %}

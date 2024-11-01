@@ -1,11 +1,11 @@
 {% if retime -%}
 
 {%- macro ext_reg_reset() %}
-        {{prefix}}.req <= '0';
+        {{prefix}}.req <= {{ req_reset }};
         {{prefix}}.req_is_wr <= '0';
     {%- if has_sw_writable %}
-        {{prefix}}.wr_data <= '0';
-        {{prefix}}.wr_biten <= '0';
+        {{prefix}}.wr_data <= (others => '0');
+        {{prefix}}.wr_biten <= (others => '0');
     {%- endif %}
 {%- endmacro %}
 process({{get_always_ff_event(resetsignal)}}) begin
@@ -18,9 +18,9 @@ process({{get_always_ff_event(resetsignal)}}) begin
         {%- if has_sw_readable and has_sw_writable %}
             {{prefix}}.req <= {{strb}};
         {%- elif has_sw_readable and not has_sw_writable %}
-            {{prefix}}.req <= {{strb}} when not decoded_req_is_wr else '0';
+            {{prefix}}.req <= {{strb}} when not decoded_req_is_wr else {{ req_reset }};
         {%- elif not has_sw_readable and has_sw_writable %}
-            {{prefix}}.req <= {{strb}} when decoded_req_is_wr else '0';
+            {{prefix}}.req <= {{strb}} when decoded_req_is_wr else {{ req_reset }};
         {%- endif %}
             {{prefix}}.req_is_wr <= decoded_req_is_wr;
         {%- if has_sw_writable %}
@@ -38,9 +38,9 @@ end process;
 {%- if has_sw_readable and has_sw_writable %}
 {{prefix}}.req <= {{strb}};
 {%- elif has_sw_readable and not has_sw_writable %}
-{{prefix}}.req <= {{strb}} when not decoded_req_is_wr else '0';
+{{prefix}}.req <= {{strb}} when not decoded_req_is_wr else {{ req_reset }};
 {%- elif not has_sw_readable and has_sw_writable %}
-{{prefix}}.req <= {{strb}} when decoded_req_is_wr else '0';
+{{prefix}}.req <= {{strb}} when decoded_req_is_wr else {{ req_reset }};
 {%- endif %}
 {{prefix}}.req_is_wr <= decoded_req_is_wr;
 {%- if has_sw_writable %}

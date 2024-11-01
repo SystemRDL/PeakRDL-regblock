@@ -9,6 +9,8 @@ from ..struct_generator import RDLFlatStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
+from ..vhdl_int import VhdlInt
+
 
 if TYPE_CHECKING:
     from . import FieldLogic
@@ -367,6 +369,8 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             bslice = f"({width - 1} downto 0)"
         else:
             bslice = ""
+        n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
+        req_reset = VhdlInt.zeros(n_subwords)
 
         context = {
             "has_sw_writable": node.has_sw_writable,
@@ -374,6 +378,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "prefix": prefix,
             "strb": strb,
             "bslice": bslice,
+            "req_reset": req_reset,
             "retime": self.ds.retime_external_reg,
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,
