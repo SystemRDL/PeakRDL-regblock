@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 import inspect
 import os
 
@@ -39,7 +39,7 @@ class CpuifBase:
         raise NotImplementedError()
 
     @property
-    def package_name(self) -> str:
+    def package_name(self) -> Union[str, None]:
         raise NotImplementedError()
 
     @property

@@ -1,3 +1,5 @@
+from typing import Union
+
 from ..base import CpuifBase
 from ...utils import clog2, roundup_pow2
 
@@ -49,7 +51,7 @@ class AXI4Lite_Cpuif(CpuifBase):
         return "\n".join(signals)
 
     @property
-    def package_name(self) -> str:
+    def package_name(self) -> Union[str, None]:
         return "axi4lite_intf_pkg"
 
     def signal(self, name:str) -> str:
@@ -90,8 +92,8 @@ class AXI4Lite_Cpuif(CpuifBase):
 
 class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
     @property
-    def package_name(self) -> str:
-        return ""
+    def package_name(self) -> Union[str, None]:
+        return None
 
     @property
     def port_declaration(self) -> str:
