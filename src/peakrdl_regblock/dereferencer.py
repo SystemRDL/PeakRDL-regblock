@@ -101,16 +101,25 @@ class Dereferencer:
         width: Optional[int] = None,
     ) -> Union[VhdlInt, str]:
         # Value reduction properties.
-        # Wrap with the appropriate Verilog reduction operator
+        # Wrap with the appropriate VHDL reduction operator
         if prop_name == "anded":
             val = self.get_value(field)
-            return f"(and {val})"
+            if field.width == 1:
+                return str(val)
+            else:
+                return f"(and {val})"
         elif prop_name == "ored":
             val = self.get_value(field)
-            return f"(or {val})"
+            if field.width == 1:
+                return str(val)
+            else:
+                return f"(or {val})"
         elif prop_name == "xored":
             val = self.get_value(field)
-            return f"(xor {val})"
+            if field.width == 1:
+                return str(val)
+            else:
+                return f"(xor {val})"
 
         # references that directly access a property value
         if prop_name in {

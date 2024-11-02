@@ -98,12 +98,12 @@ class Hwif:
         lines = []
         if self.has_input_struct:
             type_name = f"{self.top_node.inst_name}__in_t"
-            lines.append(f"hwif_in : in {type_name};")
+            lines.append(f"hwif_in : in {type_name}")
         if self.has_output_struct:
             type_name = f"{self.top_node.inst_name}__out_t"
             lines.append(f"hwif_out : out {type_name}")
 
-        return "\n".join(lines)
+        return ";\n".join(lines)
 
     #---------------------------------------------------------------------------
     # hwif utility functions

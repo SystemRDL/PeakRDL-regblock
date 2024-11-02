@@ -20,24 +20,23 @@ begin
         {{assignment|indent}}
         {%- endfor %}
     {%- endfor %}
-    {%- if unconditional %}
+{%- if unconditional %}
     {% if conditionals %}else -- {{unconditional.comment}}
         {%- for assignment in unconditional.get_assignments(node) %}
         {{assignment|indent}}
         {%- endfor %}
     end if;
     {%- else %}
-    end if;
     -- {{unconditional.comment}}
     {%- for assignment in unconditional.get_assignments(node) %}
     {{assignment|indent}}
     {%- endfor %}
     {%- endif %}
-    {%- else %}
+{%- else %}
     {%- if conditionals %}
     end if;
     {%- endif %}
-    {%- endif %}
+{%- endif %}
 
     {%- if node.is_up_counter %}
     {{counter_macros.up_counter(node)}}

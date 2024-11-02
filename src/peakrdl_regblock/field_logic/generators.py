@@ -189,12 +189,15 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 F = self.exp.dereferencer.get_value(field)
                 if enable:
                     E = self.exp.dereferencer.get_value(enable)
-                    s = f"(or ({F} and {E}))"
+                    s = f"({F} and {E})"
                 elif mask:
                     M = self.exp.dereferencer.get_value(mask)
-                    s = f"(or ({F} and not {M}))"
+                    s = f"({F} and not {M})"
                 else:
-                    s = f"(or {F})"
+                    s = f"{F}"
+
+                if field.width > 1:
+                    s = f"(or {s})"
                 strs.append(s)
 
             self.add_content(
@@ -215,12 +218,15 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 F = self.exp.dereferencer.get_value(field)
                 if enable:
                     E = self.exp.dereferencer.get_value(enable)
-                    s = f"(or ({F} and {E}))"
+                    s = f"({F} and {E})"
                 elif mask:
                     M = self.exp.dereferencer.get_value(mask)
-                    s = f"(or ({F} and not {M}))"
+                    s = f"({F} and not {M})"
                 else:
-                    s = f"(or {F})"
+                    s = f"{F}"
+
+                if field.width > 1:
+                    s = f"(or {s})"
                 strs.append(s)
 
             self.add_content(
