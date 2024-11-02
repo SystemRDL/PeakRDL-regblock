@@ -273,7 +273,7 @@ class FieldLogic:
             return rstrb
 
         # Not sw modifiable
-        return "0"
+        return "'0'"
 
     def get_parity_identifier(self, field: 'FieldNode') -> str:
         """
