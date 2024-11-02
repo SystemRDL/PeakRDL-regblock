@@ -1,0 +1,12 @@
+cpuif_req <= s_cpuif_req;
+cpuif_req_is_wr <= s_cpuif_req_is_wr;
+cpuif_addr <= s_cpuif_addr;
+cpuif_wr_data <= s_cpuif_wr_data;
+cpuif_wr_biten <= s_cpuif_wr_biten;
+s_cpuif_req_stall_wr <= cpuif_req_stall_wr;
+s_cpuif_req_stall_rd <= cpuif_req_stall_rd;
+s_cpuif_rd_ack <= cpuif_rd_ack;
+s_cpuif_rd_err <= cpuif_rd_err;
+s_cpuif_rd_data <= cpuif_rd_data;
+s_cpuif_wr_ack <= cpuif_wr_ack;
+s_cpuif_wr_err <= cpuif_wr_err;
