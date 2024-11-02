@@ -1,10 +1,12 @@
+from typing import Union
+
 from ..base import CpuifBase
 
 class APB3_Cpuif(CpuifBase):
     template_path = "apb3_tmpl.vhd"
 
     @property
-    def package_name(self) -> str:
+    def package_name(self) -> Union[str, None]:
         return "apb3_intf_pkg"
 
     @property
@@ -32,8 +34,8 @@ class APB3_Cpuif(CpuifBase):
 
 class APB3_Cpuif_flattened(APB3_Cpuif):
     @property
-    def package_name(self) -> str:
-        return ""
+    def package_name(self) -> Union[str, None]:
+        return None
 
     @property
     def port_declaration(self) -> str:
