@@ -104,6 +104,14 @@ architecture rtl of {{ds.module_name}} is
 
     {{field_logic.get_storage_struct()|indent}}
 
+{%- if ds.has_buffered_read_regs %}
+
+    ----------------------------------------------------------------------------
+    -- Read Buffer Signals
+    ----------------------------------------------------------------------------
+    {{read_buffering.get_storage_struct()|indent}}
+{%- endif %}
+
     ----------------------------------------------------------------------------
     -- Readback Signals
     ----------------------------------------------------------------------------
@@ -286,8 +294,6 @@ begin
     ----------------------------------------------------------------------------
     -- Read double-buffers
     ----------------------------------------------------------------------------
-    {{read_buffering.get_storage_struct()|indent}}
-
     {{read_buffering.get_implementation()|indent}}
 {%- endif %}
 

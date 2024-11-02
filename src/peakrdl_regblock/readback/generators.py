@@ -248,7 +248,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
 
         # pad up remainder of subword
         if bidx < accesswidth:
-            self.add_content(f"readback_array({self.current_offset_str})({accesswidth-1} downto {bidx}) <= '0';")
+            self.add_content(f"readback_array({self.current_offset_str})({accesswidth-1} downto {bidx}) <= (others => '0');")
         self.current_offset += 1
 
         # Assign remainder of subwords from read buffer
@@ -257,7 +257,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         for i in range(1, n_subwords):
             rd_strb = f"({astrb}({i}) and not decoded_req_is_wr)"
             bslice = f"({(i + 1) * accesswidth - 1} downto {i*accesswidth})"
-            self.add_content(f"readback_array({self.current_offset_str}) = {rbuf}{bslice} when {rd_strb} else (others => '0');")
+            self.add_content(f"readback_array({self.current_offset_str}) <= {rbuf}{bslice} when {rd_strb} else (others => '0');")
             self.current_offset += 1
 
     def process_wide_reg(self, node: RegNode, accesswidth: int) -> None:

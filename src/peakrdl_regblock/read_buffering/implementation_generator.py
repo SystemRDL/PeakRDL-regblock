@@ -4,18 +4,19 @@ from systemrdl.component import Reg
 from systemrdl.node import RegNode
 
 from ..forloop_generator import RDLForLoopGenerator
+from ..vhdl_int import VhdlInt
 
 if TYPE_CHECKING:
     from . import ReadBuffering
 
 class RBufLogicGenerator(RDLForLoopGenerator):
-    i_type = "genvar"
+    loop_type = "generate"
     def __init__(self, rbuf: 'ReadBuffering') -> None:
         super().__init__()
         self.rbuf = rbuf
         self.exp = rbuf.exp
         self.template = self.exp.jj_env.get_template(
-            "read_buffering/template.sv"
+            "read_buffering/template.vhd"
         )
 
     def enter_Reg(self, node: RegNode) -> None:
@@ -32,8 +33,6 @@ class RBufLogicGenerator(RDLForLoopGenerator):
         }
         self.add_content(self.template.render(context))
 
-
-
     def get_assignments(self, node: RegNode) -> str:
         data = self.rbuf.get_rbuf_data(node)
         bidx = 0
@@ -41,19 +40,19 @@ class RBufLogicGenerator(RDLForLoopGenerator):
         for field in node.fields():
             if bidx < field.low:
                 # zero padding before field
-                s.append(f"{data}[{field.low-1}:{bidx}] <= '0;")
+                s.append(f"{data}({field.low-1} downto {bidx}) <= (others => '0');")
 
             value = self.exp.dereferencer.get_value(field)
             if field.msb < field.lsb:
                 # Field gets bitswapped since it is in [low:high] orientation
-                value = f"{{<<{{{value}}}}}"
-            s.append(f"{data}[{field.high}:{field.low}] <= {value};")
+                value = f"bitswap({value})"
+            s.append(f"{data}({field.high} downto {field.low}) <= {value};")
 
             bidx = field.high + 1
 
         regwidth = node.get_property('regwidth')
         if bidx < regwidth:
             # zero padding after last field
-            s.append(f"{data}[{regwidth-1}:{bidx}] <= '0;")
+            s.append(f"{data}({regwidth-1} downto {bidx}) <= (others => '0');")
 
         return "\n".join(s)
