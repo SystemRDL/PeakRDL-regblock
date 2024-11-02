@@ -9,6 +9,8 @@ from ..struct_generator import RDLFlatStructGenerator
 from ..forloop_generator import RDLForLoopGenerator
 from ..utils import get_indexed_path
 from ..identifier_filter import kw_filter as kwf
+from ..vhdl_int import VhdlInt
+
 
 if TYPE_CHECKING:
     from . import FieldLogic
@@ -124,7 +126,7 @@ class FieldStorageStructGenerator(RDLFlatStructGenerator):
 class FieldLogicGenerator(RDLForLoopGenerator):
     loop_type = "generate"
     def __init__(self, field_logic: 'FieldLogic') -> None:
-        super().__init__()
+        super().__init__("gen_field_logic_")
         self.field_logic = field_logic
         self.exp = field_logic.exp
         self.ds = self.exp.ds
@@ -187,12 +189,15 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 F = self.exp.dereferencer.get_value(field)
                 if enable:
                     E = self.exp.dereferencer.get_value(enable)
-                    s = f"(or ({F} and {E}))"
+                    s = f"({F} and {E})"
                 elif mask:
                     M = self.exp.dereferencer.get_value(mask)
-                    s = f"(or ({F} and not {M}))"
+                    s = f"({F} and not {M})"
                 else:
-                    s = f"(or {F})"
+                    s = f"{F}"
+
+                if field.width > 1:
+                    s = f"(or {s})"
                 strs.append(s)
 
             self.add_content(
@@ -213,12 +218,15 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                 F = self.exp.dereferencer.get_value(field)
                 if enable:
                     E = self.exp.dereferencer.get_value(enable)
-                    s = f"(or ({F} and {E}))"
+                    s = f"({F} and {E})"
                 elif mask:
                     M = self.exp.dereferencer.get_value(mask)
-                    s = f"(or ({F} and not {M}))"
+                    s = f"({F} and not {M})"
                 else:
-                    s = f"(or {F})"
+                    s = f"{F}"
+
+                if field.width > 1:
+                    s = f"(or {s})"
                 strs.append(s)
 
             self.add_content(
@@ -367,6 +375,8 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             bslice = f"({width - 1} downto 0)"
         else:
             bslice = ""
+        n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
+        req_reset = VhdlInt.zeros(n_subwords)
 
         context = {
             "has_sw_writable": node.has_sw_writable,
@@ -374,6 +384,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             "prefix": prefix,
             "strb": strb,
             "bslice": bslice,
+            "req_reset": req_reset,
             "retime": self.ds.retime_external_reg,
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             "get_resetsignal": self.exp.dereferencer.get_resetsignal,

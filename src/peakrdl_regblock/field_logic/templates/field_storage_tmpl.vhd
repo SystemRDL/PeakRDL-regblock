@@ -20,22 +20,23 @@ begin
         {{assignment|indent}}
         {%- endfor %}
     {%- endfor %}
-    {%- if unconditional %}
+{%- if unconditional %}
     {% if conditionals %}else -- {{unconditional.comment}}
         {%- for assignment in unconditional.get_assignments(node) %}
         {{assignment|indent}}
         {%- endfor %}
     end if;
     {%- else %}
-    end if;
     -- {{unconditional.comment}}
     {%- for assignment in unconditional.get_assignments(node) %}
     {{assignment|indent}}
     {%- endfor %}
     {%- endif %}
-    {%- else %}
+{%- else %}
+    {%- if conditionals %}
     end if;
     {%- endif %}
+{%- endif %}
 
     {%- if node.is_up_counter %}
     {{counter_macros.up_counter(node)}}
@@ -48,23 +49,22 @@ begin
     {{field_logic.get_field_combo_identifier(node, "load_next")}} <= load_next_c;
 
     {%- if node.get_property('paritycheck') %}
-    {{field_logic.get_parity_error_identifier(node)}} <= ({{field_logic.get_parity_identifier(node)}} /= xor {{field_logic.get_storage_identifier(node)}});
+    {{field_logic.get_parity_error_identifier(node)}} <= to_std_logic({{field_logic.get_parity_identifier(node)}} /= ({% if node.width != 1 %}xor {% endif %}{{field_logic.get_storage_identifier(node)}}));
     {%- endif %}
 end process;
 
 {%- macro field_set() %}
     {{field_logic.get_storage_identifier(node)}} <= {{field_logic.get_field_combo_identifier(node, "next_q")}};
     {%- if node.get_property('paritycheck') %}
-    {{field_logic.get_parity_identifier(node)}} <= xor {{field_logic.get_field_combo_identifier(node, "next_q")}};
+    {{field_logic.get_parity_identifier(node)}} <= {% if node.width != 1 %}xor {% endif %}{{field_logic.get_field_combo_identifier(node, "next_q")}};
     {%- endif %}
 {%- endmacro %}
 process({{get_always_ff_event(resetsignal)}}) begin
     {%- if reset is not none %}
-    -- TODO: this reset logic isn't working right
     {%- macro field_reset() %}
         {{field_logic.get_storage_identifier(node)}} <= {{reset}};
         {%- if node.get_property('paritycheck') %}
-        {{field_logic.get_parity_identifier(node)}} <= xor {{reset}};
+        {{field_logic.get_parity_identifier(node)}} <= {% if node.width != 1 %}xor std_logic_vector'{% endif %}({{reset}});
         {%- endif %}
     {%- endmacro %}
     if {{get_resetsignal(resetsignal, asynch=True)}} then -- async reset

@@ -11,7 +11,7 @@ from . import hw_set_clr
 from . import hw_interrupts
 
 from ..utils import get_indexed_path
-from ..sv_int import SVInt
+from ..vhdl_int import VhdlInt
 
 from .generators import CombinationalStructGenerator, FieldStorageStructGenerator, FieldLogicGenerator
 
@@ -100,12 +100,12 @@ class FieldLogic:
         """
         prop_value = field.get_property('incr')
         if prop_value:
-            return str(self.exp.dereferencer.get_value(prop_value))
+            return str(self.exp.dereferencer.get_value(prop_value, field.width))
 
         # unset by the user, points to the implied input signal
         return self.exp.hwif.get_implied_prop_input_identifier(field, "incr")
 
-    def get_counter_incrvalue(self, field: 'FieldNode') -> Union[SVInt, str]:
+    def get_counter_incrvalue(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         """
         Return the string that represents the field's increment value
         """
@@ -116,7 +116,7 @@ class FieldLogic:
             return self.exp.hwif.get_implied_prop_input_identifier(field, "incrvalue")
         return "1"
 
-    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> Union[SVInt, str]:
+    def get_counter_incrsaturate_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('incrsaturate')
         if prop_value is True:
             return self.exp.dereferencer.get_value(2**field.width - 1, field.width)
@@ -128,7 +128,7 @@ class FieldLogic:
         """
         return field.get_property('incrsaturate') is not False
 
-    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> Union[SVInt, str]:
+    def get_counter_incrthreshold_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('incrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use max
@@ -137,16 +137,16 @@ class FieldLogic:
 
     def get_counter_decr_strobe(self, field: 'FieldNode') -> str:
         """
-        Return the VHDL string that represents the field's incr strobe signal.
+        Return the VHDL string that represents the field's decr strobe signal.
         """
         prop_value = field.get_property('decr')
         if prop_value:
-            return str(self.exp.dereferencer.get_value(prop_value))
+            return str(self.exp.dereferencer.get_value(prop_value, field.width))
 
         # unset by the user, points to the implied input signal
         return self.exp.hwif.get_implied_prop_input_identifier(field, "decr")
 
-    def get_counter_decrvalue(self, field: 'FieldNode') -> Union[SVInt, str]:
+    def get_counter_decrvalue(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         """
         Return the string that represents the field's decrement value
         """
@@ -157,10 +157,10 @@ class FieldLogic:
             return self.exp.hwif.get_implied_prop_input_identifier(field, "decrvalue")
         return "1"
 
-    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> Union[SVInt, str]:
+    def get_counter_decrsaturate_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('decrsaturate')
         if prop_value is True:
-            return self.exp.dereferencer.get_value(0)
+            return self.exp.dereferencer.get_value(0, field.width)
         return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def counter_decrsaturates(self, field: 'FieldNode') -> bool:
@@ -169,11 +169,11 @@ class FieldLogic:
         """
         return field.get_property('decrsaturate') is not False
 
-    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> Union[SVInt, str]:
+    def get_counter_decrthreshold_value(self, field: 'FieldNode') -> Union[VhdlInt, str]:
         prop_value = field.get_property('decrthreshold')
         if isinstance(prop_value, bool):
             # No explicit value set. use min
-            return self.exp.dereferencer.get_value(0)
+            return self.exp.dereferencer.get_value(0, field.width)
         return self.exp.dereferencer.get_value(prop_value, field.width)
 
     def get_swacc_identifier(self, field: 'FieldNode') -> str:
@@ -273,7 +273,7 @@ class FieldLogic:
             return rstrb
 
         # Not sw modifiable
-        return "0"
+        return "'0'"
 
     def get_parity_identifier(self, field: 'FieldNode') -> str:
         """

@@ -64,8 +64,8 @@ end process;
 -- Request dispatch
 process(all) begin
     cpuif_wr_data <= axil_wdata;
-    for i in 0 to {{cpuif.data_width_bytes-1}} loop
-        cpuif_wr_biten(i*8 + 7 downto i*8 + 7) <= (7 downto 0 => axil_wstrb(i));
+    for i in axil_wstrb'RANGE loop
+        cpuif_wr_biten(i*8 + 7 downto i*8) <= (others => axil_wstrb(i));
     end loop;
     cpuif_req <= '0';
     cpuif_req_is_wr <= '0';
@@ -83,7 +83,7 @@ process(all) begin
             {%- else %}
             cpuif_addr <= ({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}} => axil_araddr({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}}), others => '0');
             {%- endif %}
-            if not cpuif_reg_stall_rd then
+            if not cpuif_req_stall_rd then
                 axil_ar_accept <= '1';
             end if;
         elsif axil_awvalid and axil_wvalid then
@@ -94,7 +94,7 @@ process(all) begin
             {%- else %}
             cpuif_addr <= ({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}} => axil_awaddr({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}}), others => '0');
             {%- endif %}
-            if not cpuif_reg_stall_wr then
+            if not cpuif_req_stall_wr then
                 axil_aw_accept <= '1';
             end if;
         elsif axil_arvalid then
@@ -105,7 +105,7 @@ process(all) begin
             {%- else %}
             cpuif_addr <= ({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}} => axil_araddr({{cpuif.addr_width-1}} downto {{clog2(cpuif.data_width_bytes)}}), others => '0');
             {%- endif %}
-            if not cpuif_reg_stall_rd then
+            if not cpuif_req_stall_rd then
                 axil_ar_accept <= '1';
             end if;
         end if;
@@ -177,13 +177,13 @@ end
 {% endif %}
 
 {%- macro axil_resp_buffer_reset() %}
-        for i in 0 to {{cpuif.resp_buffer_size-1}} loop
+        for i in axil_resp_buffer'RANGE loop
             axil_resp_buffer(i).is_wr <= '0';
             axil_resp_buffer(i).err <= '0';
             axil_resp_buffer(i).rdata <= (others => '0');
         end loop;
-        axil_resp_wptr <= 0;
-        axil_resp_rptr <= 0;
+        axil_resp_wptr <= (others => '0');
+        axil_resp_rptr <= (others => '0');
 {%- endmacro %}
 process({{get_always_ff_event(cpuif.reset)}}) begin
     if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
@@ -195,13 +195,13 @@ process({{get_always_ff_event(cpuif.reset)}}) begin
             -- Store responses in buffer until AXI response channel accepts them
             if cpuif_rd_ack or cpuif_wr_ack then
                 if cpuif_rd_ack then
-                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr <= (others => '0');
-                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err <= cpuif_rd_err;
-                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).rdata <= cpuif_rd_data;
+                    axil_resp_buffer(to_integer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).is_wr <= '0';
+                    axil_resp_buffer(to_integer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).err <= cpuif_rd_err;
+                    axil_resp_buffer(to_integer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).rdata <= cpuif_rd_data;
 
                 elsif cpuif_wr_ack then
-                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr <= '1';
-                    axil_resp_buffer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err <= cpuif_wr_err;
+                    axil_resp_buffer(to_integer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).is_wr <= '1';
+                    axil_resp_buffer(to_integer(axil_resp_wptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).err <= cpuif_wr_err;
                 end if;
                 {%- if is_pow2(cpuif.resp_buffer_size) %}
                 axil_resp_wptr <= axil_resp_wptr + 1;
@@ -237,7 +237,7 @@ process(all) begin
     {{cpuif.signal("bvalid")}} <= '0';
     {{cpuif.signal("rvalid")}} <= '0';
     if axil_resp_rptr /= axil_resp_wptr then
-        if axil_resp_buffer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).is_wr then
+        if axil_resp_buffer(to_integer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).is_wr then
             {{cpuif.signal("bvalid")}} <= '1';
             if {{cpuif.signal("bready")}} then
                 axil_resp_acked <= '1';
@@ -250,8 +250,8 @@ process(all) begin
         end if;
     end if;
 
-    {{cpuif.signal("rdata")}} <= axil_resp_buffer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).rdata;
-    if axil_resp_buffer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0)).err then
+    {{cpuif.signal("rdata")}} <= axil_resp_buffer(to_integer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).rdata;
+    if axil_resp_buffer(to_integer(axil_resp_rptr({{clog2(cpuif.resp_buffer_size)-1}} downto 0))).err then
         {{cpuif.signal("bresp")}} <= "10";
         {{cpuif.signal("rresp")}} <= "10";
     else

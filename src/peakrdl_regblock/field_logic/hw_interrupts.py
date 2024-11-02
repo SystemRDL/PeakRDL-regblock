@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List
 from systemrdl.rdltypes import InterruptType
 
 from .bases import NextStateConditional
-from ..sv_int import VhdlVectorInt
+from ..vhdl_int import VhdlInt
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
@@ -23,7 +23,7 @@ class Sticky(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         R = self.exp.field_logic.get_storage_identifier(field)
-        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
+        zero = VhdlInt.zeros(field.width)
         return f"({R} = {zero}) and ({I} /= {zero})"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -47,7 +47,7 @@ class Stickybit(NextStateConditional):
 
     def get_predicate(self, field: 'FieldNode') -> str:
         F = self.exp.hwif.get_input_identifier(field)
-        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
+        zero = VhdlInt.zeros(field.width)
         return f"{F} /= {zero}"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -73,7 +73,7 @@ class PosedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
+        zero = VhdlInt.zeros(field.width)
         return f"(not {Iq} and {I}) /= {zero}"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
@@ -100,7 +100,7 @@ class NegedgeStickybit(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         I = self.exp.hwif.get_input_identifier(field)
         Iq = self.exp.field_logic.get_next_q_identifier(field)
-        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
+        zero = VhdlInt.zeros(field.width)
         return f"({Iq} and not {I}) /= {zero}"
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:

@@ -74,4 +74,4 @@ class WELWrite(AlwaysWrite):
         else:
             # signal or field
             identifier = str(self.exp.dereferencer.get_value(prop))
-        return f"!{identifier}"
+        return f"not {identifier}"

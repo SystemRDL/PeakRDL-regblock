@@ -3,8 +3,12 @@
 library ieee;
 context ieee.ieee_std_context;
 
-use work.{{ds.module_name}}_pkg.all;
--- TODO: need CPUIF package
+library regblock_lib;
+use regblock_lib.{{ds.module_name}}_pkg.all;
+{%- if cpuif.package_name %}
+use regblock_lib.{{cpuif.package_name}}.all;
+{%- endif %}
+use regblock_lib.reg_utils.all;
 
 entity {{ds.module_name}} is
     {%- if cpuif.parameters %}
@@ -41,7 +45,7 @@ architecture rtl of {{ds.module_name}} is
     ----------------------------------------------------------------------------
     signal cpuif_req : std_logic;
     signal cpuif_req_is_wr : std_logic;
-    signal cpuif_addr : unsigned({{cpuif.addr_width-1}} downto 0);
+    signal cpuif_addr : std_logic_vector({{cpuif.addr_width-1}} downto 0);
     signal cpuif_wr_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
     signal cpuif_wr_biten : std_logic_vector({{cpuif.data_width-1}} downto 0);
     signal cpuif_req_stall_wr : std_logic;
@@ -89,8 +93,8 @@ architecture rtl of {{ds.module_name}} is
     signal decoded_wr_biten : std_logic_vector({{cpuif.data_width-1}} downto 0);
 
     {%- if ds.has_writable_msb0_fields %}
-    decoded_wr_data_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
-    decoded_wr_biten_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    signal decoded_wr_data_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
+    signal decoded_wr_biten_bswap : std_logic_vector({{cpuif.data_width-1}} downto 0);
     {%- endif %}
 
     ----------------------------------------------------------------------------
@@ -111,6 +115,7 @@ architecture rtl of {{ds.module_name}} is
     signal readback_done : std_logic;
     signal readback_data : std_logic_vector({{cpuif.data_width-1}} downto 0);
     {{ readback.signal_declaration | indent }}
+
 begin
 
     ----------------------------------------------------------------------------
@@ -153,12 +158,12 @@ begin
     -- Read latency > write latency. May need to delay next write that follows a read
     process({{get_always_ff_event(cpuif.reset)}}) begin
         if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
-            cpuif_req_stall_sr <= '0';
+            cpuif_req_stall_sr <= (others => '0');
         elsif rising_edge(clk) then
             if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
-                cpuif_req_stall_sr <= '0';
+                cpuif_req_stall_sr <= (others => '0');
             elsif cpuif_req and not cpuif_req_is_wr then
-                cpuif_req_stall_sr <= '1';
+                cpuif_req_stall_sr <= (others => '0');
             else
                 cpuif_req_stall_sr <= "0" & cpuif_req_stall_sr(cpuif_req_stall_sr'high downto 1);
             end if;
@@ -202,6 +207,13 @@ begin
     -- Address Decode
     ----------------------------------------------------------------------------
     process(all)
+        -- overload "=" in this scope to avoid lots of type casts
+        function "="(L: std_logic_vector; R: integer) return std_logic is
+            variable result : std_logic;
+        begin
+            result := '1' when unsigned(L) = R else '0';
+            return result;
+        end;
         {%- if ds.has_external_addressable %}
         variable is_external: std_logic;
         {%- endif %}
@@ -227,10 +239,8 @@ begin
         decoded_wr_biten <= cpuif_wr_biten;
     {%- if ds.has_writable_msb0_fields %}
         -- bitswap for use by fields with msb0 ordering
-        for i in 0 to {{cpuif.data_width-1}} loop
-            decoded_wr_data_bswap(i) <= decoded_wr_data({{cpuif.data_width-1}}-i);
-            decoded_wr_biten_bswap(i) <= decoded_wr_biten({{cpuif.data_width-1}}-i);
-        end loop;
+        decoded_wr_data_bswap <= bitswap(decoded_wr_data);
+        decoded_wr_biten_bswap <= bitswap(decoded_wr_biten);
     {%- endif %}
     end process;
 
@@ -290,7 +300,7 @@ begin
     begin
         wr_ack := '0';
         {{ext_write_acks.get_implementation()|indent(8)}}
-        external_wr_ack = wr_ack;
+        external_wr_ack <= wr_ack;
     end process;
     cpuif_wr_ack <= external_wr_ack or (decoded_req and decoded_req_is_wr and not decoded_strb_is_external);
 {%- else %}
@@ -308,7 +318,7 @@ begin
     begin
         rd_ack := '0';
         {{ext_read_acks.get_implementation()|indent(8)}}
-        readback_external_rd_ack_c = rd_ack;
+        readback_external_rd_ack_c <= rd_ack;
     end process;
 
     {%- if ds.retime_read_fanin %}

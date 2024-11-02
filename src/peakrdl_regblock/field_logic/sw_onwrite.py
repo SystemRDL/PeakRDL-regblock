@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List
 from systemrdl.rdltypes import OnWriteType
 
 from .bases import NextStateConditional
-from ..sv_int import VhdlVectorInt
+from ..vhdl_int import VhdlInt
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
@@ -75,7 +75,10 @@ class _OnWrite(NextStateConditional):
                 high = bus_width - 1 - high
                 low, high = high, low
 
-        return f"({high} downto {low})"
+        if high == low:
+            return f"({high})"
+        else:
+            return f"({high} downto {low})"
 
     def _wr_data(self, field: 'FieldNode', subword_idx: int=0) -> str:
         if field.parent.get_property('buffer_writes'):
@@ -185,7 +188,7 @@ class WriteClear(_OnWrite):
     onwritetype = OnWriteType.wclr
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        zero = VhdlVectorInt(0, field.width, allow_std_logic=True)
+        zero = VhdlInt.zeros(field.width)
         return [
             f"next_c := {zero};",
             "load_next_c := '1';",
@@ -196,7 +199,7 @@ class WriteSet(_OnWrite):
     onwritetype = OnWriteType.wset
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
-        ones = VhdlVectorInt((1 << field.width) - 1, field.width, allow_std_logic=True)
+        ones = VhdlInt.ones(field.width)
         return [
             f"next_c := {ones};",
             "load_next_c := '1';",

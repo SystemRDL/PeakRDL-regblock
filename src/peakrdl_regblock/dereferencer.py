@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Union, Optional
 from systemrdl.node import AddrmapNode, FieldNode, SignalNode, RegNode, AddressableNode
 from systemrdl.rdltypes import PropertyReference
 
-from .sv_int import SVInt
+from .vhdl_int import VhdlInt, VhdlIntType
 
 if TYPE_CHECKING:
     from .exporter import RegblockExporter, DesignState
@@ -38,21 +38,26 @@ class Dereferencer:
     def top_node(self) -> AddrmapNode:
         return self.exp.ds.top_node
 
-    def get_value(self, obj: Union[int, FieldNode, SignalNode, PropertyReference], width: Optional[int] = None) -> Union[SVInt, str]:
+    def get_value(
+            self,
+            obj: Union[int, FieldNode, SignalNode, PropertyReference],
+            width: Optional[int] = None,
+            int_type: VhdlIntType = VhdlIntType.BIT_STRING,
+        ) -> Union[VhdlInt, str]:
         """
         Returns the VHDL string that represents the readable value associated
         with the object.
 
         If given a simple scalar value, then the corresponding VHDL literal is returned.
 
-        If obj references a structural systemrdl object, then the corresponding Verilog
+        If obj references a structural systemrdl object, then the corresponding VHDL
         expression is returned that represents its value.
 
         The optional width argument can be provided to hint at the expression's desired bitwidth.
         """
         if isinstance(obj, int):
             # Is a simple scalar value
-            return SVInt(obj, width)
+            return VhdlInt(obj, width, int_type)
 
         if isinstance(obj, FieldNode):
             if obj.implements_storage:
@@ -94,18 +99,27 @@ class Dereferencer:
         field: FieldNode,
         prop_name: str,
         width: Optional[int] = None,
-    ) -> Union[SVInt, str]:
+    ) -> Union[VhdlInt, str]:
         # Value reduction properties.
-        # Wrap with the appropriate Verilog reduction operator
+        # Wrap with the appropriate VHDL reduction operator
         if prop_name == "anded":
             val = self.get_value(field)
-            return f"(and {val})"
+            if field.width == 1:
+                return str(val)
+            else:
+                return f"(and {val})"
         elif prop_name == "ored":
             val = self.get_value(field)
-            return f"(or {val})"
+            if field.width == 1:
+                return str(val)
+            else:
+                return f"(or {val})"
         elif prop_name == "xored":
             val = self.get_value(field)
-            return f"(xor {val})"
+            if field.width == 1:
+                return str(val)
+            else:
+                return f"(xor {val})"
 
         # references that directly access a property value
         if prop_name in {
@@ -230,7 +244,7 @@ class Dereferencer:
         return s
 
 
-    def get_resetsignal(self, obj: Optional[SignalNode] = None, asynch=True) -> str:
+    def get_resetsignal(self, obj: Optional[SignalNode] = None, asynch: bool = True) -> str:
         """
         Returns a normalized active-high reset signal, or 'false' if the sync/async input doesn't match the reset type
         """

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 
 from systemrdl.node import RegNode, AddressableNode
 from systemrdl.walker import WalkerAction
@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     from ..exporter import RegblockExporter
 
 class ReadbackLoopBody(LoopBody):
-    def __init__(self, dim: int, iterator: str, i_type: str) -> None:
-        super().__init__(dim, iterator, i_type)
+    def __init__(self, dim: int, iterator: str, i_type: str, label: Union[str, None] = None) -> None:
+        super().__init__(dim, iterator, i_type, label)
         self.n_regs = 0
 
     def __str__(self) -> str:
@@ -27,7 +27,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
     loop_body_cls = ReadbackLoopBody
 
     def __init__(self, exp:'RegblockExporter') -> None:
-        super().__init__()
+        super().__init__("gen_readback_")
         self.exp = exp
 
         # The readback array collects all possible readback values into a flat
@@ -56,13 +56,13 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
         size of its contents is known.
         """
         offset_parts = []
+        offset_parts.append(str(self.current_offset))
         for i in range(self._loop_level):
             offset_parts.append(f"i{i}*$i{i}sz")
-        offset_parts.append(str(self.current_offset))
         return " + ".join(offset_parts)
 
-    def push_loop(self, dim: int) -> None:
-        super().push_loop(dim)
+    def push_loop(self, dim: int, label: Union[str, None] = None) -> None:
+        super().push_loop(dim, label)
         self.start_offset_stack.append(self.current_offset)
         self.dim_stack.append(dim)
 
@@ -136,7 +136,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
 
     def process_reg(self, node: RegNode) -> None:
         current_bit = 0
-        rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} and not ecoded_req_is_wr)"
+        rd_strb = f"({self.exp.dereferencer.get_access_strobe(node)} and not decoded_req_is_wr)"
         # Fields are sorted by ascending low bit
         for field in node.fields():
             if not field.is_sw_readable:
@@ -151,6 +151,9 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                 # Field gets bitswapped since it is in [low:high] orientation
                 value = do_bitswap(value)
 
+            if field.width == 1:
+                # convert from std_logic to std_logic_vector
+                value = f"(0 => {value})"
             self.add_content(f"readback_array({self.current_offset_str})({field.high} downto {field.low}) <= {value} when {rd_strb} else (others => '0');")
 
             current_bit = field.high + 1
@@ -224,9 +227,9 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                     f_low = field.width - 1 - f_low
                     f_high = field.width - 1 - f_high
                     f_low, f_high = f_high, f_low
-                    value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low))
+                    value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False))
                 else:
-                    value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low)
+                    value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False)
 
                 self.add_content(f"readback_array({self.current_offset_str})({r_high} downto {r_low}) <= {value} when {rd_strb} else (others => '0');")
                 bidx = accesswidth
@@ -236,6 +239,10 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                 if field.msb < field.lsb:
                     # Field gets bitswapped since it is in [low:high] orientation
                     value = do_bitswap(value)
+
+                if field.width == 1:
+                    # convert from std_logic to std_logic_vector
+                    value = f"(0 => {value})"
                 self.add_content(f"readback_array({self.current_offset_str})({field.high} downto {field.low}) <= {value} when {rd_strb} else (others => '0');")
                 bidx = field.high + 1
 
@@ -302,6 +309,9 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                         # Field gets bitswapped since it is in [low:high] orientation
                         value = do_bitswap(value)
 
+                    if field.width == 1:
+                        # convert from std_logic to std_logic_vector
+                        value = f"(0 => {value})"
                     self.add_content(f"readback_array({self.current_offset_str})({high} downto {low}) <= {value} when {rd_strb} else (others => '0');")
 
                     current_bit = field.high + 1
@@ -329,9 +339,9 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                         f_high = field.width - 1 - f_high
                         f_low, f_high = f_high, f_low
 
-                        value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low))
+                        value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False))
                     else:
-                        value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low)
+                        value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False)
 
                     self.add_content(f"readback_array({self.current_offset_str})({r_high} downto {r_low}) <= {value} when {rd_strb} else (others => '0');")
 
@@ -359,9 +369,9 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
                         f_high = field.width - 1 - f_high
                         f_low, f_high = f_high, f_low
 
-                        value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low))
+                        value = do_bitswap(do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False))
                     else:
-                        value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low)
+                        value = do_slice(self.exp.dereferencer.get_value(field), f_high, f_low, reduce=False)
 
                     self.add_content(f"readback_array({self.current_offset_str})({r_high} downto {r_low}) <= {value} when {rd_strb} else (others => '0');")
 

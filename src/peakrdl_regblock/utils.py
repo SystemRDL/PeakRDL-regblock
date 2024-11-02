@@ -5,7 +5,7 @@ from systemrdl.rdltypes.references import PropertyReference
 from systemrdl.node import Node, AddrmapNode
 
 from .identifier_filter import kw_filter as kwf
-from .sv_int import SVInt
+from .vhdl_int import VhdlInt
 
 def get_indexed_path(top_node: Node, target_node: Node) -> str:
     """
@@ -22,6 +22,8 @@ def get_indexed_path(top_node: Node, target_node: Node) -> str:
             self.i += 1
             return s
     path = re.sub(r'!', ReplaceUnknown(), path)
+    # change multidimensonal indices from (x)(y)(z) to (x, y, z)
+    path = re.sub(r'\)\(', ', ', path)
 
     # Sanitize any SV keywords
     def kw_filter_repl(m: Match) -> str:
@@ -67,15 +69,15 @@ def ref_is_internal(top_node: AddrmapNode, ref: Union[Node, PropertyReference]) 
     return True
 
 
-def do_slice(value: Union[SVInt, str], high: int, low: int) -> Union[SVInt, str]:
+def do_slice(value: Union[VhdlInt, str], high: int, low: int, reduce=True) -> Union[VhdlInt, str]:
     if isinstance(value, str):
         # If string, assume this is an identifier. Append bit-slice
-        if high == low:
+        if high == low and reduce:
             return f"{value}({low})"
         else:
             return f"{value}({high} downto {low})"
     else:
-        # it is an SVInt literal. Slice it down
+        # it is a VhdlInt literal. Slice it down
         mask = (1 << (high + 1)) - 1
         v = (value.value & mask) >> low
 
@@ -84,18 +86,18 @@ def do_slice(value: Union[SVInt, str], high: int, low: int) -> Union[SVInt, str]
         else:
             w = None
 
-        return SVInt(v, w)
+        return VhdlInt(v, w, value.kind, value.allow_std_logic)
 
-def do_bitswap(value: Union[SVInt, str]) -> Union[SVInt, str]:
+def do_bitswap(value: Union[VhdlInt, str]) -> Union[VhdlInt, str]:
     if isinstance(value, str):
-        # If string, assume this is an identifier. Wrap in a streaming operator
-        return "{<<{" + value + "}}"
+        # If string, assume this is an identifier. Wrap in a function
+        return f"bitswap({value})"
     else:
-        # it is an SVInt literal. bitswap it
+        # it is a VhdlInt literal. bitswap it
         assert value.width is not None # width must be known!
         v = value.value
         vswap = 0
         for _ in range(value.width):
             vswap = (vswap << 1) + (v & 1)
             v >>= 1
-        return SVInt(vswap, value.width)
+        return VhdlInt(vswap, value.width, value.kind, value.allow_std_logic)
