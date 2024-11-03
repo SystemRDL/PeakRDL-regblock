@@ -2,9 +2,8 @@ from typing import TYPE_CHECKING, Union
 
 from systemrdl.node import AddrmapNode, RegNode, SignalNode, FieldNode, Node
 
-from peakrdl_regblock.struct_generator import RDLFlatStructGenerator
-
 from .implementation_generator import RBufLogicGenerator
+from ..struct_generator import RDLFlatStructGenerator
 from ..utils import get_indexed_path
 
 if TYPE_CHECKING:

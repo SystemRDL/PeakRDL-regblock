@@ -4,12 +4,12 @@ import inspect
 
 import jinja2 as jj
 
-from peakrdl_regblock.cpuif.base import CpuifBase
+from peakrdl_regblock_vhdl.cpuif.base import CpuifBase
 
 from ..sv_line_anchor import SVLineAnchor
 
 if TYPE_CHECKING:
-    from peakrdl_regblock import RegblockExporter
+    from peakrdl_regblock_vhdl import RegblockExporter
     from ..sim_testcase import SimTestCase
 
 class CpuifTestMode:

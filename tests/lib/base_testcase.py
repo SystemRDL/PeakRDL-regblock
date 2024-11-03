@@ -9,7 +9,7 @@ import pathlib
 import pytest
 from systemrdl import RDLCompiler
 
-from peakrdl_regblock import RegblockExporter
+from peakrdl_regblock_vhdl import RegblockExporter
 from peakrdl_regblock.udps import ALL_UDPS
 
 from .cpuifs.base import CpuifTestMode

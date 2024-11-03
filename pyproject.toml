@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "peakrdl-regblock"
+name = "peakrdl-regblock-vhdl"
 dynamic = ["version"]
 requires-python = ">=3.6"
 dependencies = [
@@ -51,4 +51,4 @@ Documentation = "https://peakrdl-regblock.readthedocs.io/"
 version = {attr = "peakrdl_regblock.__about__.__version__"}
 
 [project.entry-points."peakrdl.exporters"]
-regblock = "peakrdl_regblock.__peakrdl__:Exporter"
+regblock-vhdl = "peakrdl_regblock_vhdl.__peakrdl__:Exporter"

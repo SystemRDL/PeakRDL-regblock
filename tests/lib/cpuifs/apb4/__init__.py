@@ -1,6 +1,6 @@
 from ..base import CpuifTestMode
 
-from peakrdl_regblock.cpuif.apb4 import APB4_Cpuif, APB4_Cpuif_flattened
+from peakrdl_regblock_vhdl.cpuif.apb4 import APB4_Cpuif, APB4_Cpuif_flattened
 
 class APB4(CpuifTestMode):
     cpuif_cls = APB4_Cpuif

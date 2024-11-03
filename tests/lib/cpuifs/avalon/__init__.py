@@ -1,6 +1,6 @@
 from ..base import CpuifTestMode
 
-from peakrdl_regblock.cpuif.avalon import Avalon_Cpuif, Avalon_Cpuif_flattened
+from peakrdl_regblock_vhdl.cpuif.avalon import Avalon_Cpuif, Avalon_Cpuif_flattened
 
 class Avalon(CpuifTestMode):
     cpuif_cls = Avalon_Cpuif

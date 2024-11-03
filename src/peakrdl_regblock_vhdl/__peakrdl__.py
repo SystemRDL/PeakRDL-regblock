@@ -34,7 +34,7 @@ class Choice(schema.String):
 
 
 class Exporter(ExporterSubcommandPlugin):
-    short_desc = "Generate a SystemVerilog control/status register (CSR) block"
+    short_desc = "Generate a VHDL control/status register (CSR) block"
 
     udp_definitions = ALL_UDPS
 
@@ -60,21 +60,21 @@ class Exporter(ExporterSubcommandPlugin):
         }
 
         # Load any cpuifs specified via entry points
-        for ep, dist in entry_points.get_entry_points("peakrdl_regblock.cpuif"):
+        for ep, dist in entry_points.get_entry_points("peakrdl_regblock_vhdl.cpuif"):
             name = ep.name
             cpuif = ep.load()
             if name in cpuifs:
-                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it already exists")
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock-vhdl' tried to load cpuif '{name}' but it already exists")
             if not issubclass(cpuif, CpuifBase):
-                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it not a CpuifBase class")
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock-vhdl' tried to load cpuif '{name}' but it not a CpuifBase class")
             cpuifs[name] = cpuif
 
         # Load any CPUIFs via config import
         for name, cpuif in self.cfg['cpuifs'].items():
             if name in cpuifs:
-                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it already exists")
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock-vhdl' tried to load cpuif '{name}' but it already exists")
             if not issubclass(cpuif, CpuifBase):
-                raise RuntimeError(f"A plugin for 'peakrdl-regblock' tried to load cpuif '{name}' but it not a CpuifBase class")
+                raise RuntimeError(f"A plugin for 'peakrdl-regblock-vhdl' tried to load cpuif '{name}' but it not a CpuifBase class")
             cpuifs[name] = cpuif
 
         return cpuifs
