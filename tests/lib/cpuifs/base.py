@@ -4,7 +4,8 @@ import inspect
 
 import jinja2 as jj
 
-from peakrdl_regblock_vhdl.cpuif.base import CpuifBase
+from peakrdl_regblock.cpuif.base import CpuifBase as SvCpuifBase
+from peakrdl_regblock_vhdl.cpuif.base import CpuifBase as VhdlCpuifBase
 
 from ..sv_line_anchor import SVLineAnchor
 
@@ -13,7 +14,8 @@ if TYPE_CHECKING:
     from ..sim_testcase import SimTestCase
 
 class CpuifTestMode:
-    cpuif_cls = None # type: CpuifBase
+    sv_cpuif_cls = None # type: SvCpuifBase
+    vhdl_cpuif_cls = None # type: VhdlCpuifBase
 
     # Files required by the DUT
     # Paths are relative to the class that assigns this
@@ -26,6 +28,23 @@ class CpuifTestMode:
     # Path is relative to the class that assigns this
     tb_template = ""
 
+    sv_signal_prefix = ""
+    vhdl_in_signal_prefix = ""
+    vhdl_out_signal_prefix = ""
+
+    @staticmethod
+    def input_signals(cpuif: SvCpuifBase) -> list[tuple[str, int]]:
+        raise NotImplementedError()
+
+    @staticmethod
+    def output_signals(cpuif: SvCpuifBase) -> list[tuple[str, int]]:
+        raise NotImplementedError()
+
+    @classmethod
+    def signals(cls, cpuif: SvCpuifBase) -> list[tuple[str, int]]:
+        results = cls.input_signals(cpuif)
+        results.extend(cls.output_signals(cpuif))
+        return results
 
     def _get_class_dir_of_variable(self, varname:str) -> str:
         """

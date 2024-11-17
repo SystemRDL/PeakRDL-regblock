@@ -52,7 +52,7 @@ class SimTestCase(BaseTestCase):
 
         context = {
             "testcase": self,
-            "exporter": self.exporter,
+            "exporter": self.sv_exporter,
         }
 
         # template path needs to be relative to the Jinja loader root

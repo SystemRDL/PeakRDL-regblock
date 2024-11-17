@@ -9,9 +9,11 @@ import pathlib
 import pytest
 from systemrdl import RDLCompiler
 
-from peakrdl_regblock_vhdl import RegblockExporter
+from peakrdl_regblock_vhdl import RegblockExporter as VhdlRegblockExporter
+from peakrdl_regblock import RegblockExporter as SvRegblockExporter
 from peakrdl_regblock.udps import ALL_UDPS
 
+from .vhdl_adapter import VhdlAdapter
 from .cpuifs.base import CpuifTestMode
 from .cpuifs.apb4 import APB4
 
@@ -43,7 +45,8 @@ class BaseTestCase(unittest.TestCase):
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
 
-    exporter = RegblockExporter()
+    sv_exporter = SvRegblockExporter()
+    vhdl_exporter = VhdlRegblockExporter()
 
     @pytest.fixture(autouse=True)
     def _load_request(self, request):
@@ -103,22 +106,28 @@ class BaseTestCase(unittest.TestCase):
         rdlc.compile_file(rdl_file)
         root = rdlc.elaborate(self.rdl_elab_target, "regblock", self.rdl_elab_params)
 
-        self.exporter.export(
-            root,
-            self.get_run_dir(),
-            module_name="regblock",
-            package_name="regblock_pkg",
-            cpuif_cls=self.cpuif.cpuif_cls,
-            retime_read_fanin=self.retime_read_fanin,
-            retime_read_response=self.retime_read_response,
-            reuse_hwif_typedefs=self.reuse_hwif_typedefs,
-            retime_external_reg=self.retime_external,
-            retime_external_regfile=self.retime_external,
-            retime_external_mem=self.retime_external,
-            retime_external_addrmap=self.retime_external,
-            default_reset_activelow=self.default_reset_activelow,
-            default_reset_async=self.default_reset_async,
-        )
+        for exporter, cpuif_cls in (
+            (self.sv_exporter, self.cpuif.sv_cpuif_cls),
+            (self.vhdl_exporter, self.cpuif.vhdl_cpuif_cls),
+        ):
+            exporter.export(
+                root,
+                self.get_run_dir(),
+                module_name="regblock",
+                package_name="regblock_pkg",
+                cpuif_cls=cpuif_cls,
+                retime_read_fanin=self.retime_read_fanin,
+                retime_read_response=self.retime_read_response,
+                reuse_hwif_typedefs=self.reuse_hwif_typedefs,
+                retime_external_reg=self.retime_external,
+                retime_external_regfile=self.retime_external,
+                retime_external_mem=self.retime_external,
+                retime_external_addrmap=self.retime_external,
+                default_reset_activelow=self.default_reset_activelow,
+                default_reset_async=self.default_reset_async,
+            )
+        vhdl_adapter = VhdlAdapter(self.sv_exporter, self.cpuif)
+        vhdl_adapter.export(self.get_run_dir())
 
     def setUp(self) -> None:
         if self.rerun:
