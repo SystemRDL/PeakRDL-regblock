@@ -18,13 +18,24 @@ class Simulator:
         return self.testcase.request.config.getoption("--gui")
 
     @property
-    def tb_files(self) -> List[str]:
+    def sv_tb_files(self) -> List[str]:
         files = []
         files.extend(self.testcase.cpuif.get_sim_files())
         files.extend(self.testcase.get_extra_tb_files())
         files.append("regblock_pkg.sv")
         files.append("regblock.sv")
+        files.append("regblock_adapter.sv")
         files.append("tb.sv")
+
+        return files
+
+    @property
+    def vhdl_tb_files(self) -> List[str]:
+        files = []
+        files.append("regblock_pkg.vhd")
+        files.append("regblock.vhd")
+        files.append("regblock_adapter.vhd")
+        files.append("regblock_adapter_comp.vhd")
 
         return files
 

@@ -12,11 +12,12 @@ class Questa(Simulator):
     def is_installed(cls) -> bool:
         return (
             shutil.which("vlog") is not None
+            and shutil.which("vcom") is not None
             and shutil.which("vsim") is not None
         )
 
     def compile(self) -> None:
-        cmd = [
+        sv_cmd = [
             "vlog", "-sv", "-quiet", "-l", "build.log",
 
             "+incdir+%s" % os.path.join(os.path.dirname(__file__), ".."),
@@ -29,13 +30,29 @@ class Questa(Simulator):
 
             # Ignore noisy warning about vopt-time checking of always_comb/always_latch
             "-suppress", "2583",
+
+            # Ignore warning line number differences due to `line directive
+            "-suppress", "13465",
         ]
 
         # Add source files
-        cmd.extend(self.tb_files)
+        sv_cmd.extend(self.sv_tb_files)
 
         # Run command!
-        subprocess.run(cmd, check=True)
+        subprocess.run(sv_cmd, check=True)
+
+        vhdl_cmd = [
+            "vcom", "-2008", "-quiet", "-l", "build.log",
+
+            # all warnings are errors
+            "-warning", "error",
+        ]
+
+        # Add source files
+        vhdl_cmd.extend(self.vhdl_tb_files)
+
+        # Run command!
+        subprocess.run(vhdl_cmd, check=True)
 
 
     def run(self, plusargs:List[str] = None) -> None:
