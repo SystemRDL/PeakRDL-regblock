@@ -33,11 +33,11 @@ end process;
 
 process({{get_always_ff_event(cpuif.reset)}}) begin
     if {{get_resetsignal(cpuif.reset, asynch=True)}} then -- async reset
-        readback_array_r <= (others => (others => '0'));
+        readback_array_r <= (others => {{cpuif.data_width}}x"0");
         readback_done_r <= '0';
     elsif rising_edge(clk) then
         if {{get_resetsignal(cpuif.reset, asynch=False)}} then -- sync reset
-            readback_array_r <= (others => (others => '0'));
+            readback_array_r <= (others => {{cpuif.data_width}}x"0");
             readback_done_r <= '0';
         else
             readback_array_r <= readback_array_c;
