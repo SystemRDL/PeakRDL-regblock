@@ -54,11 +54,11 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
-            hier_separator="__",
+            hier_separator=".",
             array_suffix="x",
             empty_array_suffix="x"
         )
-        return f'{base}{suffix}__in_t'
+        return kwf(f'{base}{suffix}_in_t')
 
     def enter_Signal(self, node: 'SignalNode') -> None:
         # only emit the signal if design scanner detected it is actually being used
@@ -153,11 +153,11 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
-            hier_separator="__",
+            hier_separator=".",
             array_suffix="x",
             empty_array_suffix="x"
         )
-        return f'{base}{suffix}__out_t'
+        return kwf(f'{base}{suffix}_out_t')
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("req")
@@ -230,7 +230,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 #-------------------------------------------------------------------------------
 class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
-        scope_path = node.get_global_type_name("__")
+        scope_path = node.get_global_type_name(".")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
             # Add prefix to prevent collision when mixing namespace methods
@@ -242,11 +242,11 @@ class InputStructGenerator_TypeScope(InputStructGenerator_Hier):
         else:
             extra_suffix = ""
 
-        return f'{scope_path}{extra_suffix}{suffix}__in_t'
+        return kwf(f'{scope_path}{extra_suffix}{suffix}_in_t')
 
 class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
-        scope_path = node.get_global_type_name("__")
+        scope_path = node.get_global_type_name(".")
         if scope_path is None:
             # Unable to determine a reusable type name. Fall back to hierarchical path
             # Add prefix to prevent collision when mixing namespace methods
@@ -258,7 +258,7 @@ class OutputStructGenerator_TypeScope(OutputStructGenerator_Hier):
         else:
             extra_suffix = ""
 
-        return f'{scope_path}{extra_suffix}{suffix}__out_t'
+        return kwf(f'{scope_path}{extra_suffix}{suffix}_out_t')
 
 #-------------------------------------------------------------------------------
 class EnumGenerator:

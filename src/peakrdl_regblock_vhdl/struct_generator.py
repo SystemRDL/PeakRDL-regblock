@@ -34,7 +34,7 @@ class _AnonymousStruct(_StructBase):
             f"{self.inst_name} is record\n"
             + super().__str__()
             + f"\nend record;\n"
-            + f"{self.inst_name}_array is array{suffix} of {self.inst_name};"
+            + f"{kwf(self.inst_name + "_array")} is array{suffix} of {self.inst_name};"
             )
         else:
             return (
@@ -54,12 +54,13 @@ class _TypedefStruct(_StructBase):
 
     def __str__(self) -> str:
         if self.array_dimensions:
+            type_name = kwf(self.type_name + "_array")
             suffix = "(" + ", ".join(("natural range <>" for _ in self.array_dimensions)) + ")"
             return (
                 f"type {self.type_name} is record\n"
                 + super().__str__()
                 + f"\nend record;\n"
-                + f"type {self.type_name}_array is array{suffix} of {self.type_name};"
+                + f"type {type_name} is array{suffix} of {self.type_name};"
             )
         else:
             return (
@@ -71,12 +72,14 @@ class _TypedefStruct(_StructBase):
     @property
     def instantiation(self) -> str:
         if self.array_dimensions:
-            suffix = "_array(" + ", ".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
+            type_name = kwf(self.type_name + "_array")
+            suffix = "(" + ", ".join(("0 to " + str(n - 1) for n in self.array_dimensions)) + ")"
 
         else:
+            type_name = self.type_name
             suffix = ""
 
-        return f"{self.inst_name} : {self.type_name}{suffix};"
+        return f"{self.inst_name} : {type_name}{suffix};"
 
 #-------------------------------------------------------------------------------
 

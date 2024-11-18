@@ -79,11 +79,11 @@ class DecodeStructGenerator(RDLFlatStructGenerator):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
-            hier_separator="__",
+            hier_separator=".",
             array_suffix="",
             empty_array_suffix=""
         )
-        return f'{base}{suffix}__strb_t'
+        return kwf(f'{base}{suffix}_strb_t')
 
     def _enter_external_block(self, node: 'AddressableNode') -> None:
         self.add_member(

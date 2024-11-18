@@ -58,7 +58,7 @@ class Hwif:
         gen_in = self._gen_in_cls(self)
         structs_in = gen_in.get_struct(
             self.top_node,
-            f"{self.top_node.inst_name}__in_t"
+            f"{self.top_node.inst_name}_in_t"
         )
         if structs_in is not None:
             self.has_input_struct = True
@@ -69,7 +69,7 @@ class Hwif:
         gen_out = self._gen_out_cls(self)
         structs_out = gen_out.get_struct(
             self.top_node,
-            f"{self.top_node.inst_name}__out_t"
+            f"{self.top_node.inst_name}_out_t"
         )
         if structs_out is not None:
             self.has_output_struct = True
@@ -97,10 +97,10 @@ class Hwif:
 
         lines = []
         if self.has_input_struct:
-            type_name = f"{self.top_node.inst_name}__in_t"
+            type_name = f"{self.top_node.inst_name}_in_t"
             lines.append(f"hwif_in : in {type_name}")
         if self.has_output_struct:
-            type_name = f"{self.top_node.inst_name}__out_t"
+            type_name = f"{self.top_node.inst_name}_out_t"
             lines.append(f"hwif_out : out {type_name}")
 
         return ";\n".join(lines)

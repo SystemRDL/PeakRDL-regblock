@@ -36,9 +36,9 @@ entity regblock_adapter_vhdl is
 
         {%- for hwif_sig, width in hwif_signals %}
         {%- if hwif_sig.startswith("hwif_in") %}
-        {{ hwif_sig.replace(".", "__").replace("][", "_").replace("]", "_").replace("[", "_") }} : in {{ sig_type(width) }}
+        \{{ hwif_sig }}\ : in {{ sig_type(width) }}
         {%- else %}
-        {{ hwif_sig.replace(".", "__").replace("][", "_").replace("]", "_").replace("[", "_") }} : out {{ sig_type(width) }}
+        \{{ hwif_sig }}\ : out {{ sig_type(width) }}
         {%- endif %}
         {%- if not loop.last %};{% endif -%}
         {%- endfor %}
@@ -77,7 +77,7 @@ begin
             {%- endfor %}
 
             {%- for hwif_sig, _ in hwif_signals %}
-            {{ hwif_sig.replace("][", ", ").replace("[", "(").replace("]", ")") }} => {{ hwif_sig.replace(".", "__").replace("][", "_").replace("]", "_").replace("[", "_") }}
+            {{ hwif_sig.replace("][", ", ").replace("[", "(").replace("]", ")") }} => \{{ hwif_sig }}\
             {%- if not loop.last %},{% endif -%}
             {%- endfor %}
         );

@@ -33,7 +33,7 @@ module regblock_adapter_sv
         {%- endfor %}
 
         {%- for hwif_sig, _ in hwif_signals %}
-        .{{ hwif_sig.replace(".", "__").replace("][", "_").replace("]", "_").replace("[", "_") }}({{ hwif_sig }})
+        .\{{ hwif_sig }} ({{ hwif_sig }})
         {%- if not loop.last %},{% endif -%}
         {%- endfor %}
     );

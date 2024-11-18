@@ -30,10 +30,12 @@ VHDL_KEYWORDS = {
 def kw_filter(s: str) -> str:
     """
     Make all user identifiers 'safe' and ensure they do not collide with
-    SystemVerilog keywords.
+    VHDL keywords.
 
-    If an VHDL keyword is encountered, add an underscore suffix
+    If an VHDL keyword is encountered, or identifier contains illegal characters,
+    make it an "Extended identifier" by wrapping it in backslashes.
     """
-    if s.lower() in VHDL_KEYWORDS:
-        s += "_"
+    s = s.replace("\\", "")
+    if s.lower() in VHDL_KEYWORDS or "." in s or "__" in s:
+        s = "\\" + s + "\\"
     return s

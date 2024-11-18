@@ -27,11 +27,11 @@ class CombinationalStructGenerator(RDLFlatStructGenerator):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
-            hier_separator="__",
+            hier_separator=".",
             array_suffix="",
             empty_array_suffix=""
         )
-        return f'{base}{suffix}__combo_t'
+        return kwf(f'{base}{suffix}_combo_t')
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
@@ -95,11 +95,11 @@ class FieldStorageStructGenerator(RDLFlatStructGenerator):
     def get_typdef_name(self, node:'Node', suffix: str = "") -> str:
         base = node.get_rel_path(
             self.top_node.parent,
-            hier_separator="__",
+            hier_separator=".",
             array_suffix="",
             empty_array_suffix=""
         )
-        return f'{base}{suffix}__storage_t'
+        return kwf(f'{base}{suffix}_storage_t')
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
