@@ -22,8 +22,7 @@ class Simulator:
         files = []
         files.extend(self.testcase.cpuif.get_sim_files())
         files.extend(self.testcase.get_extra_tb_files())
-        files.append("regblock_pkg.sv")
-        files.append("regblock.sv")
+        files.append("sv_regblock_pkg.sv")
         files.append("regblock_adapter.sv")
         files.append("tb.sv")
 
@@ -32,10 +31,10 @@ class Simulator:
     @property
     def vhdl_tb_files(self) -> List[str]:
         files = []
-        files.append("regblock_pkg.vhd")
-        files.append("regblock.vhd")
+        files.append("../../../../hdl-src/reg_utils.vhd")
+        files.append("vhdl_regblock_pkg.vhd")
+        files.append("vhdl_regblock.vhd")
         files.append("regblock_adapter.vhd")
-        files.append("regblock_adapter_comp.vhd")
 
         return files
 

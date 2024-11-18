@@ -57,7 +57,6 @@ class VhdlAdapter:
         for (adapter_name, adapter_tmpl) in (
             ("regblock_adapter.sv", "test_adapter_tmpl.sv"),
             ("regblock_adapter.vhd", "test_adapter_tmpl.vhd"),
-            ("regblock_adapter_comp.vhd", "test_adapter_comp_tmpl.vhd"),
         ):
             adapter_file_path = os.path.join(output_dir, adapter_name)
             template = self.jj_env.get_template(adapter_tmpl)
