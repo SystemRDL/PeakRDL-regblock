@@ -28,10 +28,10 @@ entity regblock_adapter_vhdl is
         {%- endif %}
 
         {%- for cpuif_sig, width in cpuif_signals_in %}
-        {{ (cpuif_sv_prefix + cpuif_sig).replace(".", "__") }} : in {{ sig_type(width) }};
+        {{ kwf(sv_cpuif.signal(cpuif_sig)) }} : in {{ sig_type(width) }};
         {%- endfor %}
         {%- for cpuif_sig, width in cpuif_signals_out %}
-        {{ (cpuif_sv_prefix + cpuif_sig).replace(".", "__") }} : out {{ sig_type(width) }};
+        {{ kwf(sv_cpuif.signal(cpuif_sig)) }} : out {{ sig_type(width) }};
         {%- endfor %}
 
         {%- for hwif_sig, width in hwif_signals %}
@@ -49,10 +49,10 @@ architecture rtl of regblock_adapter_vhdl is
 
 begin
 
-    dut: entity work.{{ds.module_name}}
-        {%- if cpuif.parameters %}
+    dut: entity work.vhdl_regblock
+        {%- if vhdl_cpuif.parameters %}
         generic map (
-            {%- for param in cpuif.parameters %}
+            {%- for param in vhdl_cpuif.parameters %}
             {{param}} => {{param}},
             {%- endfor %}
         )
@@ -70,10 +70,10 @@ begin
             {%- endif %}
 
             {%- for cpuif_sig, _ in cpuif_signals_in %}
-            {{ (cpuif_vhdl_in_prefix + cpuif_sig).replace(".", "__") }} => {{ (cpuif_sv_prefix + cpuif_sig).replace(".", "__") }},
+            {{ vhdl_cpuif.signal(cpuif_sig) }} => {{ kwf(sv_cpuif.signal(cpuif_sig)) }},
             {%- endfor %}
             {%- for cpuif_sig, _ in cpuif_signals_out %}
-            {{ (cpuif_vhdl_out_prefix + cpuif_sig).replace(".", "__") }} => {{ (cpuif_sv_prefix + cpuif_sig).replace(".", "__") }},
+            {{ vhdl_cpuif.signal(cpuif_sig) }} => {{ kwf(sv_cpuif.signal(cpuif_sig)) }},
             {%- endfor %}
 
             {%- for hwif_sig, _ in hwif_signals %}

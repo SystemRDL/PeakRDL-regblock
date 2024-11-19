@@ -1,21 +1,23 @@
 import os
-from typing import Optional
 from itertools import product
 
 import jinja2 as jj
-from peakrdl_regblock.hwif.generators import InputStructGenerator_Hier, OutputStructGenerator_Hier
 from systemrdl.walker import RDLWalker
 from systemrdl.node import Node
 
 from peakrdl_regblock import RegblockExporter as SvRegblockExporter
+from peakrdl_regblock_vhdl import RegblockExporter as VhdlRegblockExporter
+from peakrdl_regblock.hwif.generators import InputStructGenerator_Hier, OutputStructGenerator_Hier
+from peakrdl_regblock_vhdl.identifier_filter import kw_filter
 
 from ...lib.cpuifs.base import CpuifTestMode
 
 
 class VhdlAdapter:
     """Adapter to test VHDL regblock using SV testbenches"""
-    def __init__(self, sv_exporter: SvRegblockExporter, cpuif_test_cls: CpuifTestMode):
+    def __init__(self, sv_exporter: SvRegblockExporter, vhdl_exporter: VhdlRegblockExporter, cpuif_test_cls: CpuifTestMode):
         self.sv_exporter = sv_exporter
+        self.vhdl_exporter = vhdl_exporter
         self.cpuif_test_cls = cpuif_test_cls
 
         loader = jj.ChoiceLoader([
@@ -38,11 +40,17 @@ class VhdlAdapter:
         cpuif_signals_in = self.cpuif_test_cls.input_signals(self.sv_exporter.cpuif)
         cpuif_signals_out = self.cpuif_test_cls.output_signals(self.sv_exporter.cpuif)
 
+        # CPUIFs with flattened variants have a ".signal()" method that returns the given bus signal name
+        # with the appropriate prefix. The adapter templates rely on this behavior, but it's not implemented
+        # for the passthrough CPUIF. Hack it in.
+        if not hasattr(self.sv_exporter.cpuif, "signal"):
+            self.sv_exporter.cpuif.signal = lambda x: x
+        if not hasattr(self.vhdl_exporter.cpuif, "signal"):
+            self.vhdl_exporter.cpuif.signal = lambda x: x
+
         context = {
-            "cpuif": self.sv_exporter.cpuif,
-            "cpuif_sv_prefix": self.cpuif_test_cls.sv_signal_prefix,
-            "cpuif_vhdl_in_prefix": self.cpuif_test_cls.vhdl_in_signal_prefix,
-            "cpuif_vhdl_out_prefix": self.cpuif_test_cls.vhdl_out_signal_prefix,
+            "sv_cpuif": self.sv_exporter.cpuif,
+            "vhdl_cpuif": self.vhdl_exporter.cpuif,
             "cpuif_signals" : cpuif_signals,
             "cpuif_signals_in" : cpuif_signals_in,
             "cpuif_signals_out" : cpuif_signals_out,
@@ -50,6 +58,7 @@ class VhdlAdapter:
             "hwif": self.sv_exporter.hwif,
             "hwif_signals": hwif_signals,
             "default_resetsignal_name": self.sv_exporter.dereferencer.default_resetsignal_name,
+            "kwf": kw_filter,
         }
 
         # Write out design

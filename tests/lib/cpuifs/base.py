@@ -28,10 +28,6 @@ class CpuifTestMode:
     # Path is relative to the class that assigns this
     tb_template = ""
 
-    sv_signal_prefix = ""
-    vhdl_in_signal_prefix = ""
-    vhdl_out_signal_prefix = ""
-
     @staticmethod
     def input_signals(cpuif: SvCpuifBase) -> list[tuple[str, int]]:
         raise NotImplementedError()

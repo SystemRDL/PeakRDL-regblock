@@ -9,17 +9,15 @@ class APB4(CpuifTestMode):
     sv_cpuif_cls = SvAPB4_Cpuif
     vhdl_cpuif_cls = VhdlAPB4_Cpuif
     rtl_files = [
-        "../../../../hdl-src/apb4_intf.sv",
+        "../../../hdl-src/apb4_intf.sv",
+        "../../../../hdl-src/apb4_intf_pkg.vhd",
     ]
     tb_files = [
-        "../../../../hdl-src/apb4_intf.sv",
+        "../../../hdl-src/apb4_intf.sv",
+        "../../../../hdl-src/apb4_intf_pkg.vhd",
         "apb4_intf_driver.sv",
     ]
     tb_template = "tb_inst.sv"
-
-    sv_signal_prefix = "s_apb."
-    vhdl_in_signal_prefix = "s_apb_i."
-    vhdl_out_signal_prefix = "s_apb_o."
 
     @staticmethod
     def input_signals(cpuif: SvAPB4_Cpuif) -> list[tuple[str, int]]:
@@ -46,7 +44,3 @@ class FlatAPB4(APB4):
     sv_cpuif_cls = SvAPB4_Cpuif_flattened
     vhdl_cpuif_cls = VhdlAPB4_Cpuif_flattened
     rtl_files = []
-
-    sv_signal_prefix = "s_apb_"
-    vhdl_in_signal_prefix = "s_apb_"
-    vhdl_out_signal_prefix = "s_apb_"

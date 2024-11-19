@@ -126,7 +126,7 @@ class BaseTestCase(unittest.TestCase):
                 default_reset_activelow=self.default_reset_activelow,
                 default_reset_async=self.default_reset_async,
             )
-        vhdl_adapter = VhdlAdapter(self.sv_exporter, self.cpuif)
+        vhdl_adapter = VhdlAdapter(self.sv_exporter, self.vhdl_exporter, self.cpuif)
         vhdl_adapter.export(self.get_run_dir())
 
     def setUp(self) -> None:

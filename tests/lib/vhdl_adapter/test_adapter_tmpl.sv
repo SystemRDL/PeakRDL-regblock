@@ -1,6 +1,10 @@
+{%- macro escape(identifier) -%}
+{%- if "." in identifier %}\{{identifier}} {% else %}{{identifier}}{% endif -%}
+{%- endmacro -%}
+
 module regblock_adapter_sv
-    {%- if cpuif.parameters %} #(
-        {{",\n        ".join(cpuif.parameters)}}
+    {%- if sv_cpuif.parameters %} #(
+        {{",\n        ".join(sv_cpuif.parameters)}}
     ) {%- endif %} (
         input wire clk,
         input wire {{default_resetsignal_name}},
@@ -18,7 +22,7 @@ module regblock_adapter_sv
         output logic parity_error,
         {%- endif %}
 
-        {{cpuif.port_declaration|indent(8)}}
+        {{sv_cpuif.port_declaration|indent(8)}}
         {%- if hwif.has_input_struct or hwif.has_output_struct %},{% endif %}
 
         {{hwif.port_declaration|indent(8)}}
@@ -28,12 +32,12 @@ module regblock_adapter_sv
         .clk(clk),
         .{{default_resetsignal_name}}({{default_resetsignal_name}}),
 
-        {%- for cpuif_sig in cpuif_signals %}
-        .{{ (cpuif_sv_prefix + cpuif_sig[0]).replace(".", "_") }}({{ cpuif_sv_prefix + cpuif_sig[0] }}),
+        {%- for cpuif_sig, _ in cpuif_signals %}
+        .{{ escape(sv_cpuif.signal(cpuif_sig)) }}({{ sv_cpuif.signal(cpuif_sig) }}),
         {%- endfor %}
 
         {%- for hwif_sig, _ in hwif_signals %}
-        .\{{ hwif_sig }} ({{ hwif_sig }})
+        .{{ escape(hwif_sig) }}({{ hwif_sig }})
         {%- if not loop.last %},{% endif -%}
         {%- endfor %}
     );
