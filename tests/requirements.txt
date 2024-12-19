@@ -8,3 +8,4 @@ pylint
 mypy
 pytest-cov
 coveralls>=3.0.0
+types-setuptools

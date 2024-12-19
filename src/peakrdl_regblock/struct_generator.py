@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional, List
 import textwrap
 from collections import OrderedDict
 
-from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
+from systemrdl.walker import RDLListener, RDLWalker
 
 from .identifier_filter import kw_filter as kwf
 
