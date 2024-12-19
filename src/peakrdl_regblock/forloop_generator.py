@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, List, Union
 import textwrap
 
-from systemrdl.walker import RDLListener, RDLWalker
+from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
 
 if TYPE_CHECKING:
     from systemrdl.node import AddressableNode, Node
@@ -81,16 +81,18 @@ class RDLForLoopGenerator(ForLoopGenerator, RDLListener):
         walker.walk(node, self, skip_top=True)
         return self.finish()
 
-    def enter_AddressableComponent(self, node: 'AddressableNode') -> None:
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         if not node.is_array:
-            return
+            return None
 
         for dim in node.array_dimensions:
             self.push_loop(dim)
+        return None
 
-    def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
+    def exit_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         if not node.is_array:
-            return
+            return None
 
         for _ in node.array_dimensions:
             self.pop_loop()
+        return None

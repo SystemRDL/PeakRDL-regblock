@@ -72,13 +72,13 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         self.add_member("rd_data", self.hwif.ds.cpuif_data_width)
         self.add_member("wr_ack")
 
-    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+    def enter_Addrmap(self, node: 'AddrmapNode') -> Optional[WalkerAction]:
         super().enter_Addrmap(node)
         assert node.external
         self._add_external_block_members(node)
         return WalkerAction.SkipDescendants
 
-    def enter_Regfile(self, node: 'RegfileNode') -> None:
+    def enter_Regfile(self, node: 'RegfileNode') -> Optional[WalkerAction]:
         super().enter_Regfile(node)
         if node.external:
             self._add_external_block_members(node)
@@ -137,7 +137,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             # Multiple sub-words. Cannot generate a struct
             self.add_member("rd_data", width)
 
-    def enter_Field(self, node: 'FieldNode') -> None:
+    def enter_Field(self, node: 'FieldNode') -> Optional[WalkerAction]:
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
 
@@ -175,7 +175,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
                 # Implies a corresponding decrvalue input
                 self.add_member('decrvalue', width)
 
-    def exit_Field(self, node: 'FieldNode') -> None:
+    def exit_Field(self, node: 'FieldNode') -> Optional[WalkerAction]:
         self.pop_struct()
 
 
@@ -199,13 +199,13 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
         self.add_member("wr_data", self.hwif.ds.cpuif_data_width)
         self.add_member("wr_biten", self.hwif.ds.cpuif_data_width)
 
-    def enter_Addrmap(self, node: 'AddrmapNode') -> None:
+    def enter_Addrmap(self, node: 'AddrmapNode') -> Optional[WalkerAction]:
         super().enter_Addrmap(node)
         assert node.external
         self._add_external_block_members(node)
         return WalkerAction.SkipDescendants
 
-    def enter_Regfile(self, node: 'RegfileNode') -> None:
+    def enter_Regfile(self, node: 'RegfileNode') -> Optional[WalkerAction]:
         super().enter_Regfile(node)
         if node.external:
             self._add_external_block_members(node)

@@ -3,7 +3,14 @@ module tb;
     timeunit 10ps;
     timeprecision 1ps;
 
-    `define bitswap(x) ($bits(x))'({<<{x}})
+    class bitswap_cls #(W=1);
+        static function logic [W-1:0] bitswap(logic [W-1:0] x);
+            logic [W-1:0] result;
+            result = {<<{x}};
+            return result;
+        endfunction
+    endclass
+    `define bitswap(x) (bitswap_cls#($bits(x))::bitswap(x))
 
     logic rst = '1;
     logic clk = '0;
