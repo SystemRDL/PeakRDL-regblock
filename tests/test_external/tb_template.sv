@@ -294,4 +294,18 @@
     end
     wait fork;
 
+    // Check register struct bit-order
+    repeat(32) begin
+        regblock_pkg::top__my_reg_alt__external__fields__in_t fields_in;
+        regblock_pkg::top__my_reg_alt__external__fields__out_t fields_out;
+        fields_in = $urandom();
+        fields_out = $urandom();
+
+        assert(fields_in.whatever_a == fields_in[3:2]);
+        assert(fields_in.whatever_c == fields_in[15:8]);
+
+        assert(fields_out.whatever_b == fields_out[4]);
+        assert(fields_out.whatever_c == fields_out[15:8]);
+    end
+
 {% endblock %}

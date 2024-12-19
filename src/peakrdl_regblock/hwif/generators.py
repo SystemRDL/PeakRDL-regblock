@@ -110,27 +110,27 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             # External reg is 1 sub-word. Add a packed struct to represent it
             type_name = self.get_typdef_name(node, "__fields")
             self.push_struct(type_name, "rd_data", packed=True)
-            current_bit = 0
-            for field in node.fields():
+            current_bit = width - 1
+            for field in reversed(list(node.fields())):
                 if not field.is_sw_readable:
                     continue
-                if field.low > current_bit:
+                if field.high < current_bit:
                     # Add padding
                     self.add_member(
-                        f"_reserved_{field.low - 1}_{current_bit}",
-                        field.low - current_bit
+                        f"_reserved_{current_bit}_{field.high + 1}",
+                        current_bit - field.high
                     )
                 self.add_member(
                     kwf(field.inst_name),
                     field.width
                 )
-                current_bit = field.high + 1
+                current_bit = field.low - 1
 
             # Add end padding if needed
-            if current_bit != width:
+            if current_bit != -1:
                 self.add_member(
-                    f"_reserved_{width - 1}_{current_bit}",
-                    width - current_bit
+                    f"_reserved_{current_bit}_0",
+                    current_bit + 1
                 )
             self.pop_struct()
         else:
@@ -237,27 +237,27 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             # External reg is 1 sub-word. Add a packed struct to represent it
             type_name = self.get_typdef_name(node, "__fields")
             self.push_struct(type_name, name, packed=True)
-            current_bit = 0
-            for field in node.fields():
+            current_bit = width - 1
+            for field in reversed(list(node.fields())):
                 if not field.is_sw_writable:
                     continue
-                if field.low > current_bit:
+                if field.high < current_bit:
                     # Add padding
                     self.add_member(
-                        f"_reserved_{field.low - 1}_{current_bit}",
-                        field.low - current_bit
+                        f"_reserved_{current_bit}_{field.high + 1}",
+                        current_bit - field.high
                     )
                 self.add_member(
                     kwf(field.inst_name),
                     field.width
                 )
-                current_bit = field.high + 1
+                current_bit = field.low - 1
 
             # Add end padding if needed
-            if current_bit != width:
+            if current_bit != -1:
                 self.add_member(
-                    f"_reserved_{width - 1}_{current_bit}",
-                    width - current_bit
+                    f"_reserved_{current_bit}_0",
+                    current_bit + 1
                 )
             self.pop_struct()
         else:
