@@ -9,7 +9,7 @@ commands to be visible via the PATH environment variable.
 *Questa - Intel FPGA Starter Edition* can be downloaded for free from Intel:
 * Go to https://www.intel.com/content/www/us/en/collections/products/fpga/software/downloads.html?edition=pro&q=questa&s=Relevancy
 * Select latest version of Questa
-* Download Questa files. (Don't forget part 2!)
+* Download Questa files.
 * Install
     * Be sure to choose "Starter Edition" for the free version.
 * Create an account on https://licensing.intel.com

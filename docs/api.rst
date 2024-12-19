@@ -2,7 +2,7 @@ Exporter API
 ============
 
 If you are not using the `PeakRDL command-line tool <https://peakrdl.readthedocs.io>`_,
-you can still generate regblocks programmaticaly using the exporter API:
+you can still generate regblocks programmatically using the exporter API:
 
 .. autoclass:: peakrdl_regblock.RegblockExporter
     :members:

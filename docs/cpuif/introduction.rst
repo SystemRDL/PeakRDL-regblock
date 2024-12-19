@@ -11,7 +11,7 @@ Bus Width
 ^^^^^^^^^
 The CPU interface bus width is automatically determined from the contents of the
 design being exported. The bus width is equal to the widest ``accesswidth``
-encountered in the deisgn.
+encountered in the design.
 
 
 Addressing

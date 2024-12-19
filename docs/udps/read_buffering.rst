@@ -108,7 +108,7 @@ Atomic Group of Registers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Perhaps you have a group of registers that monitor some rapidly-changing state
 within your design. Using the ``rbuffer_trigger`` property, you can define which
-reagister read operation triggers the buffered registers' values to be latched.
+register read operation triggers the buffered registers' values to be latched.
 
 .. code-block:: systemrdl
     :emphasize-lines: 11-14

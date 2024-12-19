@@ -92,33 +92,22 @@ The easiest way to add your cpuif is via the TOML config file. See the
 
 Via a package's entry point definition
 --------------------------------------
-If you are publishing a collecxtion of PeakRDL plugins as an installable Python
+If you are publishing a collection of PeakRDL plugins as an installable Python
 package, you can advertise them to PeakRDL using an entry point.
 This advertises your custom CPUIF class to the PeakRDL-regblock tool as a plugin
 that should be loaded, and made available as a command-line option in PeakRDL.
 
-.. code-block:: python
-    :emphasize-lines: 7-11
+.. code-block:: toml
 
-    import setuptools
-
-    setuptools.setup(
-        name="my_package",
-        packages=["my_package"],
-        # ...
-        entry_points = {
-            "peakrdl_regblock.cpuif": [
-                'my-cpuif = my_package.__peakrdl_regblock__:MyCPUIF'
-            ]
-        }
-    )
+    [project.entry-points."peakrdl_regblock.cpuif"]
+    my-cpuif = "my_package.my_module:MyCPUIF"
 
 
 *   ``my_package``: The name of your installable Python module
 *   ``peakrdl-regblock.cpuif``: This is the namespace that PeakRDL-regblock will
     search. Any cpuif plugins you create must be enclosed in this namespace in
     order to be discovered.
-*   ``my_package.__peakrdl_regblock__:MyCPUIF``: This is the import path that
+*   ``my_package.my_module:MyCPUIF``: This is the import path that
     points to your CPUIF class definition.
 *   ``my-cpuif``: The lefthand side of the assignment is your cpuif's name. This
     text is what the end-user uses in the command line interface to select your
