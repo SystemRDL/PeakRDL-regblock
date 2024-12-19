@@ -137,7 +137,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             # Multiple sub-words. Cannot generate a struct
             self.add_member("rd_data", width)
 
-    def enter_Field(self, node: 'FieldNode') -> Optional[WalkerAction]:
+    def enter_Field(self, node: 'FieldNode') -> None:
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
 
@@ -175,7 +175,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
                 # Implies a corresponding decrvalue input
                 self.add_member('decrvalue', width)
 
-    def exit_Field(self, node: 'FieldNode') -> Optional[WalkerAction]:
+    def exit_Field(self, node: 'FieldNode') -> None:
         self.pop_struct()
 
 
