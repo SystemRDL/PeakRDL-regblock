@@ -19,10 +19,6 @@
     {{field_logic.get_field_combo_identifier(node, "incrthreshold")}} = ({{field_logic.get_storage_identifier(node)}} >= {{field_logic.get_counter_incrthreshold_value(node)}});
     {%- if field_logic.counter_incrsaturates(node) %}
     {{field_logic.get_field_combo_identifier(node, "incrsaturate")}} = ({{field_logic.get_storage_identifier(node)}} >= {{field_logic.get_counter_incrsaturate_value(node)}});
-    if(next_c > {{field_logic.get_counter_incrsaturate_value(node)}}) begin
-        next_c = {{field_logic.get_counter_incrsaturate_value(node)}};
-        load_next_c = '1;
-    end
     {%- endif %}
 {%- endmacro %}
 
@@ -48,9 +44,5 @@
     {{field_logic.get_field_combo_identifier(node, "decrthreshold")}} = ({{field_logic.get_storage_identifier(node)}} <= {{field_logic.get_counter_decrthreshold_value(node)}});
     {%- if field_logic.counter_decrsaturates(node) %}
     {{field_logic.get_field_combo_identifier(node, "decrsaturate")}} = ({{field_logic.get_storage_identifier(node)}} <= {{field_logic.get_counter_decrsaturate_value(node)}});
-    if(next_c < {{field_logic.get_counter_decrsaturate_value(node)}}) begin
-        next_c = {{field_logic.get_counter_decrsaturate_value(node)}};
-        load_next_c = '1;
-    end
     {%- endif %}
 {%- endmacro %}

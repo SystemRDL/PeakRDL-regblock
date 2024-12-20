@@ -65,13 +65,13 @@
     //--------------------------------------------------------------------------
     // Test incrsaturate = 250; decrsaturate = 5;
     //--------------------------------------------------------------------------
-    cpuif.assert_read('h4, 'h05, 'hFF);
+    cpuif.assert_read('h4, 'h00, 'hFF);
 
     // incrsaturate via +1
     cpuif.write('h4, `set);
-    cpuif.assert_read('h4, 'hFA, 'hFF);
+    cpuif.assert_read('h4, 'hFF, 'hFF);
     cpuif.write('h4, `decr + `step(1));
-    cpuif.assert_read('h4, 'hF9, 'hFF);
+    cpuif.assert_read('h4, 'hFE, 'hFF);
     cpuif.write('h4, `incr + `step(1));
     cpuif.assert_read('h4, 'hFA, 'hFF);
     cpuif.write('h4, `incr + `step(1));
@@ -79,9 +79,9 @@
 
     // decrsaturate via +1
     cpuif.write('h4, `clr);
-    cpuif.assert_read('h4, 'h05, 'hFF);
+    cpuif.assert_read('h4, 'h00, 'hFF);
     cpuif.write('h4, `incr + `step(1));
-    cpuif.assert_read('h4, 'h06, 'hFF);
+    cpuif.assert_read('h4, 'h01, 'hFF);
     cpuif.write('h4, `decr + `step(1));
     cpuif.assert_read('h4, 'h05, 'hFF);
     cpuif.write('h4, `decr + `step(1));
@@ -89,9 +89,9 @@
 
     // incrsaturate via larger steps
     cpuif.write('h4, `set);
-    cpuif.assert_read('h4, 'hFA, 'hFF);
+    cpuif.assert_read('h4, 'hFF, 'hFF);
     cpuif.write('h4, `decr + `step(1));
-    cpuif.assert_read('h4, 'hF9, 'hFF);
+    cpuif.assert_read('h4, 'hFE, 'hFF);
     cpuif.write('h4, `incr + `step(2));
     cpuif.assert_read('h4, 'hFA, 'hFF);
     cpuif.write('h4, `incr + `step(3));
@@ -101,9 +101,9 @@
 
     // decrsaturate via larger steps
     cpuif.write('h4, `clr);
-    cpuif.assert_read('h4, 'h05, 'hFF);
+    cpuif.assert_read('h4, 'h00, 'hFF);
     cpuif.write('h4, `incr + `step(1));
-    cpuif.assert_read('h4, 'h06, 'hFF);
+    cpuif.assert_read('h4, 'h01, 'hFF);
     cpuif.write('h4, `decr + `step(2));
     cpuif.assert_read('h4, 'h05, 'hFF);
     cpuif.write('h4, `decr + `step(3));
@@ -169,9 +169,9 @@
 
     // incrsaturate via +1
     cpuif.write('h8, `set);
-    cpuif.assert_read('h8, 'hFA, 'hFF);
+    cpuif.assert_read('h8, 'hFF, 'hFF);
     cpuif.write('h8, `decr + `step(1));
-    cpuif.assert_read('h8, 'hF9, 'hFF);
+    cpuif.assert_read('h8, 'hFE, 'hFF);
     cpuif.write('h8, `incr + `step(1));
     cpuif.assert_read('h8, 'hFA, 'hFF);
     cpuif.write('h8, `incr + `step(1));
@@ -179,9 +179,9 @@
 
     // decrsaturate via +1
     cpuif.write('h8, `clr);
-    cpuif.assert_read('h8, 'h05, 'hFF);
+    cpuif.assert_read('h8, 'h00, 'hFF);
     cpuif.write('h8, `incr + `step(1));
-    cpuif.assert_read('h8, 'h06, 'hFF);
+    cpuif.assert_read('h8, 'h01, 'hFF);
     cpuif.write('h8, `decr + `step(1));
     cpuif.assert_read('h8, 'h05, 'hFF);
     cpuif.write('h8, `decr + `step(1));
@@ -189,9 +189,9 @@
 
     // incrsaturate via larger steps
     cpuif.write('h8, `set);
-    cpuif.assert_read('h8, 'hFA, 'hFF);
+    cpuif.assert_read('h8, 'hFF, 'hFF);
     cpuif.write('h8, `decr + `step(1));
-    cpuif.assert_read('h8, 'hF9, 'hFF);
+    cpuif.assert_read('h8, 'hFE, 'hFF);
     cpuif.write('h8, `incr + `step(2));
     cpuif.assert_read('h8, 'hFA, 'hFF);
     cpuif.write('h8, `incr + `step(3));
@@ -201,9 +201,9 @@
 
     // decrsaturate via larger steps
     cpuif.write('h8, `clr);
-    cpuif.assert_read('h8, 'h05, 'hFF);
+    cpuif.assert_read('h8, 'h00, 'hFF);
     cpuif.write('h8, `incr + `step(1));
-    cpuif.assert_read('h8, 'h06, 'hFF);
+    cpuif.assert_read('h8, 'h01, 'hFF);
     cpuif.write('h8, `decr + `step(2));
     cpuif.assert_read('h8, 'h05, 'hFF);
     cpuif.write('h8, `decr + `step(3));
