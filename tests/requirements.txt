@@ -2,7 +2,7 @@
 pytest<7.2
 
 parameterized
-pytest-parallel
+pytest-parallel # TODO: deprecated. migrate to pytest-xdist
 jinja2-simple-tags
 pylint
 mypy
