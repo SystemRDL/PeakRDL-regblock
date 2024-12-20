@@ -362,7 +362,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
     def assign_external_block_outputs(self, node: 'AddressableNode') -> None:
         prefix = "hwif_out." + get_indexed_path(self.exp.ds.top_node, node)
         strb = self.exp.dereferencer.get_external_block_access_strobe(node)
-        addr_width = node.size.bit_length()
+        addr_width = (node.size - 1).bit_length()
 
         retime = False
         if isinstance(node, RegfileNode):
