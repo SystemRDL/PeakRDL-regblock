@@ -6,6 +6,7 @@ from systemrdl.walker import WalkerAction
 from ..struct_generator import RDLFlatStructGenerator
 from ..identifier_filter import kw_filter as kwf
 from ..sv_int import SVInt
+from ..utils import clog2
 
 if TYPE_CHECKING:
     from systemrdl.node import Node, SignalNode, AddressableNode, RegfileNode
@@ -194,7 +195,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("req")
-        self.add_member("addr", (node.size - 1).bit_length())
+        self.add_member("addr", clog2(node.size))
         self.add_member("req_is_wr")
         self.add_member("wr_data", self.hwif.ds.cpuif_data_width)
         self.add_member("wr_biten", self.hwif.ds.cpuif_data_width)
