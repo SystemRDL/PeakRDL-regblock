@@ -11,6 +11,15 @@ addrmap top {
     ctrl_mask       @ 0x104,
     ctrl_haltenable @ 0x108,
     ctrl_haltmask   @ 0x10c;
+    reg {
+        field ctrl_t {
+            sw=rw; hw=na;
+        };
+        ctrl_t irq0[1] = 0;
+        ctrl_t irq1[1] = 0;
+    }
+    ctrl_we         @ 0x110,
+    ctrl_wel        @ 0x114;
     //---------------------------------
 
     reg {
@@ -35,6 +44,36 @@ addrmap top {
     level_irqs_3.irq1->mask = ctrl_mask.irq1;
     level_irqs_3.irq0->haltmask = ctrl_haltmask.irq0;
     level_irqs_3.irq1->haltmask = ctrl_haltmask.irq1;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            level intr;
+            woclr;
+            we;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } level_irqs_we @ 0x10;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            level intr;
+            woclr;
+            wel;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } level_irqs_wel @ 0x14;
+
+    level_irqs_we.irq0->we = ctrl_we.irq0;
+    level_irqs_we.irq1->we = ctrl_we.irq1;
+    level_irqs_wel.irq0->wel = ctrl_wel.irq0;
+    level_irqs_wel.irq1->wel = ctrl_wel.irq1;
+
     //---------------------------------
 
     reg {
@@ -46,7 +85,35 @@ addrmap top {
 
         intr_t irq0[8] = 0;
         intr_t irq1[1] = 0;
-    } posedge_irqs @ 0x10;
+    } posedge_irqs @ 0x20;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            posedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } posedge_we_irqs @ 0x24;
+
+    posedge_we_irqs.irq0->we = ctrl_we.irq0;
+    posedge_we_irqs.irq1->we = ctrl_we.irq1;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            posedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } posedge_wel_irqs @ 0x28;
+
+    posedge_wel_irqs.irq0->wel = ctrl_wel.irq0;
+    posedge_wel_irqs.irq1->wel = ctrl_wel.irq1;
 
     //---------------------------------
 
@@ -59,7 +126,35 @@ addrmap top {
 
         intr_t irq0[8] = 0;
         intr_t irq1[1] = 0;
-    } negedge_irqs @ 0x20;
+    } negedge_irqs @ 0x30;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            negedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } negedge_we_irqs @ 0x34;
+
+    negedge_we_irqs.irq0->we = ctrl_we.irq0;
+    negedge_we_irqs.irq1->we = ctrl_we.irq1;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            negedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } negedge_wel_irqs @ 0x38;
+
+    negedge_wel_irqs.irq0->wel = ctrl_wel.irq0;
+    negedge_wel_irqs.irq1->wel = ctrl_wel.irq1;
 
     //---------------------------------
 
@@ -72,7 +167,35 @@ addrmap top {
 
         intr_t irq0[8] = 0;
         intr_t irq1[1] = 0;
-    } bothedge_irqs @ 0x30;
+    } bothedge_irqs @ 0x40;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            bothedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } bothedge_we_irqs @ 0x44;
+
+    bothedge_we_irqs.irq0->we = ctrl_we.irq0;
+    bothedge_we_irqs.irq1->we = ctrl_we.irq1;
+
+    reg {
+        field intr_t {
+            sw=rw; hw=w;
+            bothedge intr;
+            woclr;
+        };
+
+        intr_t irq0[8] = 0;
+        intr_t irq1[1] = 0;
+    } bothedge_wel_irqs @ 0x48;
+
+    bothedge_wel_irqs.irq0->wel = ctrl_wel.irq0;
+    bothedge_wel_irqs.irq1->wel = ctrl_wel.irq1;
 
     //---------------------------------
 
@@ -87,7 +210,7 @@ addrmap top {
         intr_t negedge_active[1];
         intr_t bothedge_active[1];
         intr_t level_halt_active[1];
-    } top_irq @ 0x40;
+    } top_irq @ 0x50;
 
     top_irq.level_active->next = level_irqs_1->intr;
     top_irq.posedge_active->next = posedge_irqs->intr;
@@ -101,6 +224,6 @@ addrmap top {
             sw=rw; hw=w;
             sticky;
         } stickyfield[8] = 0;
-    } stickyreg @ 0x50;
+    } stickyreg @ 0x60;
 
 };
