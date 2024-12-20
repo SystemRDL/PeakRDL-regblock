@@ -159,12 +159,13 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
 
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
+        expr_width = self.addr_decode.exp.ds.addr_width
         a = str(SVInt(
             node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
-            self.addr_decode.exp.ds.addr_width
+            expr_width
         ))
         for i, stride in enumerate(self._array_stride_stack):
-            a += f" + i{i}*{SVInt(stride, self.addr_decode.exp.ds.addr_width)}"
+            a += f" + ({expr_width})'(i{i}) * {SVInt(stride, expr_width)}"
         return a
 
 
