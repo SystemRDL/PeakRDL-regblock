@@ -1,37 +1,18 @@
-from typing import TYPE_CHECKING, Dict, Type, List, Any
+from typing import TYPE_CHECKING, Dict, Type
 import functools
 import sys
 
-from peakrdl.plugins.exporter import ExporterSubcommandPlugin #pylint: disable=import-error
-from peakrdl.config import schema #pylint: disable=import-error
+from peakrdl.plugins.exporter import ExporterSubcommandPlugin
+from peakrdl.config import schema
+from peakrdl.plugins.entry_points import get_entry_points
 
 from .exporter import RegblockExporter
 from .cpuif import CpuifBase, apb3, apb4, axi4lite, passthrough, avalon
 from .udps import ALL_UDPS
-from . import entry_points
 
 if TYPE_CHECKING:
     import argparse
     from systemrdl.node import AddrmapNode
-
-
-class Choice(schema.String):
-    """
-    Schema that matches against a specific set of allowed strings
-
-    Base PeakRDL does not have this schema yet. Polyfill here for now until it
-    is added and widely available.
-    """
-    def __init__(self, choices: List[str]) -> None:
-        super().__init__()
-        self.choices = choices
-
-    def extract(self, data: Any, path: str, err_ctx: str) -> Any:
-        s = super().extract(data, path, err_ctx)
-        if s not in self.choices:
-            raise schema.SchemaException(f"{err_ctx}: Value '{s}' is not a valid choice. Must be one of: {','.join(self.choices)}")
-        return s
-
 
 class Exporter(ExporterSubcommandPlugin):
     short_desc = "Generate a SystemVerilog control/status register (CSR) block"
@@ -40,7 +21,7 @@ class Exporter(ExporterSubcommandPlugin):
 
     cfg_schema = {
         "cpuifs": {"*": schema.PythonObjectImport()},
-        "default_reset": Choice(["rst", "rst_n", "arst", "arst_n"]),
+        "default_reset": schema.Choice(["rst", "rst_n", "arst", "arst_n"]),
     }
 
     @functools.lru_cache()
@@ -60,7 +41,7 @@ class Exporter(ExporterSubcommandPlugin):
         }
 
         # Load any cpuifs specified via entry points
-        for ep, dist in entry_points.get_entry_points("peakrdl_regblock.cpuif"):
+        for ep, dist in get_entry_points("peakrdl_regblock.cpuif"):
             name = ep.name
             cpuif = ep.load()
             if name in cpuifs:

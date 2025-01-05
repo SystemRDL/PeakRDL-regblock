@@ -12,15 +12,14 @@ source .venv/bin/activate
 # Install test dependencies
 pip install -r requirements.txt
 
-# Run static type checking prior to installing to avoid sloppy type hints of
-# systemrdl package
-mypy ../src/peakrdl_regblock
-
 # Install dut
-pip install -U ..
+pip install -e "../[cli]"
 
 # Run lint
 pylint --rcfile pylint.rc ../src/peakrdl_regblock
+
+# Run static type checking
+mypy ../src/peakrdl_regblock
 
 # Run unit tests
 pytest --workers auto --cov=peakrdl_regblock --synth-tool skip
