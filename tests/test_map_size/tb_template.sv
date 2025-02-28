@@ -7,6 +7,6 @@
     ##1;
 
     // check block size
-    assert(regblock_pkg::REGBLOCK_PKG_BYTES_SIZE == {{exporter.ds.top_node.size}});
+    assert(regblock_pkg::REGBLOCK_SIZE == {{exporter.ds.top_node.size}});
 
 {% endblock %}
