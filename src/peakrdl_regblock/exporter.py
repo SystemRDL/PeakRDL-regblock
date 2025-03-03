@@ -20,6 +20,7 @@ from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
 from .parity import ParityErrorReduceGenerator
+from .sv_int import SVInt
 
 if TYPE_CHECKING:
     from systemrdl.node import SignalNode
@@ -179,6 +180,7 @@ class RegblockExporter:
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
             "ds": self.ds,
             "kwf": kwf,
+            "SVInt" : SVInt,
         }
 
         # Write out design
