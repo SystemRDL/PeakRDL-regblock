@@ -99,6 +99,7 @@ class NextStateConditional:
             <field>.next = <next value>
             <field>.load_next = '1;
         """
+        raise NotImplementedError
 
     def get_extra_combo_signals(self, field: 'FieldNode') -> List[SVLogic]:
         """

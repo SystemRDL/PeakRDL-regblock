@@ -76,7 +76,7 @@ class DesignValidator(RDLListener):
                 f"instance '{node.inst_name}' must be a multiple of {alignment}",
                 node.inst.inst_src_ref
             )
-        if node.is_array and (node.array_stride % alignment) != 0:
+        if node.is_array and (node.array_stride % alignment) != 0: # type: ignore # is_array implies stride is not none
             self.msg.error(
                 "Unaligned registers are not supported. Address stride of "
                 f"instance array '{node.inst_name}' must be a multiple of {alignment}",
@@ -189,6 +189,7 @@ class DesignValidator(RDLListener):
                         node.inst.inst_src_ref
                     )
                 if node.is_array:
+                    assert node.array_stride is not None
                     if not is_pow2(node.array_stride):
                         self.msg.error(
                             f"Address stride of instance array '{node.inst_name}' is not a power of 2"

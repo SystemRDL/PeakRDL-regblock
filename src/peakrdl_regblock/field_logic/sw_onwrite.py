@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from systemrdl.rdltypes import OnWriteType
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 # TODO: implement sw=w1 "write once" fields
 
 class _OnWrite(NextStateConditional):
-    onwritetype = None # type: OnWriteType
+    onwritetype: Optional[OnWriteType] = None
     def is_match(self, field: 'FieldNode') -> bool:
         return field.is_sw_writable and field.get_property('onwrite') == self.onwritetype
 

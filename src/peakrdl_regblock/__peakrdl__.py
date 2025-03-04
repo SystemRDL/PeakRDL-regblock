@@ -61,7 +61,7 @@ class Exporter(ExporterSubcommandPlugin):
         return cpuifs
 
 
-    def add_exporter_arguments(self, arg_group: 'argparse.ArgumentParser') -> None:
+    def add_exporter_arguments(self, arg_group: 'argparse._ActionsContainer') -> None:
         cpuifs = self.get_cpuifs()
 
         arg_group.add_argument(

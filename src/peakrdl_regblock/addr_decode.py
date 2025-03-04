@@ -136,7 +136,8 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         super().enter_AddressableComponent(node)
 
-        if node.is_array:
+        if node.array_dimensions:
+            assert node.array_stride is not None
             # Collect strides for each array dimension
             current_stride = node.array_stride
             strides = []
@@ -211,7 +212,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
     def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
         super().exit_AddressableComponent(node)
 
-        if not node.is_array:
+        if not node.array_dimensions:
             return
 
         for _ in node.array_dimensions:

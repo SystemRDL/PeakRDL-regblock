@@ -82,7 +82,7 @@ class RDLForLoopGenerator(ForLoopGenerator, RDLListener):
         return self.finish()
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
-        if not node.is_array:
+        if not node.array_dimensions:
             return None
 
         for dim in node.array_dimensions:
@@ -90,7 +90,7 @@ class RDLForLoopGenerator(ForLoopGenerator, RDLListener):
         return None
 
     def exit_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
-        if not node.is_array:
+        if not node.array_dimensions:
             return None
 
         for _ in node.array_dimensions:

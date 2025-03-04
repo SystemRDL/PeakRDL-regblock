@@ -46,7 +46,7 @@ class WEWrite(AlwaysWrite):
     def is_match(self, field: 'FieldNode') -> bool:
         return (
             field.is_hw_writable
-            and field.get_property('we')
+            and bool(field.get_property('we'))
         )
 
     def get_predicate(self, field: 'FieldNode') -> str:
@@ -64,7 +64,7 @@ class WELWrite(AlwaysWrite):
     def is_match(self, field: 'FieldNode') -> bool:
         return (
             field.is_hw_writable
-            and field.get_property('wel')
+            and bool(field.get_property('wel'))
         )
 
     def get_predicate(self, field: 'FieldNode') -> str:

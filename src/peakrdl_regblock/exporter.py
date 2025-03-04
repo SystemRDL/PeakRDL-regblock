@@ -27,20 +27,21 @@ if TYPE_CHECKING:
     from systemrdl.rdltypes import UserEnum
 
 class RegblockExporter:
+    hwif: Hwif
+    cpuif: CpuifBase
+    address_decode: AddressDecode
+    field_logic: FieldLogic
+    readback: Readback
+    write_buffering: WriteBuffering
+    read_buffering: ReadBuffering
+    dereferencer: Dereferencer
+    ds: 'DesignState'
+
     def __init__(self, **kwargs: Any) -> None:
         # Check for stray kwargs
         if kwargs:
             raise TypeError(f"got an unexpected keyword argument '{list(kwargs.keys())[0]}'")
 
-        self.hwif = None # type: Hwif
-        self.cpuif = None # type: CpuifBase
-        self.address_decode = None # type: AddressDecode
-        self.field_logic = None # type: FieldLogic
-        self.readback = None # type: Readback
-        self.write_buffering = None # type: WriteBuffering
-        self.read_buffering = None # type: ReadBuffering
-        self.dereferencer = None # type: Dereferencer
-        self.ds = None # type: DesignState
 
         loader = jj.ChoiceLoader([
             jj.FileSystemLoader(os.path.dirname(__file__)),

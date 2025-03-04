@@ -24,6 +24,7 @@ class DesignScanner(RDLListener):
         return self.ds.top_node
 
     def _get_out_of_hier_field_reset(self) -> None:
+        current_node: Optional[Node]
         current_node = self.top_node.parent
         while current_node is not None:
             for signal in current_node.signals():
