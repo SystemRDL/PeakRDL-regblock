@@ -5,6 +5,7 @@ package {{ds.package_name}};
 
     localparam {{ds.module_name.upper()}}_DATA_WIDTH = {{ds.cpuif_data_width}};
     localparam {{ds.module_name.upper()}}_MIN_ADDR_WIDTH = {{ds.addr_width}};
+    localparam {{ds.module_name.upper()}}_SIZE = {{SVInt(ds.top_node.size)}};
 
     {{hwif.get_package_contents()|indent}}
 endpackage
