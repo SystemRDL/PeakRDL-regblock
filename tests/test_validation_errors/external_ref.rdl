@@ -1,0 +1,15 @@
+addrmap sub {
+    reg {
+        field {} f;
+    } x;
+};
+
+addrmap top {
+    reg {
+        field {} f;
+    } x;
+
+    sub sub;
+
+    x.f->reset = sub.x.f;
+};

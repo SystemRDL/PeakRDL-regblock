@@ -1,0 +1,9 @@
+addrmap top {
+    reg {
+        field {}f;
+    } x;
+    reg {
+        accesswidth = 16;
+        field {}f;
+    } y;
+};

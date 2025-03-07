@@ -1,0 +1,21 @@
+addrmap top {
+    reg {
+        regwidth = 64;
+        accesswidth = 32;
+        field {
+            sw=w;
+            hw=r;
+        } xf[64];
+    } x;
+
+    reg {
+        regwidth = 64;
+        accesswidth = 32;
+        field {
+            sw=r;
+            hw=w;
+            we;
+            onread=rclr;
+        } yf[64];
+    } y;
+};

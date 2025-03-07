@@ -1,0 +1,40 @@
+addrmap top {
+    reg {
+        field {
+            sw = rw;
+            hw = w;
+            singlepulse = true;
+        } a = 0;
+        field {
+            sw = rw;
+            hw = w;
+            singlepulse = true;
+            posedge intr;
+            stickybit = false;
+        } b = 0;
+        field {
+            sw = rw;
+            hw = w;
+            singlepulse = true;
+            negedge intr;
+            stickybit = false;
+        } c = 0;
+        field {
+            sw = rw;
+            hw = w;
+            singlepulse = true;
+            bothedge intr;
+            stickybit = false;
+        } d = 0;
+    } x;
+};
+
+/*
+stickybit=false + intr posedge
+stickybit=false + intr negedge
+stickybit=false + intr bothedge
+hw=w wel = false
+singlepulse
+
+
+*/

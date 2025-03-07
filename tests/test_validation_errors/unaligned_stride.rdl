@@ -1,0 +1,8 @@
+addrmap top {
+    default regwidth = 32;
+    default accesswidth = 32;
+
+    reg {
+        field {}f;
+    } x[4] @ 0 += 5;
+};
