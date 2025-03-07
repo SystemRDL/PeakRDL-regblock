@@ -41,6 +41,7 @@ class Stickybit(NextStateConditional):
         return (
             field.is_hw_writable
             and field.get_property('stickybit')
+            and field.get_property('intr type') in {None, InterruptType.level}
         )
 
     def get_predicate(self, field: 'FieldNode') -> str:
