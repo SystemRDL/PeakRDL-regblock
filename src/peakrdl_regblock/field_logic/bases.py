@@ -57,16 +57,12 @@ class SVLogic:
 
 class NextStateConditional:
     """
-    Decribes a single conditional action that determines the next state of a field
+    Describes a single conditional action that determines the next state of a field
     Provides information to generate the following content:
         if(<conditional>) begin
             <assignments>
         end
     """
-
-    # Assign to True if predicate can never evaluate to false.
-    # This will be generated as an 'else' clause, or a direct assignment
-    is_unconditional = False
 
     # Optional comment to emit next to the conditional
     comment = ""
@@ -77,7 +73,7 @@ class NextStateConditional:
     def is_match(self, field: 'FieldNode') -> bool:
         """
         Returns True if this conditional is relevant to the field. If so,
-        it instructs the FieldBuider that Verilog for this conditional shall
+        it instructs the FieldBuilder that Verilog for this conditional shall
         be emitted
         """
         raise NotImplementedError
@@ -107,3 +103,12 @@ class NextStateConditional:
         will assign if present.
         """
         return []
+
+class NextStateUnconditional(NextStateConditional):
+    """
+    Use this class if predicate can never evaluate to false.
+    This will be generated as an 'else' clause, or a direct assignment
+    """
+
+    # Explanation text for use in error message about conflicts
+    unconditional_explanation = ""

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List
 
 from systemrdl.rdltypes import InterruptType
 
-from .bases import NextStateConditional
+from .bases import NextStateConditional, NextStateUnconditional
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
@@ -134,12 +134,12 @@ class BothedgeStickybit(NextStateConditional):
             "load_next_c = '1;",
         ]
 
-class PosedgeNonsticky(NextStateConditional):
+class PosedgeNonsticky(NextStateUnconditional):
     """
     Positive edge non-stickybit
     """
-    is_unconditional = True
     comment = "posedge nonsticky"
+    unconditional_explanation = "Edge-sensitive non-sticky interrupts always update the field state"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
             field.is_hw_writable
@@ -155,12 +155,12 @@ class PosedgeNonsticky(NextStateConditional):
             "load_next_c = '1;",
         ]
 
-class NegedgeNonsticky(NextStateConditional):
+class NegedgeNonsticky(NextStateUnconditional):
     """
     Negative edge non-stickybit
     """
-    is_unconditional = True
     comment = "negedge nonsticky"
+    unconditional_explanation = "Edge-sensitive non-sticky interrupts always update the field state"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
             field.is_hw_writable
@@ -176,12 +176,12 @@ class NegedgeNonsticky(NextStateConditional):
             "load_next_c = '1;",
         ]
 
-class BothedgeNonsticky(NextStateConditional):
+class BothedgeNonsticky(NextStateUnconditional):
     """
     edge-sensitive non-stickybit
     """
-    is_unconditional = True
     comment = "bothedge nonsticky"
+    unconditional_explanation = "Edge-sensitive non-sticky interrupts always update the field state"
     def is_match(self, field: 'FieldNode') -> bool:
         return (
             field.is_hw_writable
