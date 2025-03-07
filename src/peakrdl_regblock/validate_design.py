@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Union
 
 from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
 from systemrdl.rdltypes import PropertyReference
@@ -97,7 +97,7 @@ class DesignValidator(RDLListener):
     def enter_Addrmap(self, node: AddrmapNode) -> None:
         self._check_sharedextbus(node)
 
-    def _check_sharedextbus(self, node: Node) -> None:
+    def _check_sharedextbus(self, node: Union[RegfileNode, AddrmapNode]) -> None:
         if node.get_property('sharedextbus'):
             self.msg.error(
                 "This exporter does not support enabling the 'sharedextbus' property yet.",
@@ -114,7 +114,7 @@ class DesignValidator(RDLListener):
             if accesswidth != self.exp.cpuif.data_width:
                 self.msg.error(
                     f"Multi-word registers that have an accesswidth ({accesswidth}) "
-                    "that is inconsistent with this regblock's CPU bus width "
+                    "that are inconsistent with this regblock's CPU bus width "
                     f"({self.exp.cpuif.data_width}) are not supported.",
                     node.inst.inst_src_ref
                 )
@@ -128,15 +128,6 @@ class DesignValidator(RDLListener):
             and (node.lsb // parent_accesswidth) != (node.msb // parent_accesswidth)
         ):
             # field spans multiple sub-words
-            if node.external:
-                # External fields that span multiple subwords is not supported
-                self.msg.error(
-                    "External fields that span multiple software-accessible "
-                    "subwords are not supported.",
-                    node.inst.inst_src_ref
-                )
-                # Skip remaining validation rules for external fields
-                return
 
             if node.is_sw_writable and not node.parent.get_property('buffer_writes'):
                 # ... and is writable without the protection of double-buffering
