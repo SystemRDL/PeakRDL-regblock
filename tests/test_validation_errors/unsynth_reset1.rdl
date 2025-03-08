@@ -1,0 +1,19 @@
+signal {
+    field_reset;
+    async;
+    activehigh;
+} foo;
+
+addrmap top {
+    reg {
+        field {
+            sw=rw; hw=na;
+        } f1;
+
+        field {
+            sw=rw; hw=na;
+        } f2;
+
+        f1->reset = f2;
+    } x;
+};

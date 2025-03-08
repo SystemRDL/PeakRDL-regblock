@@ -19,6 +19,7 @@ class DesignValidator(RDLListener):
     """
     def __init__(self, exp:'RegblockExporter') -> None:
         self.exp = exp
+        self.ds = exp.ds
         self.msg = self.top_node.env.msg
 
         self._contains_external_block_stack = [] # type: List[bool]
@@ -151,6 +152,23 @@ class DesignValidator(RDLListener):
                     "For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/read_buffering.html",
                     node.inst.inst_src_ref
                 )
+
+        # Check for unsynthesizable reset
+        reset = node.get_property("reset")
+        if not (reset is None or isinstance(reset, int)):
+            # Has reset that is not a constant value
+            resetsignal = node.get_property("resetsignal")
+            if resetsignal:
+                is_async_reset = resetsignal.get_property("async")
+            else:
+                is_async_reset = self.ds.default_reset_async
+
+            if is_async_reset:
+                self.msg.error(
+                    "A field that uses an asynchronous reset cannot use a dynamic reset value. This is not synthesizable.",
+                    node.inst.inst_src_ref
+                )
+
 
     def exit_AddressableComponent(self, node: AddressableNode) -> None:
         if not isinstance(node, RegNode):

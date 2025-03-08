@@ -76,3 +76,16 @@ class TestValidationErrors(BaseTestCase):
             "multiple_unconditional_assigns.rdl",
             "Field has multiple conflicting properties that unconditionally set its state",
         )
+
+    def test_unsynth_reset1(self) -> None:
+        self.assert_validate_error(
+            "unsynth_reset1.rdl",
+            "A field that uses an asynchronous reset cannot use a dynamic reset value. This is not synthesizable.",
+        )
+
+    def test_unsynth_reset2(self) -> None:
+        self.default_reset_async = True
+        self.assert_validate_error(
+            "unsynth_reset2.rdl",
+            "A field that uses an asynchronous reset cannot use a dynamic reset value. This is not synthesizable.",
+        )
