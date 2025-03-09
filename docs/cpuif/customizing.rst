@@ -91,7 +91,7 @@ The easiest way to add your cpuif is via the TOML config file. See the
 :ref:`peakrdl_cfg` section for more details.
 
 Via a package's entry point definition
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you are publishing a collection of PeakRDL plugins as an installable Python
 package, you can advertise them to PeakRDL using an entry point.
 This advertises your custom CPUIF class to the PeakRDL-regblock tool as a plugin

@@ -1,9 +1,9 @@
-Known Issues & Limitations
-==========================
+Known Limitations
+=================
 
 Not all SystemRDL features are supported by this exporter. For a listing of
-supported properties, see the appropriate property listing page in the following
-sections.
+supported properties, see the appropriate property listing page in the sections
+that follow.
 
 
 Alias Registers

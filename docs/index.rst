@@ -62,6 +62,7 @@ Links
     hwif
     configuring
     limitations
+    faq
     licensing
     api
 
