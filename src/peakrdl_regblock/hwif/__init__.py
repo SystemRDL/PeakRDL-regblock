@@ -49,6 +49,23 @@ class Hwif:
         return self.exp.ds.top_node
 
 
+    def get_extra_package_params(self) -> str:
+        lines = []
+
+        for param in self.top_node.inst.parameters:
+            value = param.get_value()
+            if isinstance(value, int):
+                lines.append(
+                    f"localparam {param.name} = {SVInt(value)};"
+                )
+            elif isinstance(value, str):
+                lines.append(
+                    f"localparam {param.name} = {value};"
+                )
+
+        return "\n".join(lines)
+
+
     def get_package_contents(self) -> str:
         """
         If this hwif requires a package, generate the string

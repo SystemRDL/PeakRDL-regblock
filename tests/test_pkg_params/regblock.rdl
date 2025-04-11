@@ -1,0 +1,11 @@
+addrmap top #(
+    longint N_REGS = 1,
+    longint REGWIDTH = 32,
+    string NAME = "abcd"
+) {
+    reg reg_t {
+        regwidth = REGWIDTH;
+        field {sw=rw; hw=na;} f[REGWIDTH] = 1;
+    };
+    reg_t regs[N_REGS];
+};
