@@ -231,49 +231,41 @@ class FieldLogic:
         r_modifiable = field.get_property('onread') is not None
         buffer_writes = field.parent.get_property('buffer_writes')
         buffer_reads = field.parent.get_property('buffer_reads')
+        accesswidth = field.parent.get_property("accesswidth")
 
-        if w_modifiable and not r_modifiable:
-            # assert swmod only on sw write
-            if buffer_writes:
-                # Write strobe arrives from buffer layer instead
-                wstrb = self.exp.write_buffering.get_write_strobe(field)
-                return wstrb
-            else:
-                # Unbuffered. Use decoder strobe directly
-                astrb = self.exp.dereferencer.get_access_strobe(field)
-                return f"{astrb} && decoded_req_is_wr"
 
-        if w_modifiable and r_modifiable:
-            # assert swmod on both sw read and write
-            astrb = self.exp.dereferencer.get_access_strobe(field)
-            if buffer_writes or buffer_reads:
-                if buffer_reads:
-                    rstrb = self.exp.read_buffering.get_trigger(field.parent)
-                else:
-                    rstrb = f"{astrb} && !decoded_req_is_wr"
+        astrb = self.exp.dereferencer.get_access_strobe(field)
 
-                if buffer_writes:
-                    wstrb = self.exp.write_buffering.get_write_strobe(field)
-                else:
-                    wstrb = f"{astrb} && decoded_req_is_wr"
-
-                return f"{wstrb} || {rstrb}"
-            else:
-                # Unbuffered. Use decoder strobe directly
-                astrb = self.exp.dereferencer.get_access_strobe(field)
-                return astrb
-
-        if not w_modifiable and r_modifiable:
-            # assert swmod only on sw read
-            astrb = self.exp.dereferencer.get_access_strobe(field)
+        conditions = []
+        if r_modifiable:
             if buffer_reads:
                 rstrb = self.exp.read_buffering.get_trigger(field.parent)
             else:
                 rstrb = f"{astrb} && !decoded_req_is_wr"
-            return rstrb
+            conditions.append(rstrb)
 
-        # Not sw modifiable
-        return "1'b0"
+        if w_modifiable:
+            if buffer_writes:
+                wstrb = self.exp.write_buffering.get_write_strobe(field)
+            else:
+                wstrb = f"{astrb} && decoded_req_is_wr"
+
+            # Due to 10.6.1-f, it is impossible for a field that is sw-writable to
+            # be split across subwords.
+            # Therefore it is ok to get the subword idx from only one of the bit offsets
+            # in order to compute the biten range
+            sidx = field.low // accesswidth
+            biten = self.get_wr_biten(field, sidx)
+            wstrb += f" && |({biten})"
+
+            conditions.append(wstrb)
+
+        if not conditions:
+            # Not sw modifiable
+            return "1'b0"
+        else:
+            return " || ".join(conditions)
+
 
     def get_parity_identifier(self, field: 'FieldNode') -> str:
         """
@@ -305,6 +297,92 @@ class FieldLogic:
 
         return False
 
+    def get_wbus_bitslice(self, field: 'FieldNode', subword_idx: int = 0) -> str:
+        """
+        Get the bitslice range string of the internal cpuif's data/biten bus
+        that corresponds to this field
+        """
+        if field.parent.get_property('buffer_writes'):
+            # register is buffered.
+            # write buffer is the full width of the register. no need to deal with subwords
+            high = field.high
+            low = field.low
+            if field.msb < field.lsb:
+                # slice is for an msb0 field.
+                # mirror it
+                regwidth = field.parent.get_property('regwidth')
+                low = regwidth - 1 - low
+                high = regwidth - 1 - high
+                low, high = high, low
+        else:
+            # Regular non-buffered register
+            # For normal fields this ends up passing-through the field's low/high
+            # values unchanged.
+            # For fields within a wide register (accesswidth < regwidth), low/high
+            # may be shifted down and clamped depending on which sub-word is being accessed
+            accesswidth = field.parent.get_property('accesswidth')
+
+            # Shift based on subword
+            high = field.high - (subword_idx * accesswidth)
+            low = field.low - (subword_idx * accesswidth)
+
+            # clamp to accesswidth
+            high = max(min(high, accesswidth), 0)
+            low = max(min(low, accesswidth), 0)
+
+            if field.msb < field.lsb:
+                # slice is for an msb0 field.
+                # mirror it
+                bus_width = self.exp.cpuif.data_width
+                low = bus_width - 1 - low
+                high = bus_width - 1 - high
+                low, high = high, low
+
+        return f"[{high}:{low}]"
+
+    def get_wr_biten(self, field: 'FieldNode', subword_idx: int=0) -> str:
+        """
+        Get the bit-enable slice that corresponds to this field
+        """
+        if field.parent.get_property('buffer_writes'):
+            # Is buffered. Use value from write buffer
+            # No need to check msb0 ordering. Bus is pre-swapped, and bitslice
+            # accounts for it
+            bslice = self.get_wbus_bitslice(field)
+            wbuf_prefix = self.exp.write_buffering.get_wbuf_prefix(field)
+            return wbuf_prefix + ".biten" + bslice
+        else:
+            # Regular non-buffered register
+            bslice = self.get_wbus_bitslice(field, subword_idx)
+
+            if field.msb < field.lsb:
+                # Field gets bitswapped since it is in [low:high] orientation
+                value = "decoded_wr_biten_bswap" + bslice
+            else:
+                value = "decoded_wr_biten" + bslice
+            return value
+
+    def get_wr_data(self, field: 'FieldNode', subword_idx: int=0) -> str:
+        """
+        Get the write data slice that corresponds to this field
+        """
+        if field.parent.get_property('buffer_writes'):
+            # Is buffered. Use value from write buffer
+            # No need to check msb0 ordering. Bus is pre-swapped, and bitslice
+            # accounts for it
+            bslice = self.get_wbus_bitslice(field)
+            wbuf_prefix = self.exp.write_buffering.get_wbuf_prefix(field)
+            return wbuf_prefix + ".data" + bslice
+        else:
+            # Regular non-buffered register
+            bslice = self.get_wbus_bitslice(field, subword_idx)
+
+            if field.msb < field.lsb:
+                # Field gets bitswapped since it is in [low:high] orientation
+                value = "decoded_wr_data_bswap" + bslice
+            else:
+                value = "decoded_wr_data" + bslice
+            return value
 
     #---------------------------------------------------------------------------
     # Field Logic Conditionals

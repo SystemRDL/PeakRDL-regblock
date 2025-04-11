@@ -88,6 +88,27 @@
     disable fork;
     assert(fired);
 
+    // Verify that swmod does NOT trigger if strobes not set
+    fired = 0;
+    fork
+        begin
+            ##0;
+            forever begin
+                assert(cb.hwif_out.r2.f.value == 21);
+                if(cb.hwif_out.r2.f.swmod) break;
+                @cb;
+            end
+            fired = 1;
+        end
+
+        begin
+            cpuif.write('h1, 22, 0);
+            repeat(4) @cb;
+        end
+    join_any
+    disable fork;
+    assert(!fired);
+
     // Verify that hwif changes 1 cycle after swmod
     fired = 0;
     fork

@@ -36,84 +36,6 @@ class _OnWrite(NextStateConditional):
 
             return f"{strb} && decoded_req_is_wr"
 
-    def _wbus_bitslice(self, field: 'FieldNode', subword_idx: int = 0) -> str:
-        # Get the source bitslice range from the internal cpuif's data bus
-        if field.parent.get_property('buffer_writes'):
-            # register is buffered.
-            # write buffer is the full width of the register. no need to deal with subwords
-            high = field.high
-            low = field.low
-            if field.msb < field.lsb:
-                # slice is for an msb0 field.
-                # mirror it
-                regwidth = field.parent.get_property('regwidth')
-                low = regwidth - 1 - low
-                high = regwidth - 1 - high
-                low, high = high, low
-        else:
-            # Regular non-buffered register
-            # For normal fields this ends up passing-through the field's low/high
-            # values unchanged.
-            # For fields within a wide register (accesswidth < regwidth), low/high
-            # may be shifted down and clamped depending on which sub-word is being accessed
-            accesswidth = field.parent.get_property('accesswidth')
-
-            # Shift based on subword
-            high = field.high - (subword_idx * accesswidth)
-            low = field.low - (subword_idx * accesswidth)
-
-            # clamp to accesswidth
-            high = max(min(high, accesswidth), 0)
-            low = max(min(low, accesswidth), 0)
-
-            if field.msb < field.lsb:
-                # slice is for an msb0 field.
-                # mirror it
-                bus_width = self.exp.cpuif.data_width
-                low = bus_width - 1 - low
-                high = bus_width - 1 - high
-                low, high = high, low
-
-        return f"[{high}:{low}]"
-
-    def _wr_data(self, field: 'FieldNode', subword_idx: int=0) -> str:
-        if field.parent.get_property('buffer_writes'):
-            # Is buffered. Use value from write buffer
-            # No need to check msb0 ordering. Bus is pre-swapped, and bitslice
-            # accounts for it
-            bslice = self._wbus_bitslice(field)
-            wbuf_prefix = self.exp.write_buffering.get_wbuf_prefix(field)
-            return wbuf_prefix + ".data" + bslice
-        else:
-            # Regular non-buffered register
-            bslice = self._wbus_bitslice(field, subword_idx)
-
-            if field.msb < field.lsb:
-                # Field gets bitswapped since it is in [low:high] orientation
-                value = "decoded_wr_data_bswap" + bslice
-            else:
-                value = "decoded_wr_data" + bslice
-            return value
-
-    def _wr_biten(self, field: 'FieldNode', subword_idx: int=0) -> str:
-        if field.parent.get_property('buffer_writes'):
-            # Is buffered. Use value from write buffer
-            # No need to check msb0 ordering. Bus is pre-swapped, and bitslice
-            # accounts for it
-            bslice = self._wbus_bitslice(field)
-            wbuf_prefix = self.exp.write_buffering.get_wbuf_prefix(field)
-            return wbuf_prefix + ".biten" + bslice
-        else:
-            # Regular non-buffered register
-            bslice = self._wbus_bitslice(field, subword_idx)
-
-            if field.msb < field.lsb:
-                # Field gets bitswapped since it is in [low:high] orientation
-                value = "decoded_wr_biten_bswap" + bslice
-            else:
-                value = "decoded_wr_biten" + bslice
-            return value
-
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         accesswidth = field.parent.get_property("accesswidth")
 
@@ -124,8 +46,8 @@ class _OnWrite(NextStateConditional):
 
         # field does not get split between subwords
         R = self.exp.field_logic.get_storage_identifier(field)
-        D = self._wr_data(field, sidx)
-        S = self._wr_biten(field, sidx)
+        D = self.exp.field_logic.get_wr_data(field, sidx)
+        S = self.exp.field_logic.get_wr_biten(field, sidx)
         lines = [
             f"next_c = {self.get_onwrite_rhs(R, D, S)};",
             "load_next_c = '1;",
