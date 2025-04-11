@@ -99,6 +99,7 @@ Links
     :caption: Extended Properties
 
     udps/intro
+    udps/cpuif
     udps/read_buffering
     udps/write_buffering
     udps/extended_swacc

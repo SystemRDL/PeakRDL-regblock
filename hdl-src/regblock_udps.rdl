@@ -36,3 +36,13 @@ property wr_swacc {
     component = field;
     type = boolean;
 };
+
+property cpuif {
+    component = addrmap;
+    type = string;
+};
+
+property addrwidth {
+    component = addrmap;
+    type = longint unsigned;
+};
