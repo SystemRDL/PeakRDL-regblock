@@ -6,15 +6,6 @@ import shutil
 from .base import Simulator
 
 class XilinxXSIM(Simulator):
-    """
-    Avoid using the Xilinx simulator... Its buggy and extraordinarily slow.
-    As observed in v2023.2:
-        - Clocking block assignments to struct members do not simulate correctly.
-          assignment statements get lost.
-            https://support.xilinx.com/s/question/0D54U00007ZIGfXSAX/xsim-bug-xsim-does-not-simulate-struct-assignments-in-clocking-blocks-correctly?language=en_US
-        - Streaming bit-swap within a conditional returns a corrupted value
-            https://support.xilinx.com/s/question/0D54U00007ZIIBPSA5/xsim-bug-xsim-corrupts-value-of-signal-that-is-bitswapped-within-a-conditional-operator?language=en_US
-    """
     name = "xsim"
 
     @classmethod

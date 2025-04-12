@@ -71,13 +71,10 @@
     cpuif.assert_read('h3000, 'h4DEAB000);
 
     // rw_reg_lsb0
-    `ifndef XILINX_XSIM
-        // Skip due to xsim bug simulating internal RTL - bitswap inside conditional corrupts data
-        cpuif.assert_read('h3004, 0);
-        cpuif.write('h3004, 'h4DEAB000);
-        @cb;
-        assert(`bitswap(cb.hwif_out.rw_reg_lsb0.f1.value) == 8'hAB);
-        assert(`bitswap(cb.hwif_out.rw_reg_lsb0.f2.value) == 11'h4DE);
-        cpuif.assert_read('h3004, 'h4DEAB000);
-    `endif
+    cpuif.assert_read('h3004, 0);
+    cpuif.write('h3004, 'h4DEAB000);
+    @cb;
+    assert(`bitswap(cb.hwif_out.rw_reg_lsb0.f1.value) == 8'hAB);
+    assert(`bitswap(cb.hwif_out.rw_reg_lsb0.f2.value) == 11'h4DE);
+    cpuif.assert_read('h3004, 'h4DEAB000);
 {% endblock %}

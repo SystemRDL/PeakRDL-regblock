@@ -112,7 +112,6 @@
     cpuif.assert_read('h10, 'h000);
     assert(cb.hwif_out.level_irqs_we.intr == 1'b0);
     cb.hwif_in.level_irqs_we.irq0.next <= 'h0F;
-    assert(cb.hwif_in.level_irqs_we.irq0.next == 8'h00);
     @cb;
     cb.hwif_in.level_irqs_we.irq0.next <= 'h00;
     assert(cb.hwif_out.level_irqs_we.intr == 1'b0);
@@ -123,7 +122,6 @@
     assert(cb.hwif_out.level_irqs_we.intr == 1'b0);
     cb.hwif_in.level_irqs_we.irq0.next <= 'h0F;
     @cb;
-    assert(cb.hwif_in.level_irqs_we.irq0.next == 8'h0F);
     cpuif.assert_read('h10, 'h00F);
     assert(cb.hwif_out.level_irqs_we.intr == 1'b1);
     cpuif.write('h110, 'h0); // disable ctrl_we
@@ -138,20 +136,16 @@
     cpuif.assert_read('h14, 'h000);
     assert(cb.hwif_out.level_irqs_wel.intr == 1'b0);
     cb.hwif_in.level_irqs_wel.irq0.next <= 'h0F;
-    assert(cb.hwif_in.level_irqs_wel.irq0.next == 8'h00);
     @cb;
     cb.hwif_in.level_irqs_wel.irq0.next <= 'h00;
     cpuif.assert_read('h14, 'h000);
-    assert(cb.hwif_in.level_irqs_wel.irq0.next == 8'h00);
     assert(cb.hwif_out.level_irqs_wel.intr == 1'b0);
     cpuif.write('h114, 'h2); // enable ctrl_we
     @cb;
     cpuif.assert_read('h14, 'h000);
-    assert(cb.hwif_in.level_irqs_wel.irq0.next == 8'h00);
     assert(cb.hwif_out.level_irqs_wel.intr == 1'b0);
     cb.hwif_in.level_irqs_wel.irq0.next <= 'h0F;
     @cb;
-    assert(cb.hwif_in.level_irqs_wel.irq0.next == 8'h0F);
     cpuif.assert_read('h14, 'h00F);
     assert(cb.hwif_out.level_irqs_wel.intr == 1'b1);
     cpuif.write('h114, 'h3); // disable ctrl_we
