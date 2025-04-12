@@ -1,3 +1,15 @@
+{%- if cpuif.is_interface -%}
+`ifndef SYNTHESIS
+    initial begin
+        assert($bits({{cpuif.signal("paddr")}}) >= {{ds.package_name}}::{{ds.module_name.upper()}}_MIN_ADDR_WIDTH)
+            else $error("Interface address width of %0d is too small. Shall be at least %0d bits", $bits({{cpuif.signal("paddr")}}), {{ds.package_name}}::{{ds.module_name.upper()}}_MIN_ADDR_WIDTH);
+        assert($bits({{cpuif.signal("pwdata")}}) == {{ds.package_name}}::{{ds.module_name.upper()}}_DATA_WIDTH)
+            else $error("Interface data width of %0d is incorrect. Shall be %0d bits", $bits({{cpuif.signal("pwdata")}}), {{ds.package_name}}::{{ds.module_name.upper()}}_DATA_WIDTH);
+    end
+`endif
+
+{% endif -%}
+
 // Request
 logic is_active;
 always_ff {{get_always_ff_event(cpuif.reset)}} begin

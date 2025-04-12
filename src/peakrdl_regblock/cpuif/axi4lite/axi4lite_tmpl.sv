@@ -1,3 +1,15 @@
+{%- if cpuif.is_interface -%}
+`ifndef SYNTHESIS
+    initial begin
+        assert($bits({{cpuif.signal("araddr")}}) >= {{ds.package_name}}::{{ds.module_name.upper()}}_MIN_ADDR_WIDTH)
+            else $error("Interface address width of %0d is too small. Shall be at least %0d bits", $bits({{cpuif.signal("araddr")}}), {{ds.package_name}}::{{ds.module_name.upper()}}_MIN_ADDR_WIDTH);
+        assert($bits({{cpuif.signal("wdata")}}) == {{ds.package_name}}::{{ds.module_name.upper()}}_DATA_WIDTH)
+            else $error("Interface data width of %0d is incorrect. Shall be %0d bits", $bits({{cpuif.signal("wdata")}}), {{ds.package_name}}::{{ds.module_name.upper()}}_DATA_WIDTH);
+    end
+`endif
+
+{% endif -%}
+
 // Max Outstanding Transactions: {{cpuif.max_outstanding}}
 logic [{{clog2(cpuif.max_outstanding+1)-1}}:0] axil_n_in_flight;
 logic axil_prev_was_rd;

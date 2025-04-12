@@ -1,3 +1,15 @@
+{%- if cpuif.is_interface -%}
+`ifndef SYNTHESIS
+    initial begin
+        assert($bits({{cpuif.signal("address")}}) >= {{cpuif.word_addr_width}})
+            else $error("Interface address width of %0d is too small. Shall be at least %0d bits", $bits({{cpuif.signal("address")}}), {{cpuif.word_addr_width}});
+        assert($bits({{cpuif.signal("writedata")}}) == {{ds.package_name}}::{{ds.module_name.upper()}}_DATA_WIDTH)
+            else $error("Interface data width of %0d is incorrect. Shall be %0d bits", $bits({{cpuif.signal("writedata")}}), {{ds.package_name}}::{{ds.module_name.upper()}}_DATA_WIDTH);
+    end
+`endif
+
+{% endif -%}
+
 // Request
 always_comb begin
     cpuif_req = {{cpuif.signal("read")}} | {{cpuif.signal("write")}};

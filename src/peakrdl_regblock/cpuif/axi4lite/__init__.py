@@ -2,6 +2,7 @@ from ..base import CpuifBase
 
 class AXI4Lite_Cpuif(CpuifBase):
     template_path = "axi4lite_tmpl.sv"
+    is_interface = True
 
     @property
     def port_declaration(self) -> str:
@@ -34,6 +35,8 @@ class AXI4Lite_Cpuif(CpuifBase):
 
 
 class AXI4Lite_Cpuif_flattened(AXI4Lite_Cpuif):
+    is_interface = False
+
     @property
     def port_declaration(self) -> str:
         lines = [

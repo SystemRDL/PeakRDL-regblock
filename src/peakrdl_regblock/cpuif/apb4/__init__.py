@@ -2,6 +2,7 @@ from ..base import CpuifBase
 
 class APB4_Cpuif(CpuifBase):
     template_path = "apb4_tmpl.sv"
+    is_interface = True
 
     @property
     def port_declaration(self) -> str:
@@ -12,6 +13,8 @@ class APB4_Cpuif(CpuifBase):
 
 
 class APB4_Cpuif_flattened(APB4_Cpuif):
+    is_interface = False
+
     @property
     def port_declaration(self) -> str:
         lines = [

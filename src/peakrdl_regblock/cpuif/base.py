@@ -69,6 +69,7 @@ class CpuifBase:
             "clog2": clog2,
             "is_pow2": is_pow2,
             "roundup_pow2": roundup_pow2,
+            "ds": self.exp.ds,
         }
 
         template = jj_env.get_template(self.template_path)
