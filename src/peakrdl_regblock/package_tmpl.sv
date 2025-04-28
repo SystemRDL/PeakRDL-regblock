@@ -10,5 +10,7 @@ package {{ds.package_name}};
     {{hwif.get_extra_package_params()|indent}}
 
     {{hwif.get_package_contents()|indent}}
+
+    {{address_decode.get_address_offsets()|indent}}
 endpackage
 {# (eof newline anchor) #}
