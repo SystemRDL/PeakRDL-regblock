@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Union, List, Optional
+from re import sub as re_sub
 
 from systemrdl.node import FieldNode, RegNode
 from systemrdl.walker import WalkerAction
@@ -167,7 +168,8 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
     def _get_address_offset_param_name(self, node: 'AddressableNode', subword_offset: int=0) -> str:
         a = f"{self.addr_decode.top_node.inst_name}"
-        a += f"__{get_indexed_path(self.addr_decode.top_node, node).split('[', 1)[0]}"
+        a += "__"
+        a += re_sub(r'\[.*?\]', '', get_indexed_path(self.addr_decode.top_node, node))
         if subword_offset != 0:
             a += f"_{subword_offset}"
         a += f"__offset"
