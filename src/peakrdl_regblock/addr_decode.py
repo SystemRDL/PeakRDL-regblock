@@ -165,9 +165,11 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         return WalkerAction.Continue
 
 
-    def _get_address_offset_param_name(self, node: 'AddressableNode') -> str:
+    def _get_address_offset_param_name(self, node: 'AddressableNode', subword_offset: int=0) -> str:
         a = f"{self.addr_decode.top_node.inst_name}"
         a += f"__{get_indexed_path(self.addr_decode.top_node, node).split('[', 1)[0]}"
+        if subword_offset != 0:
+            a += f"_{subword_offset}"
         a += f"__offset"
         a = a.replace(".", "__")
 
@@ -176,7 +178,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
         expr_width = self.addr_decode.exp.ds.addr_width
-        a = f"{self.addr_decode.exp.ds.package_name}::{self._get_address_offset_param_name(node)}"
+        a = f"{self.addr_decode.exp.ds.package_name}::{self._get_address_offset_param_name(node, subword_offset=subword_offset)}"
         for i, stride in enumerate(self._array_stride_stack):
             a += f" + ({expr_width})'(i{i}) * {SVInt(stride, expr_width)}"
         return a
@@ -271,5 +273,5 @@ class AddrOffsetGenerator(DecodeLogicGenerator):
             subword_stride = accesswidth // 8
             for i in range(n_subwords):
                 rhs = f"{self._get_address_offset_str(node, subword_offset=(i*subword_stride))}"
-                s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node)} = {rhs};"
+                s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node, subword_offset=(i*subword_stride))} = {rhs};"
                 self.add_content(s)
