@@ -251,11 +251,15 @@ class AddrOffsetGenerator(DecodeLogicGenerator):
 
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
+        if node.external and not isinstance(node, RegNode):
+            # Is an external block
+            expr_width = self.addr_decode.exp.ds.addr_width
+            rhs = f"{self._get_address_offset_str(node)}"
+            s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node)} = {rhs};"
+            self.add_content(s)
+            return WalkerAction.SkipDescendants
+
         return WalkerAction.Continue
-
-
-    def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
-        return
 
 
     def enter_Reg(self, node: RegNode) -> None:
@@ -275,3 +279,7 @@ class AddrOffsetGenerator(DecodeLogicGenerator):
                 rhs = f"{self._get_address_offset_str(node, subword_offset=(i*subword_stride))}"
                 s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node, subword_offset=(i*subword_stride))} = {rhs};"
                 self.add_content(s)
+
+
+    def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
+        return
