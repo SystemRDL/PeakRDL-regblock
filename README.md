@@ -9,4 +9,4 @@ Compile SystemRDL into a SystemVerilog control/status register (CSR) block.
 For the command line tool, see the [PeakRDL project](https://peakrdl.readthedocs.io).
 
 ## Documentation
-See the [PeakRDL-regblock Documentation](http://peakrdl-regblock.readthedocs.io) for more details
+See the [PeakRDL-regblock Documentation](https://peakrdl-regblock.readthedocs.io) for more details

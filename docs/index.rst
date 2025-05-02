@@ -25,6 +25,13 @@ The easiest way to use PeakRDL-regblock is via the  `PeakRDL command line tool <
     peakrdl regblock atxmega_spi.rdl -o regblock/ --cpuif axi4-lite
 
 
+Looking for VHDL?
+-----------------
+This project generates SystemVerilog RTL. If you prefer using VHDL, check out
+the sister project which aims to be a feature-equivalent fork of
+PeakRDL-regblock: `PeakRDL-regblock-VHDL <https://peakrdl-regblock-vhdl.readthedocs.io>`_
+
+
 Links
 -----
 
