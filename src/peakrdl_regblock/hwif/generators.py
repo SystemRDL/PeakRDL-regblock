@@ -35,11 +35,11 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().pop_struct()
         self.hwif_report_stack.pop()
 
-    def add_member(self, name: str, width: int = 1) -> None: # type: ignore # pylint: disable=arguments-differ
-        super().add_member(name, width)
+    def add_member(self, name: str, width: int = 1, lsb: int = 0) -> None: # type: ignore # pylint: disable=arguments-differ
+        super().add_member(name, width, lsb=lsb)
 
         if width > 1:
-            suffix = f"[{width-1}:0]"
+            suffix = f"[{lsb+width-1}:{lsb}]"
         else:
             suffix = ""
 
@@ -66,7 +66,11 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         # only emit the signal if design scanner detected it is actually being used
         path = node.get_path()
         if path in self.hwif.ds.in_hier_signal_paths:
-            self.add_member(kwf(node.inst_name), node.width)
+            # Get the node's LSB index (can be nonzero for fixedpoint values)
+            fracwidth = node.get_property("fracwidth")
+            lsb = 0 if fracwidth is None else -fracwidth
+
+            self.add_member(kwf(node.inst_name), node.width, lsb)
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("rd_ack")
@@ -142,10 +146,14 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
 
+        # Get the node's LSB index (can be nonzero for fixedpoint values)
+        fracwidth = node.get_property("fracwidth")
+        lsb = 0 if fracwidth is None else -fracwidth
+
         # Provide input to field's next value if it is writable by hw, and it
         # was not overridden by the 'next' property
         if node.is_hw_writable and node.get_property('next') is None:
-            self.add_member("next", node.width)
+            self.add_member("next", node.width, lsb)
 
         # Generate implied inputs
         for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:
@@ -163,7 +171,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             width = node.get_property('incrwidth')
             if width:
                 # Implies a corresponding incrvalue input
-                self.add_member('incrvalue', width)
+                self.add_member('incrvalue', width, lsb)
 
         if node.is_down_counter:
             if not node.get_property('decr'):
@@ -174,7 +182,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             width = node.get_property('decrwidth')
             if width:
                 # Implies a corresponding decrvalue input
-                self.add_member('decrvalue', width)
+                self.add_member('decrvalue', width, lsb)
 
     def exit_Field(self, node: 'FieldNode') -> None:
         self.pop_struct()
@@ -271,7 +279,11 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
         # Expose field's value if it is readable by hw
         if node.is_hw_readable:
-            self.add_member("value", node.width)
+            # Get the node's LSB index (can be nonzero for fixedpoint values)
+            fracwidth = node.get_property("fracwidth")
+            lsb = 0 if fracwidth is None else -fracwidth
+
+            self.add_member("value", node.width, lsb)
 
         # Generate output bit signals enabled via property
         for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow", "rd_swacc", "wr_swacc"]:
