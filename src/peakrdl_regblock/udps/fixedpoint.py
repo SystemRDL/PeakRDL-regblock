@@ -17,6 +17,20 @@ class FixedpointWidth(UDPDefinition):
         assert intwidth is not None
         assert fracwidth is not None
 
+        # incompatible with "counter" fields
+        if node.get_property("counter"):
+            self.msg.error(
+                f"{type(node.inst).__name__.lower()} '{node.inst_name}': fixedpoint values"
+                f" are not supported for counter fields."
+            )
+
+        # incompatible with "encode" fields
+        if node.get_property("encode") is not None:
+            self.msg.error(
+                f"{type(node.inst).__name__.lower()} '{node.inst_name}': fixedpoint values"
+                f" are not supported for fields encoded as an enum."
+            )
+
         # ensure node width = fracwidth + intwidth
         if intwidth + fracwidth != node.width:
             self.msg.error(
@@ -59,6 +73,21 @@ class IsSigned(UDPDefinition):
     valid_components = {Field, Signal}
     valid_type = bool
     default_assignment = True
+
+    def validate(self, node: "Node", value: Any) -> None:
+        # incompatible with "counter" fields
+        if node.get_property("counter"):
+            self.msg.error(
+                f"{type(node.inst).__name__.lower()} '{node.inst_name}': is_signed property"
+                f" is not supported for counter fields."
+            )
+
+        # incompatible with "encode" fields
+        if node.get_property("encode") is not None:
+            self.msg.error(
+                f"{type(node.inst).__name__.lower()} '{node.inst_name}': is_signed property"
+                f" is not supported for fields encoded as an enum."
+            )
 
     def get_unassigned_default(self, node: "Node") -> Any:
         intwidth = node.get_property("intwidth")

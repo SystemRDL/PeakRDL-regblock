@@ -146,13 +146,13 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         type_name = self.get_typdef_name(node)
         self.push_struct(type_name, kwf(node.inst_name))
 
-        # Get the node's LSB index (can be nonzero for fixedpoint values)
-        fracwidth = node.get_property("fracwidth")
-        lsb = 0 if fracwidth is None else -fracwidth
-
         # Provide input to field's next value if it is writable by hw, and it
         # was not overridden by the 'next' property
         if node.is_hw_writable and node.get_property('next') is None:
+            # Get the field's LSB index (can be nonzero for fixedpoint values)
+            fracwidth = node.get_property("fracwidth")
+            lsb = 0 if fracwidth is None else -fracwidth
+
             self.add_member("next", node.width, lsb)
 
         # Generate implied inputs
@@ -171,7 +171,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             width = node.get_property('incrwidth')
             if width:
                 # Implies a corresponding incrvalue input
-                self.add_member('incrvalue', width, lsb)
+                self.add_member('incrvalue', width)
 
         if node.is_down_counter:
             if not node.get_property('decr'):
@@ -182,7 +182,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             width = node.get_property('decrwidth')
             if width:
                 # Implies a corresponding decrvalue input
-                self.add_member('decrvalue', width, lsb)
+                self.add_member('decrvalue', width)
 
     def exit_Field(self, node: 'FieldNode') -> None:
         self.pop_struct()
