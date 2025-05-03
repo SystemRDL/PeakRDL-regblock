@@ -38,7 +38,7 @@ property wr_swacc {
 };
 
 property is_signed {
-    type = bool;
+    type = boolean;
     component = field | signal;
     default = true;
 };

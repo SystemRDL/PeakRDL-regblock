@@ -58,6 +58,7 @@ class IsSigned(UDPDefinition):
     name = "is_signed"
     valid_components = {Field, Signal}
     valid_type = bool
+    default_assignment = True
 
     def get_unassigned_default(self, node: "Node") -> Any:
         intwidth = node.get_property("intwidth")
