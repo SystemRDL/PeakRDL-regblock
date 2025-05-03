@@ -16,27 +16,28 @@ class FixedpointWidth(UDPDefinition):
         fracwidth = node.get_property("fracwidth")
         assert intwidth is not None
         assert fracwidth is not None
+        prop_ref = node.inst.property_src_ref.get(self.name)
 
         # incompatible with "counter" fields
         if node.get_property("counter"):
             self.msg.error(
-                f"{type(node.inst).__name__.lower()} '{node.inst_name}': fixedpoint values"
-                f" are not supported for counter fields."
+                "Fixedpoint representations are not supported for counter fields.",
+                prop_ref
             )
 
         # incompatible with "encode" fields
         if node.get_property("encode") is not None:
             self.msg.error(
-                f"{type(node.inst).__name__.lower()} '{node.inst_name}': fixedpoint values"
-                f" are not supported for fields encoded as an enum."
+                "Fixedpoint representations are not supported for fields encoded as an enum.",
+                prop_ref
             )
 
         # ensure node width = fracwidth + intwidth
         if intwidth + fracwidth != node.width:
             self.msg.error(
-                f"{type(node.inst).__name__.lower()} '{node.inst_name}' number of"
-                f" integer bits ({intwidth}) plus number of fractional bits ({fracwidth})"
-                f" must be equal to the width of the component ({node.width})."
+                f"Number of integer bits ({intwidth}) plus number of fractional bits ({fracwidth})"
+                f" must be equal to the width of the component ({node.width}).",
+                prop_ref
             )
 
 
@@ -75,18 +76,18 @@ class IsSigned(UDPDefinition):
     default_assignment = True
 
     def validate(self, node: "Node", value: Any) -> None:
-        # incompatible with "counter" fields
-        if node.get_property("counter"):
+        # "counter" fields can not be signed
+        if value and node.get_property("counter"):
             self.msg.error(
-                f"{type(node.inst).__name__.lower()} '{node.inst_name}': is_signed property"
-                f" is not supported for counter fields."
+                "The property is_signed=true is not supported for counter fields.",
+                node.inst.property_src_ref["is_signed"]
             )
 
         # incompatible with "encode" fields
         if node.get_property("encode") is not None:
             self.msg.error(
-                f"{type(node.inst).__name__.lower()} '{node.inst_name}': is_signed property"
-                f" is not supported for fields encoded as an enum."
+                "The is_signed property is not supported for fields encoded as an enum.",
+                node.inst.property_src_ref["is_signed"]
             )
 
     def get_unassigned_default(self, node: "Node") -> Any:
