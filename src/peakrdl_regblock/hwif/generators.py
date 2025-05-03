@@ -35,8 +35,8 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().pop_struct()
         self.hwif_report_stack.pop()
 
-    def add_member(self, name: str, width: int = 1, lsb: int = 0) -> None: # type: ignore # pylint: disable=arguments-differ
-        super().add_member(name, width, lsb=lsb)
+    def add_member(self, name: str, width: int = 1, lsb: int = 0, signed: Optional[bool] = None) -> None: # type: ignore # pylint: disable=arguments-differ
+        super().add_member(name, width, lsb=lsb, signed=signed)
 
         if width > 1:
             suffix = f"[{lsb+width-1}:{lsb}]"
@@ -70,7 +70,10 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             fracwidth = node.get_property("fracwidth")
             lsb = 0 if fracwidth is None else -fracwidth
 
-            self.add_member(kwf(node.inst_name), node.width, lsb)
+            # get the signedness of the signal
+            signed = node.get_property("is_signed")
+
+            self.add_member(kwf(node.inst_name), node.width, lsb, signed)
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("rd_ack")
@@ -153,7 +156,10 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             fracwidth = node.get_property("fracwidth")
             lsb = 0 if fracwidth is None else -fracwidth
 
-            self.add_member("next", node.width, lsb)
+            # get the signedness of the field
+            signed = node.get_property("is_signed")
+
+            self.add_member("next", node.width, lsb, signed)
 
         # Generate implied inputs
         for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:
@@ -283,7 +289,10 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             fracwidth = node.get_property("fracwidth")
             lsb = 0 if fracwidth is None else -fracwidth
 
-            self.add_member("value", node.width, lsb)
+            # get the signedness of the field
+            signed = node.get_property("is_signed")
+
+            self.add_member("value", node.width, lsb, signed)
 
         # Generate output bit signals enabled via property
         for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow", "rd_swacc", "wr_swacc"]:
