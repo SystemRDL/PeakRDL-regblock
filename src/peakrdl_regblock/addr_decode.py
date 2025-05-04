@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Union, List, Optional
+from re import sub as re_sub
 
 from systemrdl.node import FieldNode, RegNode
 from systemrdl.walker import WalkerAction
@@ -30,6 +31,12 @@ class AddressDecode:
 
     def get_implementation(self) -> str:
         gen = DecodeLogicGenerator(self)
+        s = gen.get_content(self.top_node)
+        assert s is not None
+        return s
+
+    def get_address_offsets(self) -> str:
+        gen = AddrOffsetGenerator(self)
         s = gen.get_content(self.top_node)
         assert s is not None
         return s
@@ -159,12 +166,21 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         return WalkerAction.Continue
 
 
+    def _get_address_offset_param_name(self, node: 'AddressableNode', subword_offset: int=0) -> str:
+        a = f"{self.addr_decode.top_node.inst_name}"
+        a += "__"
+        a += re_sub(r'\[.*?\]', '', get_indexed_path(self.addr_decode.top_node, node))
+        if subword_offset != 0:
+            a += f"_{subword_offset}"
+        a += f"__offset"
+        a = a.replace(".", "__")
+
+        return a.upper()
+
+
     def _get_address_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
         expr_width = self.addr_decode.exp.ds.addr_width
-        a = str(SVInt(
-            node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
-            expr_width
-        ))
+        a = f"{self.addr_decode.exp.ds.package_name}::{self._get_address_offset_param_name(node, subword_offset=subword_offset)}"
         for i, stride in enumerate(self._array_stride_stack):
             a += f" + ({expr_width})'(i{i}) * {SVInt(stride, expr_width)}"
         return a
@@ -217,3 +233,55 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
         for _ in node.array_dimensions:
             self._array_stride_stack.pop()
+
+class AddrOffsetGenerator(DecodeLogicGenerator):
+    """
+    Generates the address offsets for each register in the design.
+    """
+
+    def __init__(self, addr_decode: AddressDecode) -> None:
+        super().__init__(addr_decode)
+
+
+    def _get_address_offset_str(self, node: 'AddressableNode', subword_offset: int=0) -> str:
+        expr_width = self.addr_decode.exp.ds.addr_width
+        a = str(SVInt(
+            node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address + subword_offset,
+            expr_width
+        ))
+        return a
+
+
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
+        if node.external and not isinstance(node, RegNode):
+            # Is an external block
+            expr_width = self.addr_decode.exp.ds.addr_width
+            rhs = f"{self._get_address_offset_str(node)}"
+            s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node)} = {rhs};"
+            self.add_content(s)
+            return WalkerAction.SkipDescendants
+
+        return WalkerAction.Continue
+
+
+    def enter_Reg(self, node: RegNode) -> None:
+        regwidth = node.get_property('regwidth')
+        accesswidth = node.get_property('accesswidth')
+        expr_width = self.addr_decode.exp.ds.addr_width
+
+        if regwidth == accesswidth:
+            rhs = f"{self._get_address_offset_str(node)}"
+            s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node)} = {rhs};"
+            self.add_content(s)
+        else:
+            # Register is wide. Create a substrobe for each subword
+            n_subwords = regwidth // accesswidth
+            subword_stride = accesswidth // 8
+            for i in range(n_subwords):
+                rhs = f"{self._get_address_offset_str(node, subword_offset=(i*subword_stride))}"
+                s = f"localparam bit [{expr_width-1}:0] {self._get_address_offset_param_name(node, subword_offset=(i*subword_stride))} = {rhs};"
+                self.add_content(s)
+
+
+    def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
+        return
