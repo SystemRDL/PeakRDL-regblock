@@ -1,0 +1,34 @@
+addrmap top {
+    default accesswidth = 64;
+    default regwidth = 64;
+    reg {
+        field {
+            sw = rw; hw = r;
+            intwidth = 8;
+            fracwidth = 8;
+        } f_Q8_8[16] = 0;
+        field {
+            sw = r; hw = w;
+            intwidth = 32;
+        } f_Q32_n8[24];
+        field {
+            sw = rw; hw = r;
+            fracwidth = 32;
+            is_signed;
+        } f_SQn8_32[24] = 0;
+    } r1 @ 0x0;
+
+    reg {
+        field {
+            sw = r; hw = w;
+            is_signed;
+        } f_signed[16];
+        field {
+            sw = rw; hw = r;
+            is_signed = false;
+        } f_unsigned[16] = 0;
+        field {
+            sw = r; hw = w;
+        } f_no_sign[16];
+    } r2 @ 0x8;
+};
