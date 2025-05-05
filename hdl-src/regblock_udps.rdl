@@ -39,16 +39,16 @@ property wr_swacc {
 
 property is_signed {
     type = boolean;
-    component = field | signal;
+    component = field;
     default = true;
 };
 
 property intwidth {
     type = longint unsigned;
-    component = field | signal;
+    component = field;
 };
 
 property fracwidth {
     type = longint unsigned;
-    component = field | signal;
+    component = field;
 };

@@ -1,16 +1,16 @@
 from typing import Any
 
-from systemrdl.component import Field, Signal
-from systemrdl.node import Node, VectorNode
+from systemrdl.component import Field
+from systemrdl.node import Node, FieldNode
 from systemrdl.udp import UDPDefinition
 
 
 class FixedpointWidth(UDPDefinition):
-    valid_components = {Field, Signal}
+    valid_components = {Field}
     valid_type = int
 
     def validate(self, node: "Node", value: Any) -> None:
-        assert isinstance(node, VectorNode)
+        assert isinstance(node, FieldNode)
 
         intwidth = node.get_property("intwidth")
         fracwidth = node.get_property("fracwidth")
@@ -48,7 +48,7 @@ class IntWidth(FixedpointWidth):
         # if 'fracwidth' is defined, 'intwidth' is inferred from the node width
         fracwidth = node.get_property("fracwidth", default=None)
         if fracwidth is not None:
-            assert isinstance(node, VectorNode)
+            assert isinstance(node, FieldNode)
             return node.width - fracwidth
         else:
             # not a fixedpoint number
@@ -62,7 +62,7 @@ class FracWidth(FixedpointWidth):
         # if 'intwidth' is defined, 'fracwidth' is inferred from the node width
         intwidth = node.get_property("intwidth", default=None)
         if intwidth is not None:
-            assert isinstance(node, VectorNode)
+            assert isinstance(node, FieldNode)
             return node.width - intwidth
         else:
             # not a fixedpoint number
@@ -71,7 +71,7 @@ class FracWidth(FixedpointWidth):
 
 class IsSigned(UDPDefinition):
     name = "is_signed"
-    valid_components = {Field, Signal}
+    valid_components = {Field}
     valid_type = bool
     default_assignment = True
 

@@ -66,14 +66,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         # only emit the signal if design scanner detected it is actually being used
         path = node.get_path()
         if path in self.hwif.ds.in_hier_signal_paths:
-            # Get the node's LSB index (can be nonzero for fixedpoint values)
-            fracwidth = node.get_property("fracwidth")
-            lsb = 0 if fracwidth is None else -fracwidth
-
-            # get the signedness of the signal
-            signed = node.get_property("is_signed")
-
-            self.add_member(kwf(node.inst_name), node.width, lsb, signed)
+            self.add_member(kwf(node.inst_name), node.width)
 
     def _add_external_block_members(self, node: 'AddressableNode') -> None:
         self.add_member("rd_ack")
