@@ -93,6 +93,7 @@ class StructGenerator:
             name: str,
             width: int = 1,
             array_dimensions: Optional[List[int]] = None,
+            *,
             lsb: int = 0,
             signed: Optional[bool] = None,
     ) -> None:

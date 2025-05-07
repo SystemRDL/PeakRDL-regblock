@@ -35,7 +35,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().pop_struct()
         self.hwif_report_stack.pop()
 
-    def add_member(self, name: str, width: int = 1, lsb: int = 0, signed: Optional[bool] = None) -> None: # type: ignore # pylint: disable=arguments-differ
+    def add_member(self, name: str, width: int = 1, *, lsb: int = 0, signed: Optional[bool] = None) -> None: # type: ignore # pylint: disable=arguments-differ
         super().add_member(name, width, lsb=lsb, signed=signed)
 
         if width > 1 or lsb != 0:
@@ -152,7 +152,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             # get the signedness of the field
             signed = node.get_property("is_signed")
 
-            self.add_member("next", node.width, lsb, signed)
+            self.add_member("next", node.width, lsb=lsb, signed=signed)
 
         # Generate implied inputs
         for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:
@@ -285,7 +285,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
             # get the signedness of the field
             signed = node.get_property("is_signed")
 
-            self.add_member("value", node.width, lsb, signed)
+            self.add_member("value", node.width, lsb=lsb, signed=signed)
 
         # Generate output bit signals enabled via property
         for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow", "rd_swacc", "wr_swacc"]:
