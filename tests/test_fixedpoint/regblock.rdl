@@ -10,12 +10,17 @@ addrmap top {
         field {
             sw = r; hw = w;
             intwidth = 32;
-        } f_Q32_n8[24];
+        } f_Q32_n12[20];
         field {
             sw = rw; hw = r;
             fracwidth = 32;
             is_signed;
         } f_SQn8_32[24] = 0;
+        field {
+            sw = rw; hw = r;
+            fracwidth = 7;
+            is_signed;
+        } f_SQn6_7 = 0;
     } r1 @ 0x0;
 
     reg {

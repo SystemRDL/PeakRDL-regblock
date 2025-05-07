@@ -7,7 +7,7 @@
     ##1;
 
     // set all fields to all 1s
-    cb.hwif_in.r1.f_Q32_n8.next <= '1;
+    cb.hwif_in.r1.f_Q32_n12.next <= '1;
     cb.hwif_in.r2.f_signed.next <= '1;
     cb.hwif_in.r2.f_no_sign.next <= '1;
     cpuif.write('h0, 64'hFFFF_FFFF_FFFF_FFFF);
@@ -22,13 +22,13 @@
     // verfy unsigned
     assert(cb.hwif_out.r1.f_Q8_8.value > 0);
 
-    // Q32.-8
+    // Q32.-12
     // verify bit range
-    assert(cb.hwif_in.r1.f_Q32_n8.next[31:8] == '1);
+    assert(cb.hwif_in.r1.f_Q32_n12.next[31:12] == '1);
     // verify bit width
-    assert($size(cb.hwif_in.r1.f_Q32_n8.next) == 24);
+    assert($size(cb.hwif_in.r1.f_Q32_n12.next) == 20);
     // verify unsigned
-    assert(cb.hwif_in.r1.f_Q32_n8.next > 0);
+    assert(cb.hwif_in.r1.f_Q32_n12.next > 0);
 
     // SQ-8.32
     // verify bit range
@@ -37,6 +37,14 @@
     assert($size(cb.hwif_out.r1.f_SQn8_32.value) == 24);
     // verify signed
     assert(cb.hwif_out.r1.f_SQn8_32.value < 0);
+
+    // SQ-6.7
+    // verify bit range
+    assert(cb.hwif_out.r1.f_SQn6_7.value[-7:-7] == '1);
+    // verify bit width
+    assert($size(cb.hwif_out.r1.f_SQn6_7.value) == 1);
+    // verify signed
+    assert(cb.hwif_out.r1.f_SQn6_7.value < 0);
 
     // 16-bit signed integer
     // verify bit range
@@ -63,7 +71,7 @@
     assert(cb.hwif_in.r2.f_no_sign.next > 0);
 
     // verify readback
-    cpuif.assert_read('h0, 64'hFFFF_FFFF_FFFF_FFFF);
+    cpuif.assert_read('h0, 64'h1FFF_FFFF_FFFF_FFFF);
     cpuif.assert_read('h8, 64'h0000_FFFF_FFFF_FFFF);
 
 {% endblock %}

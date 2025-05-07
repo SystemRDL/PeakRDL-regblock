@@ -38,7 +38,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
     def add_member(self, name: str, width: int = 1, lsb: int = 0, signed: Optional[bool] = None) -> None: # type: ignore # pylint: disable=arguments-differ
         super().add_member(name, width, lsb=lsb, signed=signed)
 
-        if width > 1:
+        if width > 1 or lsb != 0:
             suffix = f"[{lsb+width-1}:{lsb}]"
         else:
             suffix = ""

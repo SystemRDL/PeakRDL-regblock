@@ -108,7 +108,7 @@ class StructGenerator:
         else:
             sign = "unsigned "
 
-        if width == 1:
+        if width == 1 and lsb == 0:
             m = f"logic {sign}{name}{suffix};"
         else:
             m = f"logic {sign}[{lsb+width-1}:{lsb}] {name}{suffix};"
