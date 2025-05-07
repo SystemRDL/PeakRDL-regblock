@@ -1,0 +1,9 @@
+addrmap top {
+    reg {
+        field {
+            sw = rw; hw = r;
+            intwidth = 4;
+            fracwidth = 5;
+        } num[8] = 0;
+    } r1;
+};

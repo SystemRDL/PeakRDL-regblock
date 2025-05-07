@@ -1,6 +1,7 @@
 from .rw_buffering import BufferWrites, WBufferTrigger
 from .rw_buffering import BufferReads, RBufferTrigger
 from .extended_swacc import ReadSwacc, WriteSwacc
+from .fixedpoint import IntWidth, FracWidth, IsSigned
 
 ALL_UDPS = [
     BufferWrites,
@@ -9,4 +10,7 @@ ALL_UDPS = [
     RBufferTrigger,
     ReadSwacc,
     WriteSwacc,
+    IntWidth,
+    FracWidth,
+    IsSigned,
 ]

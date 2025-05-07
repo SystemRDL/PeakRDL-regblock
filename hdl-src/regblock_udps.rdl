@@ -36,3 +36,19 @@ property wr_swacc {
     component = field;
     type = boolean;
 };
+
+property is_signed {
+    type = boolean;
+    component = field;
+    default = true;
+};
+
+property intwidth {
+    type = longint unsigned;
+    component = field;
+};
+
+property fracwidth {
+    type = longint unsigned;
+    component = field;
+};

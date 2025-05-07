@@ -1,0 +1,14 @@
+addrmap top {
+    reg {
+        field {
+            sw = rw; hw = r;
+            is_signed = false;
+            counter;
+        } unsigned_counter[8] = 0;
+        field {
+            sw = rw; hw = r;
+            is_signed;
+            counter;
+        } signed_counter[8] = 0;
+    } r1;
+};

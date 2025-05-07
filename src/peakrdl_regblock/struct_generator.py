@@ -88,16 +88,31 @@ class StructGenerator:
         self._struct_stack.append(s)
 
 
-    def add_member(self, name: str, width: int = 1, array_dimensions: Optional[List[int]] = None) -> None:
+    def add_member(
+            self,
+            name: str,
+            width: int = 1,
+            array_dimensions: Optional[List[int]] = None,
+            *,
+            lsb: int = 0,
+            signed: Optional[bool] = None,
+    ) -> None:
         if array_dimensions:
             suffix = "[" + "][".join((str(n) for n in array_dimensions)) + "]"
         else:
             suffix = ""
 
-        if width == 1:
-            m = f"logic {name}{suffix};"
+        if signed is None:
+            sign = ""
+        elif signed:
+            sign = "signed "
         else:
-            m = f"logic [{width-1}:0] {name}{suffix};"
+            sign = "unsigned "
+
+        if width == 1 and lsb == 0:
+            m = f"logic {sign}{name}{suffix};"
+        else:
+            m = f"logic {sign}[{lsb+width-1}:{lsb}] {name}{suffix};"
         self.current_struct.children.append(m)
 
 
