@@ -35,7 +35,7 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().pop_struct()
         self.hwif_report_stack.pop()
 
-    def add_member(self, name: str, width: int = 1, *, lsb: int = 0, signed: Optional[bool] = None) -> None: # type: ignore # pylint: disable=arguments-differ
+    def add_member(self, name: str, width: int = 1, *, lsb: int = 0, signed: bool = False) -> None: # type: ignore # pylint: disable=arguments-differ
         super().add_member(name, width, lsb=lsb, signed=signed)
 
         if width > 1 or lsb != 0:

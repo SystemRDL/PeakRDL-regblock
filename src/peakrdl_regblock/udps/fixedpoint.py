@@ -91,10 +91,5 @@ class IsSigned(UDPDefinition):
             )
 
     def get_unassigned_default(self, node: "Node") -> Any:
-        intwidth = node.get_property("intwidth")
-        if intwidth is not None:
-            # it's a fixed-point number, default to unsigned
-            return False
-        else:
-            # not a fixed-point number
-            return None
+        # unsigned if not specified
+        return False

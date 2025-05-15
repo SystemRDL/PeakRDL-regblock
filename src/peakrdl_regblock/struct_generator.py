@@ -95,19 +95,18 @@ class StructGenerator:
             array_dimensions: Optional[List[int]] = None,
             *,
             lsb: int = 0,
-            signed: Optional[bool] = None,
+            signed: bool = False,
     ) -> None:
         if array_dimensions:
             suffix = "[" + "][".join((str(n) for n in array_dimensions)) + "]"
         else:
             suffix = ""
 
-        if signed is None:
-            sign = ""
-        elif signed:
+        if signed:
             sign = "signed "
         else:
-            sign = "unsigned "
+            # the default 'logic' type is unsigned per SV LRM 6.11.3
+            sign = ""
 
         if width == 1 and lsb == 0:
             m = f"logic {sign}{name}{suffix};"
