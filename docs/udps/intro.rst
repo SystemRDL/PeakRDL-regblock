@@ -66,7 +66,7 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
         - boolean
         - Defines the signedness of a field.
 
-          See: :ref:`fixedpoint`.
+          See: :ref:`signed`.
 
     *   - intwidth
         - field

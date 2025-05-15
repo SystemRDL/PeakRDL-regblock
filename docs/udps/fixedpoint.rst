@@ -1,12 +1,13 @@
 .. _fixedpoint:
 
-Signed and Fixed-point Fields
-============================
+Fixed-Point Fields
+==================
 
-SystemRDL does not natively provide a way to mark fields as signed or unsigned.
-The ``is_signed`` user-defined property fills this need. Similarly, the
-``fracwidth`` and ``intwidth`` user-defined properties can be used to declare
-the fixed-point representation of a field.
+`Fixed-point <https://en.wikipedia.org/wiki/Fixed-point_arithmetic>`_ numbers
+can be used to efficiently represent real numbers using integers. Fixed-point
+numbers consist of some combination of integer bits and fractional bits. The
+number of integer/fractional bits is usually implicitly tracked (not stored)
+for each number, unlike for floating-point numbers.
 
 For this SystemVerilog exporter, these properties only affect the signal type in
 the the ``hwif`` structs. There is no special handling in the internals of
@@ -14,55 +15,64 @@ the regblock.
 
 Properties
 ----------
-The behavior of signed and/or fixed-point fields is defined using the following
-three properties:
+Fields can be declared as fixed-point numbers using the following two properties:
 
 .. literalinclude:: ../../hdl-src/regblock_udps.rdl
-    :lines: 40-54
+    :lines: 46-54
 
-These UDP definitions, along with others supported by PeakRDL-regblock can be
+The :ref:`is_signed<signed>` property can be used in conjunction with these
+properties to declare signed fixed-point fields.
+
+These UDP definitions, along with others supported by PeakRDL-regblock, can be
 enabled by compiling the following file along with your design:
 :download:`regblock_udps.rdl <../../hdl-src/regblock_udps.rdl>`.
-
-.. describe:: is_signed
-
-    *   Assigned value is a boolean.
-    *   If true, the hardware interface field will have the
-        ``logic signed [width-1:0]`` type.
-    *   If false, the hardware interface field will have the
-        ``logic unsigned [width-1:0]`` type.
-    *   If not defined for a field, the field will have the ``logic [width-1:0]``
-        type.
 
 .. describe:: intwidth
 
     *   The ``intwidth`` property defines the number of integer bits in the
         fixed-point representation (including the sign bit, if present).
-    *   If ``intwidth`` is defined for a field and ``is_signed`` is not,
-        ``is_signed`` is inferred as false (unsigned).
-    *   If ``is_signed`` is true, the fixed-point representation has a range from
-        :math:`-2^{\mathrm{intwidth}-1}` to :math:`2^{\mathrm{intwidth}-1} -2^{-\mathrm{fracwidth}}`.
-    *   If ``is_signed`` is false, the fixed-point representation has a range from
-        :math:`0` to :math:`2^{\mathrm{intwidth}} - 2^{-\mathrm{fracwidth}}`.
-    *   The type of the field in the ``hwif`` struct is
-        ``logic (un)signed [intwidth-1:-fracwidth]``.
 
 .. describe:: fracwidth
 
     *   The ``fracwidth`` property defines the number of fractional bits in the
         fixed-point representation.
-    *   The weight of the least significant bit of the field is
-        :math:`2^{-\mathrm{fracwidth}}`.
-    *   If ``fracwidth`` is defined for a field and ``is_signed`` is not,
-        ``is_signed`` is inferred as false (unsigned).
-    *   The type of the field in the ``hwif`` struct is
-        ``logic (un)signed [intwidth-1:-fracwidth]``.
+
+Representable Numbers
+^^^^^^^^^^^^^^^^^^^^^
+
+The range of representable real numbers is summarized in the table below.
+
+.. list-table:: Representable Numbers
+    :header-rows: 1
+
+    *   - Signedness
+        - Minimum Value
+        - Maximum Value
+        - Step Size
+
+    *   - Unsigned
+        - :math:`0`
+        - :math:`2^{\mathrm{intwidth}} - 2^{-\mathrm{fracwidth}}`
+        - :math:`2^{-\mathrm{fracwidth}}`
+
+    *   - Signed
+        - :math:`-2^{\mathrm{intwidth}-1}`
+        - :math:`2^{\mathrm{intwidth}-1} - 2^{-\mathrm{fracwidth}}`
+        - :math:`2^{-\mathrm{fracwidth}}`
+
+SystemVerilog Types
+^^^^^^^^^^^^^^^^^^^
+
+When either ``intwidth`` or ``fracwidth`` are defined for a field, that field's
+type in the generated SystemVerilog ``hwif`` struct is
+``logic (signed) [intwidth-1:-fracwidth]``. The bit at index :math:`i` contributes
+a weight of :math:`2^i` to the real number represented.
 
 Other Rules
 ^^^^^^^^^^^
-*   Only one of ``fracwidth`` or ``intwidth`` need be defined. The other is
+*   Only one of ``intwidth`` or ``fracwidth`` need be defined. The other is
     inferred from the field bit width.
-*   The bit width of the field shall be equal to ``fracwidth`` + ``intwidth``.
+*   The bit width of the field shall be equal to ``intwidth`` + ``fracwidth``.
 *   If both ``intwidth`` and ``fracwidth`` are defined for a field,  it is an
     error if their sum does not equal the bit width of the field.
 *   Either ``fracwidth`` or ``intwidth`` can be a negative integer. Because
@@ -70,6 +80,24 @@ Other Rules
     this is to define one of the widths as larger than the bit width of the
     component so that the other width is inferred as a negative number.
 *   The properties defined above are mutually exclusive with the ``counter``
-    property (with the exception of ``is_signed=false``).
+    property.
 *   The properties defined above are mutually exclusive with the ``encode``
     property.
+
+Examples
+--------
+
+A 12-bit signed fixed-point field with 4 integer bits and 8 fractional bits
+can be declared with
+
+.. code-block:: systemrdl
+    :emphasize-lines: 3, 4
+
+    field {
+        sw=rw; hw=r;
+        intwidth = 4;
+        is_signed;
+    } fixedpoint_num[11:0] = 0;
+
+This field can represent values from -8.0 to 7.99609375
+in steps of 0.00390625.
