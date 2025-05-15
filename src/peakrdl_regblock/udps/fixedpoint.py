@@ -21,14 +21,14 @@ class FixedpointWidth(UDPDefinition):
         # incompatible with "counter" fields
         if node.get_property("counter"):
             self.msg.error(
-                "Fixedpoint representations are not supported for counter fields.",
+                "Fixed-point representations are not supported for counter fields.",
                 prop_ref
             )
 
         # incompatible with "encode" fields
         if node.get_property("encode") is not None:
             self.msg.error(
-                "Fixedpoint representations are not supported for fields encoded as an enum.",
+                "Fixed-point representations are not supported for fields encoded as an enum.",
                 prop_ref
             )
 
@@ -51,7 +51,7 @@ class IntWidth(FixedpointWidth):
             assert isinstance(node, FieldNode)
             return node.width - fracwidth
         else:
-            # not a fixedpoint number
+            # not a fixed-point number
             return None
 
 
@@ -65,7 +65,7 @@ class FracWidth(FixedpointWidth):
             assert isinstance(node, FieldNode)
             return node.width - intwidth
         else:
-            # not a fixedpoint number
+            # not a fixed-point number
             return None
 
 
@@ -93,8 +93,8 @@ class IsSigned(UDPDefinition):
     def get_unassigned_default(self, node: "Node") -> Any:
         intwidth = node.get_property("intwidth")
         if intwidth is not None:
-            # it's a fixedpoint number, default to unsigned
+            # it's a fixed-point number, default to unsigned
             return False
         else:
-            # not a fixedpoint number
+            # not a fixed-point number
             return None

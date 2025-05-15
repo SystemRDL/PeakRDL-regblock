@@ -71,7 +71,7 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
     *   - intwidth
         - field
         - unsigned integer
-        - Defines the number of integer bits in the fixedpoint representation
+        - Defines the number of integer bits in the fixed-point representation
           of a field.
 
           See: :ref:`fixedpoint`.
@@ -79,7 +79,7 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
     *   - fracwidth
         - field
         - unsigned integer
-        - Defines the number of fractional bits in the fixedpoint representation
+        - Defines the number of fractional bits in the fixed-point representation
           of a field.
 
           See: :ref:`fixedpoint`.

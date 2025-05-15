@@ -145,7 +145,7 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         # Provide input to field's next value if it is writable by hw, and it
         # was not overridden by the 'next' property
         if node.is_hw_writable and node.get_property('next') is None:
-            # Get the field's LSB index (can be nonzero for fixedpoint values)
+            # Get the field's LSB index (can be nonzero for fixed-point values)
             fracwidth = node.get_property("fracwidth")
             lsb = 0 if fracwidth is None else -fracwidth
 
@@ -278,7 +278,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
         # Expose field's value if it is readable by hw
         if node.is_hw_readable:
-            # Get the node's LSB index (can be nonzero for fixedpoint values)
+            # Get the node's LSB index (can be nonzero for fixed-point values)
             fracwidth = node.get_property("fracwidth")
             lsb = 0 if fracwidth is None else -fracwidth
 

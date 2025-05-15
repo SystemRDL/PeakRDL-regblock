@@ -93,13 +93,13 @@ class TestValidationErrors(BaseTestCase):
     def test_fixedpoint_counter(self) -> None:
         self.assert_validate_error(
             "fixedpoint_counter.rdl",
-            "Fixedpoint representations are not supported for counter fields.",
+            "Fixed-point representations are not supported for counter fields.",
         )
 
     def test_fixedpoint_enum(self) -> None:
         self.assert_validate_error(
             "fixedpoint_enum.rdl",
-            "Fixedpoint representations are not supported for fields encoded as an enum.",
+            "Fixed-point representations are not supported for fields encoded as an enum.",
         )
 
     def test_fixedpoint_inconsistent_width(self) -> None:

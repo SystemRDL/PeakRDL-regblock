@@ -1,12 +1,12 @@
 .. _fixedpoint:
 
-Signed and Fixedpoint Fields
+Signed and Fixed-point Fields
 ============================
 
 SystemRDL does not natively provide a way to mark fields as signed or unsigned.
 The ``is_signed`` user-defined property fills this need. Similarly, the
 ``fracwidth`` and ``intwidth`` user-defined properties can be used to declare
-the fixedpoint representation of a field.
+the fixed-point representation of a field.
 
 For this SystemVerilog exporter, these properties only affect the signal type in
 the the ``hwif`` structs. There is no special handling in the internals of
@@ -14,7 +14,7 @@ the regblock.
 
 Properties
 ----------
-The behavior of signed and/or fixedpoint fields is defined using the following
+The behavior of signed and/or fixed-point fields is defined using the following
 three properties:
 
 .. literalinclude:: ../../hdl-src/regblock_udps.rdl
@@ -37,12 +37,12 @@ enabled by compiling the following file along with your design:
 .. describe:: intwidth
 
     *   The ``intwidth`` property defines the number of integer bits in the
-        fixedpoint representation (including the sign bit, if present).
+        fixed-point representation (including the sign bit, if present).
     *   If ``intwidth`` is defined for a field and ``is_signed`` is not,
         ``is_signed`` is inferred as false (unsigned).
-    *   If ``is_signed`` is true, the fixedpoint representation has a range from
+    *   If ``is_signed`` is true, the fixed-point representation has a range from
         :math:`-2^{\mathrm{intwidth}-1}` to :math:`2^{\mathrm{intwidth}-1} -2^{-\mathrm{fracwidth}}`.
-    *   If ``is_signed`` is false, the fixedpoint representation has a range from
+    *   If ``is_signed`` is false, the fixed-point representation has a range from
         :math:`0` to :math:`2^{\mathrm{intwidth}} - 2^{-\mathrm{fracwidth}}`.
     *   The type of the field in the ``hwif`` struct is
         ``logic (un)signed [intwidth-1:-fracwidth]``.
@@ -50,7 +50,7 @@ enabled by compiling the following file along with your design:
 .. describe:: fracwidth
 
     *   The ``fracwidth`` property defines the number of fractional bits in the
-        fixedpoint representation.
+        fixed-point representation.
     *   The weight of the least significant bit of the field is
         :math:`2^{-\mathrm{fracwidth}}`.
     *   If ``fracwidth`` is defined for a field and ``is_signed`` is not,
