@@ -1,0 +1,20 @@
+addrmap top {
+    reg {
+        enum test_enum {
+            zero = 2'b00;
+            one = 2'b01;
+            two = 2'b10;
+            three = 2'b11;
+        };
+        field {
+            sw = rw; hw = r;
+            is_signed = false;
+            encode = test_enum;
+        } unsigned_enum[2] = 0;
+        field {
+            sw = rw; hw = r;
+            is_signed;
+            encode = test_enum;
+        } signed_enum[2] = 0;
+    } r1;
+};

@@ -60,3 +60,26 @@ To enable these UDPs, compile this RDL file prior to the rest of your design:
         - Enables an output strobe that is asserted on sw writes.
 
           See: :ref:`extended_swacc`.
+
+    *   - is_signed
+        - field
+        - boolean
+        - Defines the signedness of a field.
+
+          See: :ref:`signed`.
+
+    *   - intwidth
+        - field
+        - unsigned integer
+        - Defines the number of integer bits in the fixed-point representation
+          of a field.
+
+          See: :ref:`fixedpoint`.
+
+    *   - fracwidth
+        - field
+        - unsigned integer
+        - Defines the number of fractional bits in the fixed-point representation
+          of a field.
+
+          See: :ref:`fixedpoint`.

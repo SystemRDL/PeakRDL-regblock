@@ -89,3 +89,33 @@ class TestValidationErrors(BaseTestCase):
             "unsynth_reset2.rdl",
             "A field that uses an asynchronous reset cannot use a dynamic reset value. This is not synthesizable.",
         )
+
+    def test_fixedpoint_counter(self) -> None:
+        self.assert_validate_error(
+            "fixedpoint_counter.rdl",
+            "Fixed-point representations are not supported for counter fields.",
+        )
+
+    def test_fixedpoint_enum(self) -> None:
+        self.assert_validate_error(
+            "fixedpoint_enum.rdl",
+            "Fixed-point representations are not supported for fields encoded as an enum.",
+        )
+
+    def test_fixedpoint_inconsistent_width(self) -> None:
+        self.assert_validate_error(
+            "fixedpoint_inconsistent_width.rdl",
+            r"Number of integer bits \(4\) plus number of fractional bits \(5\) must be equal to the width of the component \(8\).",
+        )
+
+    def test_signed_counter(self) -> None:
+        self.assert_validate_error(
+            "signed_counter.rdl",
+            "The property is_signed=true is not supported for counter fields.",
+        )
+
+    def test_signed_enum(self) -> None:
+        self.assert_validate_error(
+            "signed_enum.rdl",
+            "The property is_signed=true is not supported for fields encoded as an enum."
+        )

@@ -35,11 +35,11 @@ class HWIFStructGenerator(RDLFlatStructGenerator):
         super().pop_struct()
         self.hwif_report_stack.pop()
 
-    def add_member(self, name: str, width: int = 1) -> None: # type: ignore # pylint: disable=arguments-differ
-        super().add_member(name, width)
+    def add_member(self, name: str, width: int = 1, *, lsb: int = 0, signed: bool = False) -> None: # type: ignore # pylint: disable=arguments-differ
+        super().add_member(name, width, lsb=lsb, signed=signed)
 
-        if width > 1:
-            suffix = f"[{width-1}:0]"
+        if width > 1 or lsb != 0:
+            suffix = f"[{lsb+width-1}:{lsb}]"
         else:
             suffix = ""
 
@@ -145,7 +145,14 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         # Provide input to field's next value if it is writable by hw, and it
         # was not overridden by the 'next' property
         if node.is_hw_writable and node.get_property('next') is None:
-            self.add_member("next", node.width)
+            # Get the field's LSB index (can be nonzero for fixed-point values)
+            fracwidth = node.get_property("fracwidth")
+            lsb = 0 if fracwidth is None else -fracwidth
+
+            # get the signedness of the field
+            signed = node.get_property("is_signed")
+
+            self.add_member("next", node.width, lsb=lsb, signed=signed)
 
         # Generate implied inputs
         for prop_name in ["we", "wel", "swwe", "swwel", "hwclr", "hwset"]:
@@ -271,7 +278,14 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
 
         # Expose field's value if it is readable by hw
         if node.is_hw_readable:
-            self.add_member("value", node.width)
+            # Get the node's LSB index (can be nonzero for fixed-point values)
+            fracwidth = node.get_property("fracwidth")
+            lsb = 0 if fracwidth is None else -fracwidth
+
+            # get the signedness of the field
+            signed = node.get_property("is_signed")
+
+            self.add_member("value", node.width, lsb=lsb, signed=signed)
 
         # Generate output bit signals enabled via property
         for prop_name in ["anded", "ored", "xored", "swmod", "swacc", "overflow", "underflow", "rd_swacc", "wr_swacc"]:
