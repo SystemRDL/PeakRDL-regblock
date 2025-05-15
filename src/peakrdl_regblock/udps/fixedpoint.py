@@ -5,7 +5,7 @@ from systemrdl.node import Node, FieldNode
 from systemrdl.udp import UDPDefinition
 
 
-class FixedpointWidth(UDPDefinition):
+class _FixedpointWidth(UDPDefinition):
     valid_components = {Field}
     valid_type = int
 
@@ -41,28 +41,32 @@ class FixedpointWidth(UDPDefinition):
             )
 
 
-class IntWidth(FixedpointWidth):
+class IntWidth(_FixedpointWidth):
     name = "intwidth"
 
     def get_unassigned_default(self, node: "Node") -> Any:
-        # if 'fracwidth' is defined, 'intwidth' is inferred from the node width
+        """
+        If 'fracwidth' is defined, 'intwidth' is inferred from the node width.
+        """
+        assert isinstance(node, FieldNode)
         fracwidth = node.get_property("fracwidth", default=None)
         if fracwidth is not None:
-            assert isinstance(node, FieldNode)
             return node.width - fracwidth
         else:
             # not a fixed-point number
             return None
 
 
-class FracWidth(FixedpointWidth):
+class FracWidth(_FixedpointWidth):
     name = "fracwidth"
 
     def get_unassigned_default(self, node: "Node") -> Any:
-        # if 'intwidth' is defined, 'fracwidth' is inferred from the node width
+        """
+        If 'intwidth' is defined, 'fracwidth' is inferred from the node width.
+        """
+        assert isinstance(node, FieldNode)
         intwidth = node.get_property("intwidth", default=None)
         if intwidth is not None:
-            assert isinstance(node, FieldNode)
             return node.width - intwidth
         else:
             # not a fixed-point number

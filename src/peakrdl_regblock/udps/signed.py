@@ -27,5 +27,7 @@ class IsSigned(UDPDefinition):
             )
 
     def get_unassigned_default(self, node: "Node") -> Any:
-        # unsigned if not specified
+        """
+        Unsigned by default if not specified.
+        """
         return False
