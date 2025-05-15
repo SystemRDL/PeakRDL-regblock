@@ -84,9 +84,9 @@ class IsSigned(UDPDefinition):
             )
 
         # incompatible with "encode" fields
-        if node.get_property("encode") is not None:
+        if value and node.get_property("encode") is not None:
             self.msg.error(
-                "The is_signed property is not supported for fields encoded as an enum.",
+                "The property is_signed=true is not supported for fields encoded as an enum.",
                 node.inst.property_src_ref["is_signed"]
             )
 

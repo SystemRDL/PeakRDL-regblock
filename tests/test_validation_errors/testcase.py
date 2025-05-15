@@ -117,5 +117,5 @@ class TestValidationErrors(BaseTestCase):
     def test_signed_enum(self) -> None:
         self.assert_validate_error(
             "signed_enum.rdl",
-            "The is_signed property is not supported for fields encoded as an enum."
+            "The property is_signed=true is not supported for fields encoded as an enum."
         )
