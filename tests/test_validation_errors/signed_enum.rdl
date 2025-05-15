@@ -11,5 +11,10 @@ addrmap top {
             is_signed = false;
             encode = test_enum;
         } unsigned_enum[2] = 0;
+        field {
+            sw = rw; hw = r;
+            is_signed;
+            encode = test_enum;
+        } signed_enum[2] = 0;
     } r1;
 };
