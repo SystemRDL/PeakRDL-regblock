@@ -44,7 +44,7 @@ cpuif_req_stall_rd
     transfer will not be accepted until this signal is deasserted.
 
 cpuif_req_stall_wr
-    If asserted, and the next pending request is a read operation, then the
+    If asserted, and the next pending request is a write operation, then the
     transfer will not be accepted until this signal is deasserted.
 
 
