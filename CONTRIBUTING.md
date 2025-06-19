@@ -47,7 +47,7 @@ How to submit a PR:
 4. Submit the pull request!
 
 
-## Any contributions you make will be under the GNU GPL-3.0 Software License
+## Any contributions you make will be under the GNU LGPL-3.0 Software License
 In short, when you submit code changes, your submissions are understood to be
-under the same [GPL-3.0 License](https://choosealicense.com/licenses/gpl-3.0/) that
+under the same [LGPL-3.0 License](https://choosealicense.com/licenses/lgpl-3.0/) that
 covers this project. Feel free to contact the maintainers if that's a concern.
