@@ -50,7 +50,7 @@ class Hwif:
 
 
     def get_extra_package_params(self) -> str:
-        lines = []
+        lines = [""]
 
         for param in self.top_node.inst.parameters:
             value = param.get_value()
@@ -70,7 +70,7 @@ class Hwif:
         """
         If this hwif requires a package, generate the string
         """
-        lines = []
+        lines = [""]
 
         gen_in = self._gen_in_cls(self)
         structs_in = gen_in.get_struct(

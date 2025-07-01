@@ -5,7 +5,7 @@ addrmap top #(
 ) {
     reg reg_t {
         regwidth = REGWIDTH;
-        field {sw=rw; hw=na;} f[REGWIDTH] = 1;
+        field {sw=rw; hw=r;} f[REGWIDTH] = 1;
     };
     reg_t regs[N_REGS];
 };
