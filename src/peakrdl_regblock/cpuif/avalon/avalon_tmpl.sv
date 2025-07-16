@@ -21,7 +21,7 @@ always_comb begin
     {%- endif %}
     cpuif_wr_data = {{cpuif.signal("writedata")}};
     for(int i=0; i<{{cpuif.data_width_bytes}}; i++) begin
-        cpuif_wr_biten[i*8 +: 8] <= {8{ {{-cpuif.signal("byteenable")}}[i]}};
+        cpuif_wr_biten[i*8 +: 8] = {8{ {{-cpuif.signal("byteenable")}}[i]}};
     end
     {{cpuif.signal("waitrequest")}} = (cpuif_req_stall_rd & {{cpuif.signal("read")}}) | (cpuif_req_stall_wr & {{cpuif.signal("write")}});
 end
