@@ -17,9 +17,9 @@ Things you should know
 * By default external ``hwif_out`` signals are driven combinationally. An
   optional output retiming stage can be enabled if needed.
 * Due to the uncertain access latency of external components, the regblock will
-  always enforce that only one outstanding transaction to an external component
-  at a time. This is enforced even if the CPUIF is capable of pipelined accesses
-  such as AXI4-Lite.
+  only issue one outstanding transaction to an external component at a time.
+  This is enforced even if the CPUIF is capable of pipelined accesses such as
+  AXI4-Lite.
 
 
 External Registers
