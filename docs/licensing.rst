@@ -2,29 +2,29 @@ Licensing
 =========
 
 Re-distribution of the PeakRDL-regblock code generator tool shall adhere to the
-terms outlined by the GNU GPL v3 license. For a copy of the license, see:
+terms outlined by the GNU LGPL v3 license. For a copy of the license, see:
 https://github.com/SystemRDL/PeakRDL-regblock/blob/main/LICENSE
 
 
-Why GPL?
---------
-GPL was chosen because my intent is to promote a thriving ecosystem of free and
-open source register automation tools. GPL discourages this tool to be bundled
-into some commercially sold closed-source software, as that would be contrary to
-this project's philosophy.
+Why LGPLv3?
+-----------
+LGPLv3 was chosen because my intent is to promote a thriving ecosystem of free and
+open source register automation tools. The license terms discourage this tool from
+being bundled into some commercially sold closed-source software, as that would
+be contrary to this project's philosophy.
 
 
-What is covered by the GPL v3 license?
+What is covered by the LGPL v3 license?
 --------------------------------------
-The GPL license is intended for the code generator itself. This includes all
+The LGPL license is intended for the code generator itself. This includes all
 Python sources, Jinja template files, as well as testcase infrastructure not
 explicitly mentioned in the exemptions below.
 
 
-What is exempt from the GPL v3 license?
+What is exempt from the LGPLv3 license?
 ---------------------------------------
 Don't worry. Not everything that the PeakRDL-regblock project touches is
-considered GPL v3 code.
+considered LGPLv3 code.
 
 The following are exempt and are free to use with no restrictions:
 
@@ -44,7 +44,7 @@ Absolutely!
 
 Sometimes it may be necessary to integrate this into a larger toolchain at your
 workplace. This is totally OK, as long as you don't start distributing it
-outside your workplace in ways that violate the GPL v3 license.
+outside your workplace in ways that violate the LGPLv3 license.
 
 That said, I'd encourage you to check out the `PeakRDL command line tool <https://peakrdl.readthedocs.io/>`_.
 It may already do everything you need.
