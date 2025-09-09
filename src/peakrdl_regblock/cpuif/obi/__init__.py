@@ -1,0 +1,56 @@
+from ..base import CpuifBase
+
+class OBI_Cpuif(CpuifBase):
+    template_path = "obi_tmpl.sv"
+    is_interface = True
+
+    @property
+    def port_declaration(self) -> str:
+        return "obi_intf.subordinate obi"
+
+    def signal(self, name: str) -> str:
+        return "obi." + name
+
+    @property
+    def regblock_latency(self) -> int:
+        return max(self.exp.ds.min_read_latency, self.exp.ds.min_write_latency)
+
+    @property
+    def max_outstanding(self) -> int:
+        """
+        OBI supports multiple outstanding transactions.
+        Best performance when max outstanding is design latency + 1.
+        """
+        return self.regblock_latency + 1
+
+
+class OBI_Cpuif_flattened(OBI_Cpuif):
+    is_interface = False
+
+    @property
+    def port_declaration(self) -> str:
+        lines = [
+            # OBI Request Channel (A)
+            "input wire " + self.signal("req"),
+            f"input wire [{self.addr_width-1}:0] " + self.signal("addr"),
+            "input wire " + self.signal("we"),
+            f"input wire [{self.data_width//8-1}:0] " + self.signal("be"),
+            f"input wire [{self.data_width-1}:0] " + self.signal("wdata"),
+            f"input wire [{self.id_width-1}:0] " + self.signal("aid"),
+            
+            # OBI Response Channel (R)
+            "output logic " + self.signal("gnt"),
+            "output logic " + self.signal("rvalid"),
+            f"output logic [{self.data_width-1}:0] " + self.signal("rdata"),
+            f"output logic [{self.id_width-1}:0] " + self.signal("rid"),
+            "output logic " + self.signal("err"),
+            "input wire " + self.signal("rready"),
+        ]
+        return ",\n".join(lines)
+
+    def signal(self, name: str) -> str:
+        return "obi_" + name
+
+    @property
+    def id_width(self) -> int:
+        return 1  # Default ID width
