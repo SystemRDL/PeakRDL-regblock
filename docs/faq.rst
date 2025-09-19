@@ -54,6 +54,20 @@ has syntax to do this:
 This is lesser-known syntax, but still very well supported by synthesis
 tools, and is the recommended way to handle this.
 
+... What if I want to assign it to a bit-vector?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assigning the hwif struct to a bit-vector is strongly discouraged. This tool makes
+no guarantees regarding the field ordering of the hwif structure, so doing so
+should be considered functionally dangerous.
+
+That said, if you still need to do this, it is still trivially possible to
+without requiring packed structs. Instead, use the SystemVerilog streaming operator:
+
+.. code:: systemverilog
+
+    my_packed_vector = {<<{hwif_out}};
+
+
 ... Why are unpacked structs preferred?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In the case of the hardware interface ports, unpacked structs help prevent

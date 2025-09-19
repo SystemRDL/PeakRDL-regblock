@@ -49,3 +49,13 @@ For example, a simple design such as:
 
 For brevity in this documentation, hwif features will be described using shorthand
 notation that omits the hierarchical path: ``hwif_out..<feature>``
+
+
+.. important::
+
+    The PeakRDL tool makes no guarantees on the field order of the hwif structs.
+    For this reason, it is strongly recommended to always access struct members
+    directly, by name.
+
+    If using the SystemVerilog streaming operator to assign the hwif struct to a
+    packed vector, be extremely careful to avoid assumptions on the resulting bit-position of a field.
