@@ -1,3 +1,5 @@
+from typing import List
+
 from ..base import CpuifBase
 
 class OBI_Cpuif(CpuifBase):
@@ -32,19 +34,19 @@ class OBI_Cpuif_flattened(OBI_Cpuif):
         lines = [
             # OBI Request Channel (A)
             "input wire " + self.signal("req"),
+            "output logic " + self.signal("gnt"),
             f"input wire [{self.addr_width-1}:0] " + self.signal("addr"),
             "input wire " + self.signal("we"),
             f"input wire [{self.data_width//8-1}:0] " + self.signal("be"),
             f"input wire [{self.data_width-1}:0] " + self.signal("wdata"),
-            f"input wire [{self.id_width-1}:0] " + self.signal("aid"),
-            
+            "input wire [ID_WIDTH-1:0] " + self.signal("aid"),
+
             # OBI Response Channel (R)
-            "output logic " + self.signal("gnt"),
             "output logic " + self.signal("rvalid"),
-            f"output logic [{self.data_width-1}:0] " + self.signal("rdata"),
-            f"output logic [{self.id_width-1}:0] " + self.signal("rid"),
-            "output logic " + self.signal("err"),
             "input wire " + self.signal("rready"),
+            f"output logic [{self.data_width-1}:0] " + self.signal("rdata"),
+            "output logic " + self.signal("err"),
+            "output logic [ID_WIDTH-1:0] " + self.signal("rid"),
         ]
         return ",\n".join(lines)
 
@@ -52,5 +54,5 @@ class OBI_Cpuif_flattened(OBI_Cpuif):
         return "obi_" + name
 
     @property
-    def id_width(self) -> int:
-        return 1  # Default ID width
+    def parameters(self) -> List[str]:
+        return ["parameter ID_WIDTH = 1"]
