@@ -39,6 +39,7 @@ class BaseTestCase(unittest.TestCase):
     retime_external = False
     default_reset_activelow = False
     default_reset_async = False
+    generate_cpuif_err = False
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -118,6 +119,7 @@ class BaseTestCase(unittest.TestCase):
             retime_external_addrmap=self.retime_external,
             default_reset_activelow=self.default_reset_activelow,
             default_reset_async=self.default_reset_async,
+            generate_cpuif_err =self.generate_cpuif_err,
         )
 
     def delete_run_dir(self) -> None:

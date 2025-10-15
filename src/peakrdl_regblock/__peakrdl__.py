@@ -139,6 +139,12 @@ class Exporter(ExporterSubcommandPlugin):
             is active-high and synchronous [rst]"""
         )
 
+        arg_group.add_argument(
+            "--generate_cpuif_err",
+            action="store_true",
+            default=False,
+            help="Generate cpuif error response, when the address is decoded incorrectly"
+        )
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         cpuifs = self.get_cpuifs()
@@ -201,5 +207,6 @@ class Exporter(ExporterSubcommandPlugin):
             generate_hwif_report=options.hwif_report,
             address_width=options.addr_width,
             default_reset_activelow=default_reset_activelow,
+            generate_cpuif_err=options.generate_cpuif_err,
             default_reset_async=default_reset_async,
         )
