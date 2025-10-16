@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Union, List, Optional
 
-from systemrdl.node import FieldNode, RegNode
+from systemrdl.node import FieldNode, RegNode, MemNode
 from systemrdl.walker import WalkerAction
 
 from .utils import get_indexed_path
@@ -12,7 +12,7 @@ from .sv_int import SVInt
 if TYPE_CHECKING:
     from .exporter import RegblockExporter
     from systemrdl.node import AddrmapNode, AddressableNode
-    from systemrdl.node import RegfileNode, MemNode
+    from systemrdl.node import RegfileNode
 
 class AddressDecode:
     def __init__(self, exp:'RegblockExporter'):
@@ -152,7 +152,20 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             addr_str = self._get_address_str(node)
             strb = self.addr_decode.get_external_block_access_strobe(node)
             rhs = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {SVInt(node.size - 1, self.addr_decode.exp.ds.addr_width)})"
+            if isinstance(node, MemNode):
+                readable = node.is_sw_readable
+                writable = node.is_sw_writable
+                if readable and writable:
+                    pass
+                elif readable and not writable:
+                    rhs = f"{rhs} & !cpuif_req_is_wr"
+                elif not readable and writable:
+                    rhs = f"{rhs} & cpuif_req_is_wr"
+                else:
+                    raise RuntimeError
             self.add_content(f"{strb} = {rhs};")
+            # Add address decoding flag
+            self.add_content(f"is_decoded |= {strb};")
             self.add_content(f"is_external |= {rhs};")
             return WalkerAction.SkipDescendants
 
@@ -175,14 +188,22 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         accesswidth = node.get_property('accesswidth')
 
         if regwidth == accesswidth:
+            readable = node.has_sw_readable
+            writable = node.has_sw_writable
             rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)})"
+            if readable and writable:
+                pass
+            elif readable and not writable:
+                rhs = f"{rhs} & !cpuif_req_is_wr"
+            elif not readable and writable:
+                rhs = f"{rhs} & cpuif_req_is_wr"
+            else:
+                raise RuntimeError
             s = f"{self.addr_decode.get_access_strobe(node)} = {rhs};"
             self.add_content(s)
             # Add address decoding flag
             self.add_content(f"is_decoded |= {self.addr_decode.get_access_strobe(node)};")
             if node.external:
-                readable = node.has_sw_readable
-                writable = node.has_sw_writable
                 if readable and writable:
                     self.add_content(f"is_external |= {rhs};")
                 elif readable and not writable:
@@ -196,14 +217,22 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             n_subwords = regwidth // accesswidth
             subword_stride = accesswidth // 8
             for i in range(n_subwords):
+                readable = node.has_sw_readable
+                writable = node.has_sw_writable
                 rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=(i*subword_stride))})"
+                if readable and writable:
+                    pass
+                elif readable and not writable:
+                    rhs = f"{rhs} & !cpuif_req_is_wr"
+                elif not readable and writable:
+                    rhs = f"{rhs} & cpuif_req_is_wr"
+                else:
+                    raise RuntimeError
                 s = f"{self.addr_decode.get_access_strobe(node)}[{i}] = {rhs};"
                 self.add_content(s)
                 # Add address decoding flag
                 self.add_content(f"is_decoded |= {self.addr_decode.get_access_strobe(node)}[{i}];")
                 if node.external:
-                    readable = node.has_sw_readable
-                    writable = node.has_sw_writable
                     if readable and writable:
                         self.add_content(f"is_external |= {rhs};")
                     elif readable and not writable:
