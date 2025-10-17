@@ -20,4 +20,23 @@ addrmap top {
             sw=w; hw=r; // Storage element
         } f[31:0] = 100;
     } r_w;
+
+    external reg {
+        field {
+            sw=rw; hw=na; // Storage element
+        } f[31:0];
+    } er_rw;
+
+    external reg {
+        field {
+            sw=r; hw=na; // Wire/Bus - constant value
+        } f[31:0];
+    } er_r;
+
+    external reg {
+        field {
+            sw=w; hw=na; // Storage element
+        } f[31:0];
+    } er_w;
+
 };

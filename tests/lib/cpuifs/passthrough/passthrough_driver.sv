@@ -82,6 +82,12 @@ interface passthrough_driver #(
         join
     endtask
 
+    task automatic assert_write_err(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic expected_wr_err, logic [DATA_WIDTH-1:0] biten = '1);
+        logic wr_err;
+        write_err(addr,data,biten,wr_err);
+        assert(wr_err == expected_wr_err) else $error("Error write response from 0x%x returned 0x%x. Expected 0x%x", addr, wr_err, expected_wr_err);
+    endtask
+
     task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
         logic rd_err;
         read_err(addr,data,rd_err);

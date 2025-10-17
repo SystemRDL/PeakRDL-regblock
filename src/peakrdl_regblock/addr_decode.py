@@ -204,14 +204,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             # Add address decoding flag
             self.add_content(f"is_decoded |= {self.addr_decode.get_access_strobe(node)};")
             if node.external:
-                if readable and writable:
-                    self.add_content(f"is_external |= {rhs};")
-                elif readable and not writable:
-                    self.add_content(f"is_external |= {rhs} & !cpuif_req_is_wr;")
-                elif not readable and writable:
-                    self.add_content(f"is_external |= {rhs} & cpuif_req_is_wr;")
-                else:
-                    raise RuntimeError
+                self.add_content(f"is_external |= {rhs};")
         else:
             # Register is wide. Create a substrobe for each subword
             n_subwords = regwidth // accesswidth
@@ -233,14 +226,7 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
                 # Add address decoding flag
                 self.add_content(f"is_decoded |= {self.addr_decode.get_access_strobe(node)}[{i}];")
                 if node.external:
-                    if readable and writable:
-                        self.add_content(f"is_external |= {rhs};")
-                    elif readable and not writable:
-                        self.add_content(f"is_external |= {rhs} & !cpuif_req_is_wr;")
-                    elif not readable and writable:
-                        self.add_content(f"is_external |= {rhs} & cpuif_req_is_wr;")
-                    else:
-                        raise RuntimeError
+                    self.add_content(f"is_external |= {rhs};")
 
     def exit_AddressableComponent(self, node: 'AddressableNode') -> None:
         super().exit_AddressableComponent(node)

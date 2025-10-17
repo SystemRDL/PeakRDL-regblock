@@ -9,5 +9,9 @@ from ..lib.cpuifs.passthrough import Passthrough
     "generate_cpuif_err": [True,],
 }))
 class Test(SimTestCase):
+    extra_tb_files = [
+        "../lib/external_reg.sv",
+    ]
+
     def test_dut(self):
         self.run_test()
