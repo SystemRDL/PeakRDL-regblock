@@ -39,4 +39,21 @@ addrmap top {
         } f[31:0];
     } er_w;
 
+    external mem {
+        memwidth = 32;
+        mementries = 2;
+    } mem_rw @ 0x20;
+
+    external mem {
+        memwidth = 32;
+        mementries = 2;
+        sw=r;
+    } mem_r @ 0x28;
+
+    external mem {
+        memwidth = 32;
+        mementries = 2;
+        sw=w;
+    } mem_w @ 0x30;
+
 };

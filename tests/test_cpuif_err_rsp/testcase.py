@@ -11,6 +11,7 @@ from ..lib.cpuifs.passthrough import Passthrough
 class Test(SimTestCase):
     extra_tb_files = [
         "../lib/external_reg.sv",
+        "../lib/external_block.sv",
     ]
 
     def test_dut(self):
