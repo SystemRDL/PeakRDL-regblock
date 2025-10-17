@@ -50,6 +50,11 @@ interface passthrough_driver #(
     semaphore txn_resp_mutex = new(1);
 
     task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH-1:0] biten = '1);
+        logic wr_err;
+        write_err(addr,data,biten,wr_err);
+    endtask
+
+    task automatic write_err(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH-1:0] biten = '1, output logic wr_err);
         fork
             begin
                 // Initiate transfer
@@ -71,12 +76,18 @@ interface passthrough_driver #(
                 txn_resp_mutex.get();
                 @cb;
                 while(cb.m_cpuif_wr_ack !== 1'b1) @(cb);
+                wr_err = cb.m_cpuif_wr_err;
                 txn_resp_mutex.put();
             end
         join
     endtask
 
     task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
+        logic rd_err;
+        read_err(addr,data,rd_err);
+    endtask
+
+    task automatic read_err(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data, output logic rd_err);
         fork
             begin
                 // Initiate transfer
@@ -98,6 +109,7 @@ interface passthrough_driver #(
                 while(cb.m_cpuif_rd_ack !== 1'b1) @(cb);
                 assert(!$isunknown(cb.m_cpuif_rd_data)) else $error("Read from 0x%0x returned X's on m_cpuif_rd_data", addr);
                 data = cb.m_cpuif_rd_data;
+                rd_err = cb.m_cpuif_rd_err;
                 txn_resp_mutex.put();
             end
         join
@@ -108,6 +120,15 @@ interface passthrough_driver #(
         read(addr, data);
         data &= mask;
         assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
+    endtask
+
+    task automatic assert_read_err(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic expected_rd_err, logic [DATA_WIDTH-1:0] mask = '1);
+        logic [DATA_WIDTH-1:0] data;
+        logic                  rd_err;
+        read_err(addr, data,rd_err);
+        data &= mask;
+        assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
+        assert(rd_err == expected_rd_err) else $error("Error read response from 0x%x returned 0x%x. Expected 0x%x", addr, rd_err, expected_rd_err);
     endtask
 
     initial begin
