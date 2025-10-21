@@ -111,7 +111,7 @@ logic [5:0] addr;
     expected_rd_err = 'h0;
     expected_wr_err = 'h0;
     cpuif.assert_read_err(addr, 40, expected_rd_err);
-    cpuif.assert_write_err('h0, 41, expected_wr_err, '1);
+    cpuif.assert_write_err('h0, 41, expected_wr_err);
     cpuif.assert_read_err('h0, 41, expected_rd_err);
 
     // r_r - sw=r; hw=na; // Wire/Bus - constant value
@@ -119,7 +119,7 @@ logic [5:0] addr;
     expected_rd_err = 'h0;
     expected_wr_err = 'h1;
     cpuif.assert_read_err(addr, 80,expected_rd_err);
-    cpuif.assert_write_err(addr, 81, expected_wr_err, '1);
+    cpuif.assert_write_err(addr, 81, expected_wr_err);
     cpuif.assert_read_err(addr, 80, expected_rd_err);
 
     // r_w - sw=w; hw=r; // Storage element
@@ -129,7 +129,7 @@ logic [5:0] addr;
     cpuif.assert_read_err(addr, 0, expected_rd_err);
     assert(cb.hwif_out.r_w.f.value == 100);
 
-    cpuif.assert_write_err(addr, 101, expected_wr_err, '1);
+    cpuif.assert_write_err(addr, 101, expected_wr_err);
     cpuif.assert_read_err(addr, 0, expected_rd_err);
     assert(cb.hwif_out.r_w.f.value == 101);
 
