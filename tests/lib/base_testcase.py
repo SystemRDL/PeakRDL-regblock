@@ -119,7 +119,7 @@ class BaseTestCase(unittest.TestCase):
             retime_external_addrmap=self.retime_external,
             default_reset_activelow=self.default_reset_activelow,
             default_reset_async=self.default_reset_async,
-            generate_cpuif_err =self.generate_cpuif_err,
+            generate_cpuif_err=self.generate_cpuif_err,
         )
 
     def delete_run_dir(self) -> None:
