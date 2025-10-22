@@ -60,6 +60,11 @@ interface avalon_mm_intf_driver #(
     semaphore resp_mutex = new(1);
 
     task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1);
+        logic err;
+        write_err(addr, data, strb, err);
+    endtask
+
+    task automatic write_err(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1, output logic err);
         fork
             begin
                 req_mutex.get();
@@ -82,13 +87,25 @@ interface avalon_mm_intf_driver #(
                 @cb;
                 // Wait for response
                 while(cb.av_writeresponsevalid !== 1'b1) @(cb);
-                assert(!$isunknown(cb.av_response)) else $error("Read from 0x%0x returned X's on av_response", addr);
+                assert(!$isunknown(cb.av_response)) else $error("Write to 0x%0x returned X's on av_response", addr);
+                err = (cb.av_response == 2'b10);
                 resp_mutex.put();
             end
         join
     endtask
 
+    task automatic assert_write_err(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic expected_wr_err, logic [DATA_WIDTH/8-1:0] strb = '1);
+        logic wr_err;
+        write_err(addr, data, strb, wr_err);
+        assert(wr_err == expected_wr_err) else $error("Error write response from 0x%x returned 0x%x. Expected 0x%x", addr, wr_err, expected_wr_err);
+    endtask
+
     task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
+        logic err;
+        read_err(addr, data, err);
+    endtask
+
+    task automatic read_err(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data, output logic err);
         fork
             begin
                 req_mutex.get();
@@ -112,6 +129,7 @@ interface avalon_mm_intf_driver #(
                 assert(!$isunknown(cb.av_readdata)) else $error("Read from 0x%0x returned X's on av_response", av_readdata);
                 assert(!$isunknown(cb.av_response)) else $error("Read from 0x%0x returned X's on av_response", addr);
                 data = cb.av_readdata;
+                err = (cb.av_response == 2'b10);
                 resp_mutex.put();
             end
         join
@@ -122,6 +140,15 @@ interface avalon_mm_intf_driver #(
         read(addr, data);
         data &= mask;
         assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
+    endtask
+
+    task automatic assert_read_err(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic expected_rd_err, logic [DATA_WIDTH-1:0] mask = '1);
+        logic [DATA_WIDTH-1:0] data;
+        logic                  rd_err;
+        read_err(addr, data, rd_err);
+        data &= mask;
+        assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
+        assert(rd_err == expected_rd_err) else $error("Error read response from 0x%x returned 0x%x. Expected 0x%x", addr, rd_err, expected_rd_err);
     endtask
 
     initial begin
