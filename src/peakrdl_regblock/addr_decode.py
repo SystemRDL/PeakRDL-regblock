@@ -210,9 +210,9 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             n_subwords = regwidth // accesswidth
             subword_stride = accesswidth // 8
             for i in range(n_subwords):
+                rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=i*subword_stride)})"
                 readable = node.has_sw_readable
                 writable = node.has_sw_writable
-                rhs = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=(i*subword_stride))})"
                 if readable and writable:
                     pass
                 elif readable and not writable:
