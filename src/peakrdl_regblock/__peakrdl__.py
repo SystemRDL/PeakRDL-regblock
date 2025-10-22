@@ -140,7 +140,7 @@ class Exporter(ExporterSubcommandPlugin):
         )
 
         arg_group.add_argument(
-            "--generate_cpuif_err",
+            "--generate-cpuif-err",
             action="store_true",
             default=False,
             help="Generate cpuif error response, when the address is decoded incorrectly"
