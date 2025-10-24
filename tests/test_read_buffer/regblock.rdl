@@ -114,4 +114,13 @@ addrmap top {
     g4_r1->rbuffer_trigger = g4_trig.trig;
     g4_r2->rbuffer_trigger = g4_trig.trig->swmod;
 
+    //--------------------------------------------------------------------------
+    // external components
+    //--------------------------------------------------------------------------
+
+    // ensure read buffering logic is not generated for external components
+    external myreg_wide ext_reg1;
+    external regfile {
+        myreg_wide reg1;
+    } ext_block;
 };

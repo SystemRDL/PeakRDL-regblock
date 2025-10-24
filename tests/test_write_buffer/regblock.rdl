@@ -102,5 +102,13 @@ addrmap top {
     } g6_modcount;
     g6_modcount.c->incr = g6_r1.f1->swmod;
 
+    //--------------------------------------------------------------------------
+    // external components
+    //--------------------------------------------------------------------------
 
+    // ensure write buffering logic is not generated for external components
+    external myreg ext_reg1;
+    external regfile {
+        myreg reg1;
+    } ext_block;
 };
