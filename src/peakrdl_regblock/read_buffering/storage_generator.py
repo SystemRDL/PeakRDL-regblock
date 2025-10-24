@@ -11,7 +11,7 @@ class RBufStorageStructGenerator(RDLStructGenerator):
     def enter_Reg(self, node: RegNode) -> None:
         super().enter_Reg(node)
 
-        if not node.get_property('buffer_reads'):
+        if not node.get_property('buffer_reads') or node.external:
             return
 
         regwidth = node.get_property('regwidth')

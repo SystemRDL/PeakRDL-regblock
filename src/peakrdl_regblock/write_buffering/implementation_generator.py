@@ -23,7 +23,7 @@ class WBufLogicGenerator(RDLForLoopGenerator):
         super().enter_Reg(node)
         assert isinstance(node.inst, Reg)
 
-        if not node.get_property('buffer_writes'):
+        if not node.get_property('buffer_writes') or node.external:
             return
 
         regwidth = node.get_property('regwidth')
