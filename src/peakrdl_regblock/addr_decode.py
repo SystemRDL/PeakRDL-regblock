@@ -152,13 +152,12 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
                 raise RuntimeError
         # Add decoding flags
         self.add_content(f"{self.addr_decode.get_external_block_access_strobe(node)} = {rhs};")
+        self.add_content(f"is_external |= {rhs};")
         if self.addr_decode.exp.ds.err_if_bad_addr:
             self.add_content(f"is_valid_addr |= {rhs_valid_addr};")
         if isinstance(node, MemNode):
             if self.addr_decode.exp.ds.err_if_bad_rw:
                 self.add_content(f"is_invalid_rw |= {rhs_invalid_rw};")
-        if node.external:
-            self.add_content(f"is_external |= {rhs};")
 
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
@@ -221,12 +220,12 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             self.add_content(f"{self.addr_decode.get_access_strobe(node)} = {rhs};")
         else:
             self.add_content(f"{self.addr_decode.get_access_strobe(node)}[{subword_index}] = {rhs};")
+        if node.external:
+            self.add_content(f"is_external |= {rhs};")
         if self.addr_decode.exp.ds.err_if_bad_addr:
             self.add_content(f"is_valid_addr |= {rhs_valid_addr};")
         if self.addr_decode.exp.ds.err_if_bad_rw:
             self.add_content(f"is_invalid_rw |= {rhs_invalid_rw};")
-        if node.external:
-            self.add_content(f"is_external |= {rhs};")
 
     def enter_Reg(self, node: RegNode) -> None:
         regwidth = node.get_property('regwidth')
