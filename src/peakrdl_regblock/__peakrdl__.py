@@ -142,10 +142,18 @@ class Exporter(ExporterSubcommandPlugin):
         )
 
         arg_group.add_argument(
-            "--generate-cpuif-err",
+            "--err-if-bad-addr",
             action="store_true",
             default=False,
-            help="Generate cpuif error response, when the address is decoded incorrectly"
+            help="Generate CPUIF error response, when the address is decoded incorrectly"
+        )
+
+        arg_group.add_argument(
+            "--err-if-bad-rw",
+            action="store_true",
+            default=False,
+            help="""Generate CPUIF error response, when an illegal access is
+            performed to a read-only or write-only register"""
         )
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
@@ -209,6 +217,7 @@ class Exporter(ExporterSubcommandPlugin):
             generate_hwif_report=options.hwif_report,
             address_width=options.addr_width,
             default_reset_activelow=default_reset_activelow,
-            generate_cpuif_err=options.generate_cpuif_err,
+            err_if_bad_addr=options.err_if_bad_addr,
+            err_if_bad_rw=options.err_if_bad_rw,
             default_reset_async=default_reset_async,
         )

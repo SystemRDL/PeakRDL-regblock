@@ -8,7 +8,8 @@ from ..lib.cpuifs import ALL_CPUIF
     "cpuif": ALL_CPUIF,
 }))
 class Test(SimTestCase):
-    generate_cpuif_err = True
+    err_if_bad_addr = True
+    err_if_bad_rw = True
 
     extra_tb_files = [
         "../lib/external_reg.sv",

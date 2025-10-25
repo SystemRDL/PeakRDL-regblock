@@ -37,7 +37,7 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
         readback_err_r <= '0;
     end else begin
         readback_array_r <= readback_array_c;
-        readback_err_r <= undecoded_addr_strb;
+        readback_err_r <= decoded_err;
         {%- if ds.has_external_addressable %}
         readback_done_r <= decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
         {%- else %}
@@ -50,7 +50,7 @@ end
 always_comb begin
     automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
     readback_done = readback_done_r;
-    {%- if ds.generate_cpuif_err %}
+    {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
     readback_err = readback_err_r;
     {%- else %}
     readback_err = '0;
@@ -70,8 +70,8 @@ always_comb begin
     {%- else %}
     readback_done = decoded_req & ~decoded_req_is_wr;
     {%- endif %}
-    {%- if ds.generate_cpuif_err %}
-    readback_err = undecoded_addr_strb;
+    {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
+    readback_err = decoded_err;
     {%- else %}
     readback_err = '0;
     {%- endif %}
@@ -86,8 +86,8 @@ end
 {%- else %}
 assign readback_done = decoded_req & ~decoded_req_is_wr;
 assign readback_data = '0;
-{%- if ds.generate_cpuif_err %}
-assign readback_err = undecoded_addr_strb;
+{%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
+assign readback_err = decoded_err;
 {%- else %}
 assign readback_err = '0;
 {%- endif %}
