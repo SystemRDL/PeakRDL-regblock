@@ -7,7 +7,7 @@ from peakrdl.config import schema
 from peakrdl.plugins.entry_points import get_entry_points
 
 from .exporter import RegblockExporter
-from .cpuif import CpuifBase, apb3, apb4, axi4lite, passthrough, avalon
+from .cpuif import CpuifBase, apb3, apb4, axi4lite, passthrough, avalon, obi
 from .udps import ALL_UDPS
 
 if TYPE_CHECKING:
@@ -38,6 +38,8 @@ class Exporter(ExporterSubcommandPlugin):
             "axi4-lite-flat": axi4lite.AXI4Lite_Cpuif_flattened,
             "avalon-mm": avalon.Avalon_Cpuif,
             "avalon-mm-flat": avalon.Avalon_Cpuif_flattened,
+            "obi": obi.OBI_Cpuif,
+            "obi-flat": obi.OBI_Cpuif_flattened,
         }
 
         # Load any cpuifs specified via entry points

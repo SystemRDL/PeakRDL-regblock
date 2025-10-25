@@ -22,7 +22,7 @@ class RBufLogicGenerator(RDLForLoopGenerator):
         super().enter_Reg(node)
         assert isinstance(node.inst, Reg)
 
-        if not node.get_property('buffer_reads'):
+        if not node.get_property('buffer_reads') or node.external:
             return
 
         context = {
