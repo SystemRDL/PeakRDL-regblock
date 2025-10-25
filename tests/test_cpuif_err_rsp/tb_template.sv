@@ -110,27 +110,27 @@ logic [5:0] addr;
     addr = 'h0;
     expected_rd_err = 'h0;
     expected_wr_err = 'h0;
-    cpuif.assert_read_err(addr, 40, expected_rd_err);
-    cpuif.assert_write_err('h0, 41, expected_wr_err);
-    cpuif.assert_read_err('h0, 41, expected_rd_err);
+    cpuif.assert_read(addr, 40, .expects_err(expected_rd_err));
+    cpuif.write('h0, 61, .expects_err(expected_wr_err));
+    cpuif.assert_read('h0, 61, .expects_err(expected_rd_err));
 
     // r_r - sw=r; hw=na; // Wire/Bus - constant value
     addr = 'h4;
     expected_rd_err = 'h0;
     expected_wr_err = 'h1;
-    cpuif.assert_read_err(addr, 80,expected_rd_err);
-    cpuif.assert_write_err(addr, 81, expected_wr_err);
-    cpuif.assert_read_err(addr, 80, expected_rd_err);
+    cpuif.assert_read(addr, 80, .expects_err(expected_rd_err));
+    cpuif.write(addr, 81, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 80, .expects_err(expected_rd_err));
 
     // r_w - sw=w; hw=r; // Storage element
     addr = 'h8;
     expected_rd_err = 'h1;
     expected_wr_err = 'h0;
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
     assert(cb.hwif_out.r_w.f.value == 100);
 
-    cpuif.assert_write_err(addr, 101, expected_wr_err);
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
+    cpuif.write(addr, 101, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
     assert(cb.hwif_out.r_w.f.value == 101);
 
     // External registers
@@ -139,37 +139,37 @@ logic [5:0] addr;
     expected_rd_err = 'h0;
     expected_wr_err = 'h0;
     ext_reg_inst.value = 'h8C;
-    cpuif.assert_read_err(addr, 'h8C, expected_rd_err);
-    cpuif.assert_write_err('h0, 'h8D, expected_wr_err);
-    cpuif.assert_read_err('h0, 'h8D, expected_rd_err);
+    cpuif.assert_read(addr, 'h8C, .expects_err(expected_rd_err));
+    cpuif.write(addr, 'h8D, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 'h8D, .expects_err(expected_rd_err));
 
     // er_r - sw=r; hw=na; // Wire/Bus - constant value
     addr = 'h10;
     expected_rd_err = 'h0;
     expected_wr_err = 'h1;
     ro_reg_inst.value = 'hB4;
-    cpuif.assert_read_err(addr, 'hB4,expected_rd_err);
-    cpuif.assert_write_err(addr, 'hB5, expected_wr_err);
-    cpuif.assert_read_err(addr, 'hB4, expected_rd_err);
+    cpuif.assert_read(addr, 'hB4, .expects_err(expected_rd_err));
+    cpuif.write(addr, 'hB5, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 'hB4, .expects_err(expected_rd_err));
 
     // er_w - sw=w; hw=r; // Storage element
     addr = 'h14;
     expected_rd_err = 'h1;
     expected_wr_err = 'h0;
     wo_reg_inst.value = 'hC8;
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
     assert(wo_reg_inst.value == 'hC8);
 
-    cpuif.assert_write_err(addr, 'hC9, expected_wr_err);
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
+    cpuif.write(addr, 'hC9, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
     assert(wo_reg_inst.value == 'hC9);
 
     // Reading/writing from/to non existing register
     addr = 'h18;
     expected_rd_err = 'h1;
     expected_wr_err = 'h1;
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
-    cpuif.assert_write_err(addr, 'h8C, expected_wr_err);
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
+    cpuif.write(addr, 'h8C, .expects_err(expected_wr_err));
 
     // External memories
     // mem_rw - sw=rw;
@@ -177,18 +177,18 @@ logic [5:0] addr;
     expected_rd_err = 'h0;
     expected_wr_err = 'h0;
     mem_rw_inst.mem[0] = 'h8C;
-    cpuif.assert_read_err(addr, 'h8C, expected_rd_err);
-    cpuif.assert_write_err('h0, 'h8D, expected_wr_err);
-    cpuif.assert_read_err('h0, 'h8D, expected_rd_err);
+    cpuif.assert_read(addr, 'h8C, .expects_err(expected_rd_err));
+    cpuif.write(addr, 'h8D, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 'h8D, .expects_err(expected_rd_err));
 
     // mem_r - sw=r;
     addr = 'h28;
     expected_rd_err = 'h0;
     expected_wr_err = 'h1;
     mem_ro_inst.mem[0] = 'hB4;
-    cpuif.assert_read_err(addr, 'hB4,expected_rd_err);
-    cpuif.assert_write_err(addr, 'hB5, expected_wr_err);
-    cpuif.assert_read_err(addr, 'hB4, expected_rd_err);
+    cpuif.assert_read(addr, 'hB4, .expects_err(expected_rd_err));
+    cpuif.write(addr, 'hB5, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 'hB4, .expects_err(expected_rd_err));
 
 
     // mem_w - sw=w;
@@ -196,11 +196,11 @@ logic [5:0] addr;
     expected_rd_err = 'h1;
     expected_wr_err = 'h0;
     mem_wo_inst.mem[0] = 'hC8;
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
     assert(mem_wo_inst.mem[0] == 'hC8);
 
-    cpuif.assert_write_err(addr, 'hC9, expected_wr_err);
-    cpuif.assert_read_err(addr, 0, expected_rd_err);
+    cpuif.write(addr, 'hC9, .expects_err(expected_wr_err));
+    cpuif.assert_read(addr, 0, .expects_err(expected_rd_err));
     assert(mem_wo_inst.mem[0] == 'hC9);
 
 {% endblock %}
