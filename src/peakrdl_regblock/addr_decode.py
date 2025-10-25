@@ -194,8 +194,11 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         return a
 
 
-    def _add_reg_decoding_flags(self, node: Union['AddressableNode', RegNode], subword_index: int = None, subword_stride: int = None) -> None:
-        if subword_index is None:
+    def _add_reg_decoding_flags(self,
+        node: RegNode,
+        subword_index: Union[int, None] = None,
+        subword_stride: Union[int, None] = None) -> None:
+        if subword_index is None or subword_stride is None:
             addr_decoding_str = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)})"
         else:
             addr_decoding_str = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=subword_index*subword_stride)})"
