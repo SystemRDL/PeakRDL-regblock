@@ -1,3 +1,4 @@
+// External region: {{node.get_path()}}
 {% if retime -%}
 
 
