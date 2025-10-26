@@ -8,10 +8,10 @@ class OBI_Cpuif(CpuifBase):
 
     @property
     def port_declaration(self) -> str:
-        return "obi_intf.subordinate obi"
+        return "obi_intf.subordinate s_obi"
 
     def signal(self, name: str) -> str:
-        return "obi." + name
+        return "s_obi." + name
 
     @property
     def regblock_latency(self) -> int:
@@ -51,7 +51,7 @@ class OBI_Cpuif_flattened(OBI_Cpuif):
         return ",\n".join(lines)
 
     def signal(self, name: str) -> str:
-        return "obi_" + name
+        return "s_obi_" + name
 
     @property
     def parameters(self) -> List[str]:
