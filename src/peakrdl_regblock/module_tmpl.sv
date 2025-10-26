@@ -2,29 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 module {{ds.module_name}}
-    {%- if cpuif.parameters %} #(
-        {{",\n        ".join(cpuif.parameters)}}
+    {%- if module_has_parameters() %} #(
+        {{get_module_parameter_list()|indent(8)}}
     ) {%- endif %} (
-        input wire clk,
-        input wire {{default_resetsignal_name}},
-
-        {%- for signal in ds.out_of_hier_signals.values() %}
-        {%- if signal.width == 1 %}
-        input wire {{kwf(signal.inst_name)}},
-        {%- else %}
-        input wire [{{signal.width-1}}:0] {{kwf(signal.inst_name)}},
-        {%- endif %}
-        {%- endfor %}
-
-        {%- if ds.has_paritycheck %}
-
-        output logic parity_error,
-        {%- endif %}
-
-        {{cpuif.port_declaration|indent(8)}}
-        {%- if hwif.has_input_struct or hwif.has_output_struct %},{% endif %}
-
-        {{hwif.port_declaration|indent(8)}}
+        {{get_module_port_list()|indent(8)}}
     );
 
     //--------------------------------------------------------------------------

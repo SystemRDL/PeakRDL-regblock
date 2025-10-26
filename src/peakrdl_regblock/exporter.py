@@ -175,6 +175,9 @@ class RegblockExporter:
         context = {
             "cpuif": self.cpuif,
             "hwif": self.hwif,
+            "module_has_parameters": self.module_has_parameters,
+            "get_module_parameter_list": self.get_module_parameter_list,
+            "get_module_port_list": self.get_module_port_list,
             "write_buffering": self.write_buffering,
             "read_buffering": self.read_buffering,
             "get_resetsignal": self.dereferencer.get_resetsignal,
@@ -205,6 +208,47 @@ class RegblockExporter:
 
         if hwif_report_file:
             hwif_report_file.close()
+
+    def module_has_parameters(self) -> bool:
+        return bool(self.cpuif.parameters)
+
+    def get_module_parameter_list(self) -> str:
+        return ",\n".join(self.cpuif.parameters)
+
+    def get_module_port_list(self) -> str:
+        groups = []
+
+        # Main clock & reset
+        clkrst = [
+            "input wire clk",
+            f"input wire {self.dereferencer.default_resetsignal_name}"
+        ]
+        groups.append(",\n".join(clkrst))
+
+        # Signals that were declared outside of the hierarchy of the addrmap
+        # being exported
+        out_of_hier_signals = []
+        for signal in self.ds.out_of_hier_signals.values():
+            if signal.width == 1:
+                out_of_hier_signals.append(f"input wire {kwf(signal.inst_name)}")
+            else:
+                out_of_hier_signals.append(f"input wire [{signal.width - 1}:0] {kwf(signal.inst_name)}")
+        if out_of_hier_signals:
+            groups.append(",\n".join(out_of_hier_signals))
+
+        # Parity check error output
+        if self.ds.has_paritycheck:
+            groups.append("output logic parity_error")
+
+        # CPU interface ports
+        groups.append(self.cpuif.port_declaration)
+
+        if self.hwif.has_input_struct or self.hwif.has_output_struct:
+            groups.append(self.hwif.port_declaration)
+
+        return ",\n\n".join(groups)
+
+
 
 
 class DesignState:
