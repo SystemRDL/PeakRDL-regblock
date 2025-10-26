@@ -22,6 +22,8 @@ class Test(SimTestCase):
         "../lib/external_reg.sv",
         "../lib/external_block.sv",
     ]
+    init_hwif_in = False
+    clocking_hwif_in = False
 
     def test_dut(self):
         self.run_test()

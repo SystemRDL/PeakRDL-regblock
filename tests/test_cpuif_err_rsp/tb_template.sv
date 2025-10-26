@@ -74,7 +74,7 @@
         .wr_ack(hwif_in.mem_r.wr_ack)
     );
 
-        external_block #(
+    external_block #(
         .ADDR_WIDTH(3)
     ) mem_wo_inst (
         .clk(clk),
@@ -89,6 +89,8 @@
         .rd_data(),
         .wr_ack(hwif_in.mem_w.wr_ack)
     );
+    assign hwif_in.mem_w.rd_ack = '0;
+    assign hwif_in.mem_w.rd_data = '0;
 
 {%- endblock %}
 
