@@ -22,6 +22,8 @@ class Exporter(ExporterSubcommandPlugin):
     cfg_schema = {
         "cpuifs": {"*": schema.PythonObjectImport()},
         "default_reset": schema.Choice(["rst", "rst_n", "arst", "arst_n"]),
+        "err_if_bad_addr": schema.Boolean(),
+        "err_if_bad_rw": schema.Boolean(),
     }
 
     @functools.lru_cache()
@@ -141,6 +143,20 @@ class Exporter(ExporterSubcommandPlugin):
             is active-high and synchronous [rst]"""
         )
 
+        arg_group.add_argument(
+            "--err-if-bad-addr",
+            action="store_true",
+            default=False,
+            help="Generate CPUIF error response, when the address is decoded incorrectly"
+        )
+
+        arg_group.add_argument(
+            "--err-if-bad-rw",
+            action="store_true",
+            default=False,
+            help="""Generate CPUIF error response, when an illegal access is
+            performed to a read-only or write-only register"""
+        )
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         cpuifs = self.get_cpuifs()
@@ -203,5 +219,7 @@ class Exporter(ExporterSubcommandPlugin):
             generate_hwif_report=options.hwif_report,
             address_width=options.addr_width,
             default_reset_activelow=default_reset_activelow,
+            err_if_bad_addr=options.err_if_bad_addr or self.cfg['err_if_bad_addr'],
+            err_if_bad_rw=options.err_if_bad_rw or self.cfg['err_if_bad_rw'],
             default_reset_async=default_reset_async,
         )
