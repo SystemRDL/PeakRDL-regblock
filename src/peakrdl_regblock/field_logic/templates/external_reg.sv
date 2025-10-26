@@ -1,3 +1,4 @@
+// External register: {{node.get_path()}}
 {% if retime -%}
 
 
@@ -29,7 +30,7 @@ end
 {%- else -%}
 
 
-{%- if has_sw_readable and has_sw_writable %}
+{%- if has_sw_readable and has_sw_writable -%}
 assign {{prefix}}.req = {{strb}};
 {%- elif has_sw_readable and not has_sw_writable %}
 assign {{prefix}}.req = !decoded_req_is_wr ? {{strb}} : '0;

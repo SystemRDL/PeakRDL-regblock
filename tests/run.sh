@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 # Initialize venv
 rm -rf .venv
-python3 -m venv .venv
+python3.13 -m venv .venv
 source .venv/bin/activate
 
 # Install test dependencies

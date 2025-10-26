@@ -108,10 +108,6 @@ class Hwif:
         Returns the declaration string for all I/O ports in the hwif group
         """
 
-        # Assume get_package_declaration() is always called prior to this
-        assert self.has_input_struct is not None
-        assert self.has_output_struct is not None
-
         lines = []
         if self.has_input_struct:
             type_name = f"{self.top_node.inst_name}__in_t"

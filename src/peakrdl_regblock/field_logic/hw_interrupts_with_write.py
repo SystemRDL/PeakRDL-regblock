@@ -50,7 +50,7 @@ class StickyWEL(Sticky, WELWrite):
 
 class StickybitWE(Stickybit, WEWrite):
     """
-    Normal stickybiti with write enable
+    Normal stickybit with write enable
     """
     comment = "stickybit with WE"
     def is_match(self, field: 'FieldNode') -> bool:

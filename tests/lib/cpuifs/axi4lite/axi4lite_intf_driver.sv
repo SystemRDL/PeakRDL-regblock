@@ -160,7 +160,7 @@ interface axi4lite_intf_driver #(
         end
     end
 
-    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1);
+    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, input logic [DATA_WIDTH/8-1:0] strb = {DATA_WIDTH{1'b1}}, logic expects_err = 1'b0);
         write_request_t req;
         write_response_t resp;
 
@@ -175,7 +175,8 @@ interface axi4lite_intf_driver #(
 
         // Wait for response
         req.response_mbx.get(resp);
-        assert(!$isunknown(resp.bresp)) else $error("Read from 0x%0x returned X's on BRESP", addr);
+        assert(!$isunknown(resp.bresp)) else $error("Write to 0x%0x returned X's on BRESP", addr);
+        assert((resp.bresp==2'b10) == expects_err) else $error("Error write response to 0x%x returned 0x%x. Expected 0x%x", addr, (resp.bresp==2'b10), expects_err);
     endtask
 
     //--------------------------------------------------------------------------
@@ -212,7 +213,7 @@ interface axi4lite_intf_driver #(
         end
     end
 
-    task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
+    task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data, input logic expects_err = 1'b0);
         read_request_t req;
         read_response_t resp;
 
@@ -236,12 +237,13 @@ interface axi4lite_intf_driver #(
 
         assert(!$isunknown(resp.rdata)) else $error("Read from 0x%0x returned X's on RDATA", addr);
         assert(!$isunknown(resp.rresp)) else $error("Read from 0x%0x returned X's on RRESP", addr);
+        assert((resp.rresp == 2'b10) == expects_err) else $error("Error read response from 0x%x returned 0x%x. Expected 0x%x", addr, (resp.rresp == 2'b10), expects_err);
         data = resp.rdata;
     endtask
 
-    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
+    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = {DATA_WIDTH{1'b1}}, input logic expects_err = 1'b0);
         logic [DATA_WIDTH-1:0] data;
-        read(addr, data);
+        read(addr, data, expects_err);
         data &= mask;
         assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
     endtask

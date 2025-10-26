@@ -1,0 +1,59 @@
+addrmap top {
+    default regwidth = 32;
+    default sw=rw;
+    default hw=na;
+
+    reg {
+        field {
+            sw=rw; hw=na; // Storage element
+        } f[31:0] = 40;
+    } r_rw;
+
+    reg {
+        field {
+            sw=r; hw=na; // Wire/Bus - constant value
+        } f[31:0] = 80;
+    } r_r;
+
+    reg {
+        field {
+            sw=w; hw=r; // Storage element
+        } f[31:0] = 100;
+    } r_w;
+
+    external reg {
+        field {
+            sw=rw; hw=na; // Storage element
+        } f[31:0];
+    } er_rw;
+
+    external reg {
+        field {
+            sw=r; hw=na; // Wire/Bus - constant value
+        } f[31:0];
+    } er_r;
+
+    external reg {
+        field {
+            sw=w; hw=na; // Storage element
+        } f[31:0];
+    } er_w;
+
+    external mem {
+        memwidth = 32;
+        mementries = 2;
+    } mem_rw @ 0x20;
+
+    external mem {
+        memwidth = 32;
+        mementries = 2;
+        sw=r;
+    } mem_r @ 0x28;
+
+    external mem {
+        memwidth = 32;
+        mementries = 2;
+        sw=w;
+    } mem_w @ 0x30;
+
+};
