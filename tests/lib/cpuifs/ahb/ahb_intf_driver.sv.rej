@@ -1,0 +1,84 @@
+--- tests/lib/cpuifs/ahb/ahb_intf_driver.sv
++++ tests/lib/cpuifs/ahb/ahb_intf_driver.sv
+@@ -75,7 +75,7 @@ interface ahb_intf_driver #(
+         endcase
+     endfunction
+ 
+-    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1);
++    task automatic write(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] data, logic [DATA_WIDTH/8-1:0] strb = '1, logic expects_err = 0);
+         txn_mutex.get();
+         ##0;
+ 
+@@ -87,22 +87,24 @@ interface ahb_intf_driver #(
+         cb.HADDR <= addr;
+         @(cb);
+ 
+-        // Data Phase
++        // Data Phase - provide write data and set HTRANS to IDLE
+         cb.HWDATA <= data;
+         cb.HTRANS <= HTRANS_IDLE;
+-        @(cb);
+-
+-        // Wait for HREADY
+-        while(cb.HREADY !== 1'b1) @(cb);
++        
++        // Wait for HREADY - must wait at least one cycle for data phase
++        do @(cb); while(cb.HREADY !== 1'b1);
+         
+         // Check for error response
+-        assert(cb.HRESP !== 1'b1) else $error("Write to 0x%x returned error response", addr);
++        assert(!$isunknown(cb.HRESP)) else $error("Write to 0x%0x returned X's on HRESP", addr);
++        assert(cb.HRESP == expects_err) else $error("Error write response to 0x%x returned 0x%x. Expected 0x%x", addr, cb.HRESP, expects_err);
+         
+         reset();
++        // Wait one more cycle to ensure is_active resets before next transaction
++        @(cb);
+         txn_mutex.put();
+     endtask
+ 
+-    task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data);
++    task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data, input logic expects_err = 0);
+         txn_mutex.get();
+         ##0;
+ 
+@@ -115,26 +117,32 @@ interface ahb_intf_driver #(
+         cb.HWDATA <= '0;
+         @(cb);
+ 
+-        // Data Phase - wait for completion
++        // Data Phase - set HTRANS to IDLE
+         cb.HTRANS <= HTRANS_IDLE;
++        
++        // Wait for HREADY - must wait at least one cycle for data phase
++        do @(cb); while(cb.HREADY !== 1'b1);
++        
++        // Wait one more cycle to ensure data has propagated
++        // (external registers use NBA which takes effect in inactive region)
+         @(cb);
+-
+-        // Wait for HREADY
+-        while(cb.HREADY !== 1'b1) @(cb);
+         
+-        // Sample data and check for errors
++        // Sample data from clocking block
+         assert(!$isunknown(cb.HRDATA)) else $error("Read from 0x%0x returned X's on HRDATA", addr);
+         assert(!$isunknown(cb.HRESP)) else $error("Read from 0x%0x returned X's on HRESP", addr);
+-        assert(cb.HRESP !== 1'b1) else $error("Read from 0x%x returned error response", addr);
++        assert(cb.HRESP == expects_err) else $error("Error read response from 0x%x returned 0x%x. Expected 0x%x", addr, cb.HRESP, expects_err);
+         
+         data = cb.HRDATA;
++        
+         reset();
++        // Wait one more cycle to ensure is_active resets before next transaction
++        @(cb);
+         txn_mutex.put();
+     endtask
+ 
+-    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1);
++    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1, input logic expects_err = 0);
+         logic [DATA_WIDTH-1:0] data;
+-        read(addr, data);
++        read(addr, data, expects_err);
+         data &= mask;
+         assert(data == expected_data) else $error("Read from 0x%x returned 0x%x. Expected 0x%x", addr, data, expected_data);
+     endtask
