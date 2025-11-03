@@ -299,7 +299,10 @@ always @(*) begin
     endcase
 end
 
-assign {{cpuif.signal("hready")}} = (cpuif_rd_ack | cpuif_wr_ack | ~is_active);
+// HREADY indicates slave is ready to complete transfer
+// HIGH when: idle (not active) OR transaction acknowledged
+// LOW when: active but waiting for acknowledgement
+assign {{cpuif.signal("hready")}} = ~is_active | cpuif_rd_ack | cpuif_wr_ack;
 assign {{cpuif.signal("hrdata")}} = read_data_extracted;
 assign {{cpuif.signal("hresp")}} = (cpuif_rd_err | cpuif_wr_err) ? HRESP_ERROR : HRESP_OKAY;
 
