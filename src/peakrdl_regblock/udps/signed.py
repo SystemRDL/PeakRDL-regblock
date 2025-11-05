@@ -16,14 +16,14 @@ class IsSigned(UDPDefinition):
         if value and node.get_property("counter"):
             self.msg.error(
                 "The property is_signed=true is not supported for counter fields.",
-                node.inst.property_src_ref["is_signed"]
+                node.property_src_ref.get("is_signed", node.inst_src_ref)
             )
 
         # incompatible with "encode" fields
         if value and node.get_property("encode") is not None:
             self.msg.error(
                 "The property is_signed=true is not supported for fields encoded as an enum.",
-                node.inst.property_src_ref["is_signed"]
+                node.property_src_ref.get("is_signed", node.inst_src_ref)
             )
 
     def get_unassigned_default(self, node: "Node") -> Any:

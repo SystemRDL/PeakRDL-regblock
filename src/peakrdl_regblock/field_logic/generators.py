@@ -227,7 +227,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
                         "Field has multiple conflicting properties that unconditionally set its state:\n"
                         f"  * {conditional.unconditional_explanation}\n"
                         f"  * {unconditional.unconditional_explanation}",
-                        node.inst.inst_src_ref
+                        node.inst_src_ref
                     )
                 unconditional = conditional
             else:

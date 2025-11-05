@@ -49,7 +49,7 @@ class DesignValidator(RDLListener):
                     if isinstance(value, PropertyReference):
                         src_ref = value.src_ref
                     else:
-                        src_ref = node.inst.property_src_ref.get(prop_name, node.inst.inst_src_ref)
+                        src_ref = node.property_src_ref.get(prop_name, node.inst_src_ref)
                     self.msg.error(
                         "Property is assigned a reference that points to a component not internal to the regblock being exported.",
                         src_ref
@@ -65,7 +65,7 @@ class DesignValidator(RDLListener):
                 "Only cpuif_reset signals that are instantiated in the top-level "
                 "addrmap or above will be honored. Any cpuif_reset signals nested "
                 "within children of the addrmap being exported will be ignored.",
-                node.inst.inst_src_ref
+                node.inst_src_ref
             )
 
     def enter_AddressableComponent(self, node: 'AddressableNode') -> None:
@@ -75,13 +75,13 @@ class DesignValidator(RDLListener):
             self.msg.error(
                 "Unaligned registers are not supported. Address offset of "
                 f"instance '{node.inst_name}' must be a multiple of {alignment}",
-                node.inst.inst_src_ref
+                node.inst_src_ref
             )
         if node.is_array and (node.array_stride % alignment) != 0: # type: ignore # is_array implies stride is not none
             self.msg.error(
                 "Unaligned registers are not supported. Address stride of "
                 f"instance array '{node.inst_name}' must be a multiple of {alignment}",
-                node.inst.inst_src_ref
+                node.inst_src_ref
             )
 
         if not isinstance(node, RegNode):
@@ -102,7 +102,7 @@ class DesignValidator(RDLListener):
         if node.get_property('sharedextbus'):
             self.msg.error(
                 "This exporter does not support enabling the 'sharedextbus' property yet.",
-                node.inst.property_src_ref.get('sharedextbus', node.inst.inst_src_ref)
+                node.property_src_ref.get('sharedextbus', node.inst_src_ref)
             )
 
     def enter_Reg(self, node: 'RegNode') -> None:
@@ -117,7 +117,7 @@ class DesignValidator(RDLListener):
                     f"Multi-word registers that have an accesswidth ({accesswidth}) "
                     "that are inconsistent with this regblock's CPU bus width "
                     f"({self.exp.cpuif.data_width}) are not supported.",
-                    node.inst.inst_src_ref
+                    node.inst_src_ref
                 )
 
 
@@ -138,7 +138,7 @@ class DesignValidator(RDLListener):
                     " multiple software-accessible subwords. Consider enabling"
                     " write double-buffering.\n"
                     "For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/write_buffering.html",
-                    node.inst.inst_src_ref
+                    node.inst_src_ref
                 )
 
             if node.get_property('onread') is not None and not node.parent.get_property('buffer_reads'):
@@ -150,7 +150,7 @@ class DesignValidator(RDLListener):
                     " access its value correctly. Consider enabling read"
                     " double-buffering. \n"
                     "For more details, see: https://peakrdl-regblock.readthedocs.io/en/latest/udps/read_buffering.html",
-                    node.inst.inst_src_ref
+                    node.inst_src_ref
                 )
 
         # Check for unsynthesizable reset
@@ -166,7 +166,7 @@ class DesignValidator(RDLListener):
             if is_async_reset:
                 self.msg.error(
                     "A field that uses an asynchronous reset cannot use a dynamic reset value. This is not synthesizable.",
-                    node.inst.inst_src_ref
+                    node.inst_src_ref
                 )
 
 
@@ -195,7 +195,7 @@ class DesignValidator(RDLListener):
                     self.msg.error(
                         f"Address offset +0x{node.raw_address_offset:x} of instance '{node.inst_name}' is not a power of 2 multiple of its size 0x{node.size:x}. "
                         f"This is required by the regblock exporter if a component {err_suffix}.",
-                        node.inst.inst_src_ref
+                        node.inst_src_ref
                     )
                 if node.is_array:
                     assert node.array_stride is not None
@@ -203,5 +203,5 @@ class DesignValidator(RDLListener):
                         self.msg.error(
                             f"Address stride of instance array '{node.inst_name}' is not a power of 2"
                             f"This is required by the regblock exporter if a component {err_suffix}.",
-                            node.inst.inst_src_ref
+                            node.inst_src_ref
                         )

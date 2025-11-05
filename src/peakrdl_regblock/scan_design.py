@@ -53,7 +53,7 @@ class DesignScanner(RDLListener):
         if self.top_node.get_property('bridge'):
             self.msg.error(
                 "Regblock generator does not support exporting bridge address maps",
-                self.top_node.inst.property_src_ref.get('bridge', self.top_node.inst.inst_src_ref)
+                self.top_node.property_src_ref.get('bridge', self.top_node.inst_src_ref),
             )
 
         RDLWalker().walk(self.top_node, self)
@@ -117,5 +117,5 @@ class DesignScanner(RDLListener):
                     f"Field '{node.inst_name}' includes parity check logic, but "
                     "its reset value was not defined. Will result in an undefined "
                     "value on the module's 'parity_error' output.",
-                    self.top_node.inst.property_src_ref.get('paritycheck', self.top_node.inst.inst_src_ref)
+                    self.top_node.property_src_ref.get('paritycheck', self.top_node.inst_src_ref)
                 )

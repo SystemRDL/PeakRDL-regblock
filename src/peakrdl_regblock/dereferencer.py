@@ -70,7 +70,7 @@ class Dereferencer:
                 # No reset value defined!
                 obj.env.msg.warning(
                     f"Field '{obj.inst_name}' is a constant but does not have a known value (missing reset). Assigning it a value of X.",
-                    obj.inst.inst_src_ref
+                    obj.inst_src_ref,
                 )
                 return "'X"
 

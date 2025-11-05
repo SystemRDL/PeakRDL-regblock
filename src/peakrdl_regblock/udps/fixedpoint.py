@@ -16,7 +16,7 @@ class _FixedpointWidth(UDPDefinition):
         fracwidth = node.get_property("fracwidth")
         assert intwidth is not None
         assert fracwidth is not None
-        prop_ref = node.inst.property_src_ref.get(self.name)
+        prop_ref = node.property_src_ref.get(self.name, node.inst_src_ref)
 
         # incompatible with "counter" fields
         if node.get_property("counter"):

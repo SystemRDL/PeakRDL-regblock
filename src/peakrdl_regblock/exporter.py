@@ -315,7 +315,7 @@ class DesignState:
             # Assume 32-bits
             msg.warning(
                 "Addrmap being exported only contains external components. Unable to infer the CPUIF bus width. Assuming 32-bits.",
-                self.top_node.inst.def_src_ref
+                self.top_node.def_src_ref
             )
             self.cpuif_data_width = 32
 
