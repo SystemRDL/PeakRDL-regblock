@@ -105,8 +105,7 @@ interface ahb_intf_driver #(
     endtask
 
     task automatic read(logic [ADDR_WIDTH-1:0] addr, output logic [DATA_WIDTH-1:0] data, input logic expects_err = 0);
-        // Initialize output parameter to avoid X propagation
-        data = '0;
+        logic [DATA_WIDTH-1:0] data_local;
         txn_mutex.get();
         ##0;
 
@@ -131,16 +130,16 @@ interface ahb_intf_driver #(
         assert(!$isunknown(cb.HRESP)) else $error("Read from 0x%0x returned X's on HRESP", addr);
         assert(cb.HRESP == expects_err) else $error("Error read response from 0x%x returned 0x%x. Expected 0x%x", addr, cb.HRESP, expects_err);
         
-        // Assign output parameter - must use cb. for consistency
         data = cb.HRDATA;
         
         reset();
         // Wait one more cycle to ensure is_active resets before next transaction  
         @(cb);
+                
         txn_mutex.put();
     endtask
 
-    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = '1, input logic expects_err = 0);
+    task automatic assert_read(logic [ADDR_WIDTH-1:0] addr, logic [DATA_WIDTH-1:0] expected_data, logic [DATA_WIDTH-1:0] mask = {DATA_WIDTH{1'b1}}, input logic expects_err = 0);
         logic [DATA_WIDTH-1:0] data;
         read(addr, data, expects_err);
         data &= mask;
