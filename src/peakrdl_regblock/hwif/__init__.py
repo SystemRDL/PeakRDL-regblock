@@ -51,16 +51,14 @@ class Hwif:
 
     def get_extra_package_params(self) -> str:
         lines = [""]
-
-        for param in self.top_node.inst.parameters:
-            value = param.get_value()
+        for name, value in self.top_node.parameters.items():
             if isinstance(value, int):
                 lines.append(
-                    f"localparam {param.name} = {SVInt(value)};"
+                    f"localparam {name} = {SVInt(value)};"
                 )
             elif isinstance(value, str):
                 lines.append(
-                    f"localparam {param.name} = {value};"
+                    f"localparam {name} = {value};"
                 )
 
         return "\n".join(lines)

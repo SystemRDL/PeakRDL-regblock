@@ -15,7 +15,7 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
         {%- for segment in segments %}
         if({{segment.strobe}} && decoded_req_is_wr) begin
             {{wbuf_prefix}}.pending <= '1;
-            {%- if node.inst.is_msb0_order %}
+            {%- if node.is_msb0_order %}
             {{wbuf_prefix}}.data{{segment.bslice}} <= ({{wbuf_prefix}}.data{{segment.bslice}} & ~decoded_wr_biten_bswap) | (decoded_wr_data_bswap & decoded_wr_biten_bswap);
             {{wbuf_prefix}}.biten{{segment.bslice}} <= {{wbuf_prefix}}.biten{{segment.bslice}} | decoded_wr_biten_bswap;
             {%- else %}

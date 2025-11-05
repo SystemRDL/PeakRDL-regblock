@@ -131,7 +131,8 @@ class Exporter(ExporterSubcommandPlugin):
             "--rt-read-fanin",
             action="store_true",
             default=False,
-            help="Enable additional read path retiming. Good for register blocks with large readback fan-in",
+            help="""Enable additional read path retiming. Good for register
+            blocks with large readback fan-in"""
         )
         arg_group.add_argument(
             "--rt-read-response",
@@ -141,7 +142,8 @@ class Exporter(ExporterSubcommandPlugin):
         )
         arg_group.add_argument(
             "--rt-external",
-            help="Retime outputs to external components. Specify a comma-separated list of: reg,regfile,mem,addrmap,all",
+            help="""Retime outputs to external components. Specify a
+            comma-separated list of: reg,regfile,mem,addrmap,all"""
         )
 
         arg_group.add_argument(
@@ -157,15 +159,16 @@ class Exporter(ExporterSubcommandPlugin):
             "--err-if-bad-addr",
             action="store_true",
             default=False,
-            help="Generate CPUIF error response, when the address is decoded incorrectly"
+            help="""Generate CPUIF error response if a transaction attempts to
+            access an address that does not map to anything."""
         )
 
         arg_group.add_argument(
             "--err-if-bad-rw",
             action="store_true",
             default=False,
-            help="""Generate CPUIF error response, when an illegal access is
-            performed to a read-only or write-only register"""
+            help="""Generate CPUIF error response if an illegal access is
+            performed to a read-only or write-only register."""
         )
 
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:

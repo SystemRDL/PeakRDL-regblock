@@ -35,7 +35,7 @@ class WBufLogicGenerator(RDLForLoopGenerator):
             n_subwords = regwidth // accesswidth
             for i in range(n_subwords):
                 strobe = strb_prefix + f"[{i}]"
-                if node.inst.is_msb0_order:
+                if node.is_msb0_order:
                     bslice = f"[{regwidth - (accesswidth * i) - 1}: {regwidth - (accesswidth * (i+1))}]"
                 else:
                     bslice = f"[{(accesswidth * (i + 1)) - 1}:{accesswidth * i}]"

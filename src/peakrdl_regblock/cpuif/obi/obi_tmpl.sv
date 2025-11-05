@@ -44,7 +44,7 @@ always_ff {{get_always_ff_event(cpuif.reset)}} begin
                 is_active <= 1'b1;
                 cpuif_req <= 1'b1;
                 cpuif_req_is_wr <= {{cpuif.signal("we")}};
-                cpuif_addr <= {{cpuif.signal("addr")}};
+                cpuif_addr <= { {{-cpuif.signal("addr")}}[{{cpuif.addr_width-1}}:{{clog2(cpuif.data_width_bytes)}}], {{clog2(cpuif.data_width_bytes)}}'b0};
                 cpuif_wr_data <= {{cpuif.signal("wdata")}};
                 rid_q <= {{cpuif.signal("aid")}};
                 for (int i = 0; i < {{cpuif.data_width_bytes}}; i++) begin
