@@ -1,10 +1,11 @@
-from typing import List
 import os
+from typing import List
 
 import pytest
 
 from .base_testcase import BaseTestCase
 from .synthesizers import get_synthesizer_cls
+
 
 class SynthTestCase(BaseTestCase):
 
@@ -26,7 +27,7 @@ class SynthTestCase(BaseTestCase):
     def run_synth(self) -> None:
         name = self.request.config.getoption("--synth-tool")
         synth_cls = get_synthesizer_cls(name)
-        synth = synth_cls(self)
+        synth = synth_cls(self, request=self.request)
 
         # cd into the build directory
         cwd = os.getcwd()

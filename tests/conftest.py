@@ -46,3 +46,17 @@ def pytest_addoption(parser):
         auto: choose the best tool based on what is installed
         """
     )
+
+    parser.addoption(
+        "--synth-part",
+        type=str,
+        default=".*",
+        help="""
+        A REGEX expression used to filter the part used for the synthesis test.
+
+        Useful when the default method for finding a part finds a part which you don't have a
+        license for.
+
+        Defaults to '.*'.
+        """
+    )

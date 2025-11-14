@@ -1,5 +1,7 @@
 set this_dir [file dirname [file normalize [info script]]]
-set files $argv
+set files [lrange $argv 1 end]
+
+set part_regex [lindex $argv 0]
 
 
 # Multi-driven
@@ -22,7 +24,7 @@ set_msg_config -id {[Synth 8-295]} -new_severity "ERROR"
 set_msg_config -severity {CRITICAL WARNING} -new_severity "ERROR"
 
 
-set_part [lindex [get_parts] 0]
+set_part [lindex [get_parts -regex $part_regex] 0]
 read_verilog -sv $files
 read_xdc $this_dir/constr.xdc
 synth_design -top regblock -mode out_of_context

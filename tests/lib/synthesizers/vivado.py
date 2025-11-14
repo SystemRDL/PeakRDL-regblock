@@ -1,8 +1,9 @@
 import os
-import subprocess
 import shutil
+import subprocess
 
 from .base import Synthesizer
+
 
 class Vivado(Synthesizer):
     name = "vivado"
@@ -22,7 +23,7 @@ class Vivado(Synthesizer):
             "-mode", "batch",
             "-log", "out.log",
             "-source", script,
-            "-tclargs"
+            "-tclargs", self.request.config.getoption("--synth-part")
         ]
         cmd.extend(self.testcase._get_synth_files())
 
