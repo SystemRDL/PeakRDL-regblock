@@ -24,8 +24,8 @@
     disable fork;
 
     cpuif.write('h0, 'd0);
-    assign dut.field_storage.r1.f1.value = 16'd1;
-    deassign dut.field_storage.r1.f1.value;
+    force dut.field_storage.r1.f1.value = 16'd1;
+    release dut.field_storage.r1.f1.value;
     @cb;
     @cb;
     assert(cb.parity_error == 1'b1);
