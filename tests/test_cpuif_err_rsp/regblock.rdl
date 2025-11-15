@@ -3,6 +3,7 @@ addrmap top {
     default sw=rw;
     default hw=na;
 
+    // Internal registers
     reg {
         field {
             sw=rw; hw=na; // Storage element
@@ -13,32 +14,27 @@ addrmap top {
         field {
             sw=r; hw=na; // Wire/Bus - constant value
         } f[31:0] = 80;
-    } r_r;
+    } r_ro;
 
     reg {
         field {
             sw=w; hw=r; // Storage element
         } f[31:0] = 100;
-    } r_w;
+    } r_wo;
 
-    external reg {
-        field {
-            sw=rw; hw=na; // Storage element
-        } f[31:0];
-    } er_rw;
+    // Combined read-only and write-only register
+    reg {
+        default sw = w;
+        default hw = r;
+        field {} wvalue[32] = 0;
+    } writeonly @ 0x1C;
+    reg {
+        default sw = r;
+        default hw = na;
+        field {} rvalue[32] = 200;
+    } readonly @ 0x1C;
 
-    external reg {
-        field {
-            sw=r; hw=na; // Wire/Bus - constant value
-        } f[31:0];
-    } er_r;
-
-    external reg {
-        field {
-            sw=w; hw=na; // Storage element
-        } f[31:0];
-    } er_w;
-
+    // External memories
     external mem {
         memwidth = 32;
         mementries = 2;
@@ -48,12 +44,33 @@ addrmap top {
         memwidth = 32;
         mementries = 2;
         sw=r;
-    } mem_r @ 0x28;
+    } mem_ro @ 0x28;
 
     external mem {
         memwidth = 32;
         mementries = 2;
         sw=w;
-    } mem_w @ 0x30;
+    } mem_wo @ 0x30;
 
+    // External block
+    external regfile {
+      // Placeholder registers
+      reg {
+          field {
+              sw=rw; hw=na;
+          } f[31:0] = 40;
+      } r_rw;
+
+      reg {
+          field {
+              sw=r; hw=na;
+          } f[31:0] = 80;
+      } r_ro;
+
+      reg {
+          field {
+              sw=w; hw=r;
+          } f[31:0] = 100;
+      } r_wo;
+    } external_rf @ 0x40;
 };
