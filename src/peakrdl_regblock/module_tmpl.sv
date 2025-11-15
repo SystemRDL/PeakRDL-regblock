@@ -121,19 +121,31 @@ module {{ds.module_name}}
 
     always_comb begin
         automatic logic is_valid_addr;
-        automatic logic is_invalid_rw;
+        automatic logic is_valid_rw;
     {%- if ds.has_external_addressable %}
         automatic logic is_external;
         is_external = '0;
     {%- endif %}
-    {%- if ds.err_if_bad_addr %}
+    {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
         is_valid_addr = '0;
     {%- else %}
-        is_valid_addr = '1; // No error checking on valid address access
+        is_valid_addr = '1; // No valid address check
     {%- endif %}
-        is_invalid_rw = '0;
+    {%- if ds.err_if_bad_rw %}
+        is_valid_rw = '0;
+    {%- else %}
+        is_valid_rw = '1; // No valid RW check
+    {%- endif %}
         {{address_decode.get_implementation()|indent(8)}}
-        decoded_err = (~is_valid_addr | is_invalid_rw) & decoded_req;
+    {%- if ds.err_if_bad_addr and ds.err_if_bad_rw %}
+        decoded_err = (~is_valid_addr | (is_valid_addr & ~is_valid_rw)) & decoded_req;
+    {%- elif ds.err_if_bad_addr %}
+        decoded_err = ~is_valid_addr & decoded_req;
+    {%- elif ds.err_if_bad_rw %}
+        decoded_err = (is_valid_addr & ~is_valid_rw) & decoded_req;
+    {%- else %}
+        decoded_err = '0;
+    {%- endif %}
     {%- if ds.has_external_addressable %}
         decoded_strb_is_external = is_external;
         external_req = is_external;
