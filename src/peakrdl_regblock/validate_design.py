@@ -23,7 +23,6 @@ class DesignValidator(RDLListener):
         self.msg = self.top_node.env.msg
 
         self._contains_external_block_stack = [] # type: List[bool]
-        self.contains_external_block = False
 
     @property
     def top_node(self) -> 'AddrmapNode':
@@ -178,9 +177,6 @@ class DesignValidator(RDLListener):
             if self._contains_external_block_stack:
                 # Still in the design. Update stack
                 self._contains_external_block_stack[-1] |= contains_external_block
-            else:
-                # Exiting top addrmap. Resolve final answer
-                self.contains_external_block = contains_external_block
 
             if contains_external_block:
                 # Check that addressing follows strict alignment rules to allow
