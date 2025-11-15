@@ -7,7 +7,7 @@ name = "peakrdl-regblock"
 dynamic = ["version"]
 requires-python = ">=3.7"
 dependencies = [
-    "systemrdl-compiler ~= 1.30",
+    "systemrdl-compiler ~= 1.31",
     "Jinja2 >= 2.11",
 ]
 
