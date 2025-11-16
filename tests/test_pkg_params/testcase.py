@@ -1,14 +1,14 @@
 from parameterized import parameterized_class
 
 from ..lib.sim_testcase import SimTestCase
-from ..lib.test_params import get_permutations
+from ..lib.test_params import get_permutation_class_name, get_permutations
 
 PARAMS = get_permutations({
     "n_regs" : [1, 2],
     "regwidth" : [8, 16],
     "name" : ["hello", "world"],
 })
-@parameterized_class(PARAMS)
+@parameterized_class(PARAMS, class_name_func=get_permutation_class_name)
 class TestRetimedFanin(SimTestCase):
     n_regs = 20
     regwidth = 32
