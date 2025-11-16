@@ -1,8 +1,9 @@
 from parameterized import parameterized_class
 
-from ..lib.sim_testcase import SimTestCase
-from ..lib.test_params import get_permutations
 from ..lib.cpuifs import ALL_CPUIF
+from ..lib.sim_testcase import SimTestCase
+from ..lib.test_params import get_permutation_class_name, get_permutations
+
 
 @parameterized_class(
     # To reduce the number of tests, cover all CPUIFs with both error injections enabled, and all
@@ -15,7 +16,8 @@ from ..lib.cpuifs import ALL_CPUIF
     get_permutations({
         "err_if_bad_addr": [True, False],
         "err_if_bad_rw": [True, False],
-    })
+    }),
+    class_name_func=get_permutation_class_name
 )
 class Test(SimTestCase):
     extra_tb_files = [

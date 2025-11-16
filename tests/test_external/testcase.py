@@ -1,10 +1,11 @@
 from parameterized import parameterized_class
 
-from ..lib.sim_testcase import SimTestCase
-from ..lib.test_params import get_permutations
 from ..lib.cpuifs.apb4 import APB4
 from ..lib.cpuifs.axi4lite import AXI4Lite
 from ..lib.cpuifs.passthrough import Passthrough
+from ..lib.sim_testcase import SimTestCase
+from ..lib.test_params import get_permutation_class_name, get_permutations
+
 
 @parameterized_class(get_permutations({
     "cpuif": [
@@ -15,7 +16,7 @@ from ..lib.cpuifs.passthrough import Passthrough
     "retime_read_fanin": [True, False],
     "retime_read_response": [True, False],
     "retime_external": [True, False],
-}))
+}), class_name_func=get_permutation_class_name)
 class Test(SimTestCase):
     extra_tb_files = [
         "../lib/external_reg.sv",
