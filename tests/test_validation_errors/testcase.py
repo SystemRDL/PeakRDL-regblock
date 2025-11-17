@@ -10,10 +10,6 @@ class TestValidationErrors(BaseTestCase):
         # Stub usual pre-test setup
         pass
 
-    def tearDown(self):
-        # Delete any cruft that may get generated
-        self.delete_run_dir()
-
     def assert_validate_error(self, rdl_file: str, err_regex: str) -> None:
         self.rdl_file = rdl_file
         f = io.StringIO()

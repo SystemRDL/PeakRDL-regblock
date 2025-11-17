@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
-from systemrdl.node import FieldNode, RegNode
+from systemrdl.node import FieldNode, RegNode, AddressableNode
+from systemrdl.walker import WalkerAction
 
 from ..struct_generator import RDLStructGenerator
 
@@ -11,6 +12,11 @@ class WBufStorageStructGenerator(RDLStructGenerator):
     def __init__(self, wbuf: 'WriteBuffering') -> None:
         super().__init__()
         self.wbuf = wbuf
+
+    def enter_AddressableComponent(self, node: AddressableNode) -> WalkerAction:
+        if node.external :
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
 
     def enter_Field(self, node: FieldNode) -> None:
         # suppress parent class's field behavior

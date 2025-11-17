@@ -1,8 +1,13 @@
-from systemrdl.node import FieldNode, RegNode
+from systemrdl.node import FieldNode, RegNode, AddressableNode
+from systemrdl.walker import WalkerAction
 
 from ..struct_generator import RDLStructGenerator
 
 class RBufStorageStructGenerator(RDLStructGenerator):
+    def enter_AddressableComponent(self, node: AddressableNode) -> WalkerAction:
+        if node.external :
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
 
     def enter_Field(self, node: FieldNode) -> None:
         # suppress parent class's field behavior
