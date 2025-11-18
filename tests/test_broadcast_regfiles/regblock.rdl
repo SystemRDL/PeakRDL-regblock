@@ -1,0 +1,38 @@
+addrmap top {
+    default regwidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg my_reg_t {
+        field {
+            sw=rw; hw=r;
+            reset=0;
+        } f[8];
+    };
+
+    // Define a regfile containing multiple registers
+    regfile my_regfile_t {
+        my_reg_t reg_a @ 0x00;
+        my_reg_t reg_b @ 0x04;
+        my_reg_t reg_c @ 0x08;
+    };
+
+    // Instantiate multiple regfiles
+    my_regfile_t regfile_a @ 0x00;
+    my_regfile_t regfile_b @ 0x10;
+    my_regfile_t regfile_c @ 0x20;
+
+    // Instantiate a regfile array
+    // Each element is 0xC size, stride must be >= size
+    my_regfile_t regfile_array[2] @ 0x100 += 0x10;
+
+    // Broadcaster that writes to all regfile instances
+    // This should automatically expand to all registers within each regfile
+    my_regfile_t broadcast_all @ 0x40;
+    broadcast_all -> broadcast = '{ regfile_a, regfile_b, regfile_c };
+
+    // Broadcaster that writes to the regfile array
+    // Must explicitly list array elements due to SystemRDL syntax limitation
+    my_regfile_t broadcast_to_array @ 0x80;
+    broadcast_to_array -> broadcast = '{ regfile_array[0], regfile_array[1] };
+};

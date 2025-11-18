@@ -178,4 +178,65 @@ logic [7:0] addr;
     cpuif.assert_read(addr, 'h0, .expects_err(expected_rd_err));
     cpuif.write(addr, 'hD0, .expects_err(expected_wr_err));
     cpuif.assert_read(addr, 'hD0, .expects_err(expected_rd_err));
+
+    // Broadcast regfile tests
+    // First, initialize target regfiles with different values
+    // bc_target_a.r_rw
+    cpuif.write('h50, 'hA1, .expects_err('h0));
+    @cb;
+    cpuif.assert_read('h50, 'hA1, .expects_err('h0));
+
+    // bc_target_b.r_rw
+    cpuif.write('h60, 'hB2, .expects_err('h0));
+    @cb;
+    cpuif.assert_read('h60, 'hB2, .expects_err('h0));
+
+    // bc_target_c.r_rw
+    cpuif.write('h70, 'hC3, .expects_err('h0));
+    @cb;
+    cpuif.assert_read('h70, 'hC3, .expects_err('h0));
+
+    // Test broadcast write to r_rw (should succeed)
+    addr = 'h80; // bc_all.r_rw
+    expected_rd_err = 'h0;
+    expected_wr_err = 'h0;
+    cpuif.write(addr, 'hFF, .expects_err(expected_wr_err));
+    @cb;
+    // Verify all targets were written
+    cpuif.assert_read('h50, 'hFF, .expects_err('h0)); // bc_target_a.r_rw
+    cpuif.assert_read('h60, 'hFF, .expects_err('h0)); // bc_target_b.r_rw
+    cpuif.assert_read('h70, 'hFF, .expects_err('h0)); // bc_target_c.r_rw
+    // Verify broadcast read returns OR of all targets
+    cpuif.assert_read(addr, 'hFF, .expects_err(expected_rd_err));
+
+    // Test broadcast write to r_ro (should error if err_if_bad_rw)
+    addr = 'h84; // bc_all.r_ro
+    expected_rd_err = 'h0;
+    expected_wr_err = bad_rw_expected_wr_err;
+    cpuif.write(addr, 'hEE, .expects_err(expected_wr_err));
+    @cb;
+    // Verify broadcast read returns OR of all targets (should be 0)
+    cpuif.assert_read(addr, 'h0, .expects_err(expected_rd_err));
+
+    // Test broadcast write to r_wo (should succeed)
+    addr = 'h88; // bc_all.r_wo
+    expected_rd_err = bad_rw_expected_rd_err;
+    expected_wr_err = 'h0;
+    cpuif.write(addr, 'hDD, .expects_err(expected_wr_err));
+    @cb;
+    // Verify all targets were written by checking hwif_out
+    assert(cb.hwif_out.bc_target_a.r_wo.f.value == 'hDD);
+    assert(cb.hwif_out.bc_target_b.r_wo.f.value == 'hDD);
+    assert(cb.hwif_out.bc_target_c.r_wo.f.value == 'hDD);
+    // Verify broadcast read (should error if err_if_bad_rw)
+    cpuif.assert_read(addr, 'h0, .expects_err(expected_rd_err));
+
+    // Test that writing to one target doesn't affect others
+    cpuif.write('h50, 'hA5, .expects_err('h0)); // bc_target_a.r_rw
+    @cb;
+    cpuif.assert_read('h50, 'hA5, .expects_err('h0));
+    cpuif.assert_read('h60, 'hFF, .expects_err('h0)); // bc_target_b.r_rw unchanged
+    cpuif.assert_read('h70, 'hFF, .expects_err('h0)); // bc_target_c.r_rw unchanged
+    // Broadcast read should return OR of all targets
+    cpuif.assert_read('h80, 'hFF, .expects_err('h0)); // 'hA5 | 'hFF | 'hFF = 'hFF
 {% endblock %}

@@ -52,3 +52,8 @@ property fracwidth {
     type = longint unsigned;
     component = field;
 };
+
+property broadcast {
+    type = ref[];
+    component = reg | regfile;
+};
