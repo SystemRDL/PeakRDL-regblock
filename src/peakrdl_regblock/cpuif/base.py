@@ -19,6 +19,10 @@ class CpuifBase:
         self.reset = exp.ds.top_node.cpuif_reset
 
     @property
+    def addr_mask(self) -> int:
+        return self.exp.ds.addr_mask
+
+    @property
     def addr_width(self) -> int:
         return self.exp.ds.addr_width
 

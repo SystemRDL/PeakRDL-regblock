@@ -322,6 +322,7 @@ class DesignState:
         #------------------------
         # Min address width encloses the total size AND at least 1 useful address bit
         self.addr_width = max(clog2(self.top_node.size), clog2(self.cpuif_data_width//8) + 1)
+        self.addr_mask = (1 << self.addr_width) - 1
 
         if user_addr_width is not None:
             if user_addr_width < self.addr_width:
