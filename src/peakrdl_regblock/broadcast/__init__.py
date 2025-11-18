@@ -48,11 +48,60 @@ class BroadcastWriteLogic:
         return node in self.targets
 
     def get_broadcasters_for_target(self, target: RegNode) -> List[str]:
-        """Get all broadcaster paths that write to this target"""
+        """
+        Get all broadcaster paths that write to this target.
+
+        For array iteration (target path has empty brackets []), only returns broadcasters
+        that target ALL elements of the array, as we cannot conditionally OR subset
+        broadcasts in the FOR loop.
+        """
         broadcasters = []
+        target_path = target.get_path()
+
         for broadcaster_path, targets in self.broadcast_map.items():
-            if target in targets:
-                broadcasters.append(broadcaster_path)
+            # Compare by path since array elements may be different node objects
+            for t in targets:
+                t_path = t.get_path()
+
+                # Handle two cases:
+                # 1. Exact match: 'regblock.rega' == 'regblock.rega'
+                # 2. Array iteration match: 'regblock.reg_array[]' matches only if broadcaster targets ALL elements
+                is_match = False
+                if t_path == target_path:
+                    # Exact match
+                    is_match = True
+                elif '[]' in target_path:
+                    # Target has empty brackets (array iteration variable in FOR loop)
+                    # We can only safely OR this broadcaster if it targets ALL elements of the array
+                    # Otherwise we'd incorrectly apply broadcasts to non-target elements
+
+                    # Get the array base path (eg 'regblock.reg_array')
+                    array_base_with_bracket = target_path.replace('[]', '[')  # 'regblock.reg_array['
+
+                    # Check if this stored target is in the same array
+                    if t_path.startswith(array_base_with_bracket):
+                        # This broadcaster targets at least one element of this array
+                        # But we need to check if it targets ALL elements
+
+                        # Count how many elements of this array this broadcaster targets
+                        array_element_count = 0
+                        for target_in_list in targets:
+                            if target_in_list.get_path().startswith(array_base_with_bracket):
+                                array_element_count += 1
+
+                        # Get the array size from the target node
+                        if target.is_array and target.array_dimensions:
+                            expected_count = 1
+                            for dim in target.array_dimensions:
+                                expected_count *= dim
+
+                            # Only match if broadcaster targets ALL array elements
+                            if array_element_count == expected_count:
+                                is_match = True
+
+                if is_match:
+                    broadcasters.append(broadcaster_path)
+                    break
         return broadcasters
 
 
@@ -122,21 +171,12 @@ class BroadcastScanner(RDLListener):
         return expanded
 
     def _expand_array(self, node: AddressableNode) -> List[AddressableNode]:
-        """Recursively expand an array node to all its elements"""
-        result = []
-
-        def recurse(n, indexes):
-            if len(indexes) == len(n.array_dimensions):
-                # Reached leaf - get indexed node
-                result.append(n.get_child_by_indexes(indexes))
-            else:
-                # Recurse through this dimension
-                dim_size = n.array_dimensions[len(indexes)]
-                for i in range(dim_size):
-                    recurse(n, indexes + [i])
-
-        recurse(node, [])
-        return result
+        """
+        For broadcast targets, we expect explicit array indexing in the RDL.
+        Just return the node as-is since it's already the specific element.
+        """
+        # Simply return the node - RDL references should already be explicit
+        return [node]
 
     def _expand_regfile(self, regfile: RegfileNode) -> List[RegNode]:
         """Expand a regfile to all its child registers"""
