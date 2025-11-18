@@ -139,6 +139,9 @@ module {{ds.module_name}}
         external_req = is_external;
     {%- endif %}
     end
+{%- if address_decode.get_cpuif_index_logic() %}
+    {{address_decode.get_cpuif_index_logic()|indent}}
+{%- endif %}
 
     // Pass down signals to next stage
 {%- if ds.has_external_block %}

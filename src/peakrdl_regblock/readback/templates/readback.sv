@@ -48,23 +48,20 @@ end
 
 // Reduce the array
 always_comb begin
-    automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
     readback_done = readback_done_r;
     {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
     readback_err = readback_err_r;
+    readback_data = decoded_err ? '0 : readback_array[cpuif_index];
     {%- else %}
     readback_err = '0;
+    readback_data = readback_array[cpuif_index];
     {%- endif %}
-    readback_data_var = '0;
-    for(int i=0; i<{{fanin_array_size}}; i++) readback_data_var |= readback_array_r[i];
-    readback_data = readback_data_var;
 end
 
 {%- else %}
 
 // Reduce the array
 always_comb begin
-    automatic logic [{{cpuif.data_width-1}}:0] readback_data_var;
     {%- if ds.has_external_addressable %}
     readback_done = decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
     {%- else %}
@@ -72,12 +69,11 @@ always_comb begin
     {%- endif %}
     {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
     readback_err = decoded_err;
+    readback_data = decoded_err ? '0 : readback_array[cpuif_index];
     {%- else %}
     readback_err = '0;
+    readback_data = readback_array[cpuif_index];
     {%- endif %}
-    readback_data_var = '0;
-    for(int i=0; i<{{array_size}}; i++) readback_data_var |= readback_array[i];
-    readback_data = readback_data_var;
 end
 {%- endif %}
 
