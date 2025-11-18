@@ -215,6 +215,17 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             rhs = f"{addr_decoding_str} & cpuif_req_is_wr"
         else:
             raise RuntimeError
+
+        # Check if this register is a broadcast target
+        # If so, OR in the broadcast write strobe(s)
+        from .broadcast.implementation_generator import BroadcastLogicGenerator
+        broadcast_gen = BroadcastLogicGenerator(self.addr_decode.exp.broadcast_logic)
+        broadcast_strobe = broadcast_gen.get_broadcast_strobe(node)
+
+        if broadcast_strobe:
+            # Combine direct access with broadcast access
+            rhs = f"({rhs}) | ({broadcast_strobe})"
+
         # Add decoding flags
         if subword_index is None:
             self.add_content(f"{self.addr_decode.get_access_strobe(node)} = {rhs};")

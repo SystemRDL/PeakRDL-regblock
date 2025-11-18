@@ -18,6 +18,7 @@ from .cpuif.apb4 import APB4_Cpuif
 from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
+from .broadcast import BroadcastWriteLogic
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
 from .parity import ParityErrorReduceGenerator
 from .sv_int import SVInt
@@ -34,6 +35,7 @@ class RegblockExporter:
     readback: Readback
     write_buffering: WriteBuffering
     read_buffering: ReadBuffering
+    broadcast_logic: BroadcastWriteLogic
     dereferencer: Dereferencer
     ds: 'DesignState'
 
@@ -157,6 +159,7 @@ class RegblockExporter:
         self.field_logic = FieldLogic(self)
         self.write_buffering = WriteBuffering(self)
         self.read_buffering = ReadBuffering(self)
+        self.broadcast_logic = BroadcastWriteLogic(self)
         self.dereferencer = Dereferencer(self)
         ext_write_acks = ExternalWriteAckGenerator(self)
         ext_read_acks = ExternalReadAckGenerator(self)
@@ -171,6 +174,14 @@ class RegblockExporter:
         # before any other templates are rendered
         readback_implementation = self.readback.get_implementation()
 
+        # Generate broadcast write logic
+        from .broadcast.implementation_generator import BroadcastLogicGenerator
+        broadcast_gen = BroadcastLogicGenerator(self.broadcast_logic)
+
+        broadcast_logic_impl = broadcast_gen.get_content(self.ds.top_node)
+
+
+
         # Build Jinja template context
         context = {
             "cpuif": self.cpuif,
@@ -180,6 +191,8 @@ class RegblockExporter:
             "get_module_port_list": self.get_module_port_list,
             "write_buffering": self.write_buffering,
             "read_buffering": self.read_buffering,
+            "broadcast_logic": self.broadcast_logic,
+            "broadcast_logic_impl": broadcast_logic_impl,
             "get_resetsignal": self.dereferencer.get_resetsignal,
             "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,

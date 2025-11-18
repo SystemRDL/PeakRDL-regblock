@@ -119,6 +119,27 @@ module {{ds.module_name}}
     logic [{{cpuif.data_width-1}}:0] decoded_wr_data;
     logic [{{cpuif.data_width-1}}:0] decoded_wr_biten;
 
+    // Pass down signals to next stage
+{%- if ds.has_external_block %}
+    assign decoded_addr = cpuif_addr;
+{% endif %}
+    assign decoded_req = cpuif_req_masked;
+    assign decoded_req_is_wr = cpuif_req_is_wr;
+    assign decoded_wr_data = cpuif_wr_data;
+    assign decoded_wr_biten = cpuif_wr_biten;
+{% if ds.has_writable_msb0_fields %}
+    // bitswap for use by fields with msb0 ordering
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_data_bswap;
+    logic [{{cpuif.data_width-1}}:0] decoded_wr_biten_bswap;
+    assign decoded_wr_data_bswap = {<<{decoded_wr_data}};
+    assign decoded_wr_biten_bswap = {<<{decoded_wr_biten}};
+{%- endif %}
+
+{%- if broadcast_logic.broadcast_map %}
+
+{{broadcast_logic_impl|indent}}
+{%- endif %}
+
     always_comb begin
         automatic logic is_valid_addr;
         automatic logic is_valid_rw;
@@ -151,22 +172,6 @@ module {{ds.module_name}}
         external_req = is_external;
     {%- endif %}
     end
-
-    // Pass down signals to next stage
-{%- if ds.has_external_block %}
-    assign decoded_addr = cpuif_addr;
-{% endif %}
-    assign decoded_req = cpuif_req_masked;
-    assign decoded_req_is_wr = cpuif_req_is_wr;
-    assign decoded_wr_data = cpuif_wr_data;
-    assign decoded_wr_biten = cpuif_wr_biten;
-{% if ds.has_writable_msb0_fields %}
-    // bitswap for use by fields with msb0 ordering
-    logic [{{cpuif.data_width-1}}:0] decoded_wr_data_bswap;
-    logic [{{cpuif.data_width-1}}:0] decoded_wr_biten_bswap;
-    assign decoded_wr_data_bswap = {<<{decoded_wr_data}};
-    assign decoded_wr_biten_bswap = {<<{decoded_wr_biten}};
-{%- endif %}
 
 {%- if ds.has_buffered_write_regs %}
 
