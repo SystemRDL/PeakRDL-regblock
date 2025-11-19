@@ -267,6 +267,10 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         regwidth = node.get_property('regwidth')
         accesswidth = node.get_property('accesswidth')
 
+        if self.addr_decode.exp.broadcast_logic.is_in_broadcast_scope(node):
+            # Register is within a broadcaster scope. Do not add decoding flags
+            return
+
         if regwidth == accesswidth:
             self._add_reg_decoding_flags(node)
         else:
