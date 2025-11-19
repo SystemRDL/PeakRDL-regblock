@@ -133,84 +133,78 @@ class BroadcastScanner(RDLListener):
 
     def __init__(self, broadcast_logic: BroadcastWriteLogic) -> None:
         self.bl = broadcast_logic
+        # Stack of active broadcaster scopes: List[Tuple[BroadcasterNode, List[TargetNode]]]
+        self.scope_stack = []
 
     def enter_Component(self, node: AddressableNode) -> None:
 
+        # 1. Check if we are inside an active broadcaster scope (Structural Broadcast)
+        if self.scope_stack and isinstance(node, RegNode):
+            broadcaster_scope, target_scopes = self.scope_stack[-1]
 
-        # Only check broadcast_write property on Reg and Regfile nodes
-        # (these are the valid_components for the UDP)
-        if not isinstance(node, (RegNode, RegfileNode)):
-            return
+            # Calculate relative path from the broadcaster scope
+            b_path = broadcaster_scope.get_path()
+            node_path = node.get_path()
 
-        # Check if this node has the broadcast_write property
-        broadcast_targets = node.get_property('broadcast_write')
+            if node_path.startswith(b_path + '.'):
+                rel_path = node_path[len(b_path)+1:]
 
-        if broadcast_targets is not None:
-            # This is a broadcaster
-            self.bl.broadcasters.append(node)
+                # Map to each target scope
+                for target_scope in target_scopes:
+                    # Find corresponding node in target
+                    target_reg = target_scope.find_by_path(rel_path)
 
-            # Expand targets (handle regfiles and arrays)
-            expanded_targets = self._expand_targets(node, broadcast_targets)
-            # Use path as key since RegNode is not hashable
-            if expanded_targets:
-                self.bl.broadcast_map[node.get_path()] = expanded_targets
+                    if target_reg and isinstance(target_reg, RegNode):
+                        self._add_broadcast_map(node, target_reg)
 
-            # Track all targets
-            # Note: This only tracks targets returned by _expand_targets.
-            # Targets added via _expand_regfile (structural) are added to map but maybe not to self.bl.targets list?
-            # We should probably ensure they are added to self.bl.targets in _add_broadcast_map if we want to track them.
-            # But for now let's just fix the crash.
-            for target in expanded_targets:
-                self.bl.targets.append(target)
+        # 2. Check if this node defines a new broadcast (is a Broadcaster)
+        if isinstance(node, (RegNode, RegfileNode)):
+            broadcast_targets = node.get_property('broadcast_write')
 
-    def _expand_array(self, node: Node, targets_list: List[Node] = None) -> List[Node]:
+            if broadcast_targets is not None:
+                self.bl.broadcasters.append(node)
+
+                # Resolve targets (handle arrays)
+                expanded_targets = self._expand_targets(broadcast_targets)
+
+                if isinstance(node, RegfileNode):
+                    # Structural Broadcast: Push to stack to handle children
+                    # Filter targets to only RegfileNodes (validation ensures they are compatible)
+                    rf_targets = [t for t in expanded_targets if isinstance(t, RegfileNode)]
+                    if rf_targets:
+                        self.scope_stack.append((node, rf_targets))
+
+                elif isinstance(node, RegNode):
+                    # Direct Register Broadcast: Map immediately
+                    for target in expanded_targets:
+                        if isinstance(target, RegNode):
+                            self._add_broadcast_map(node, target)
+
+    def exit_Component(self, node: AddressableNode) -> None:
+        # Pop scope if we are exiting the current broadcaster scope
+        if self.scope_stack and self.scope_stack[-1][0] == node:
+            self.scope_stack.pop()
+
+    def _expand_targets(self, targets: any) -> List[AddressableNode]:
         """
-        Expand an array node.
-        For broadcast logic, we generally treat the array as a single target
-        and let the matcher handle the index expansion/matching.
-        So this simply returns the node itself in a list.
-        """
-        expanded = [node]
-        if targets_list is not None:
-            targets_list.extend(expanded)
-        return expanded
-
-    def _expand_targets(self, broadcaster: AddressableNode, targets: any) -> List[RegNode]:
-        """
-        Expand broadcast targets into individual register nodes.
-
+        Expand broadcast targets into a flat list of nodes.
         Handles:
-        - Single register/regfile reference
-        - List of register/regfile references
-        - Regfile references (expand to all child registers)
+        - Single reference
+        - List of references
         - Array references (expand to all array elements)
         """
         # Normalize to list
         if not isinstance(targets, list):
             targets = [targets]
 
-        final_reg_targets = []
+        final_targets = []
         for target in targets:
-            if isinstance(target, RegfileNode):
-                # Handle regfile targets (structural or flat)
-                if target.is_array:
-                    # Expand array of regfiles
-                    for rf_elem in self._expand_array(target):
-                        # _expand_regfile will add mappings directly to self.bl.broadcast_map
-                        self._expand_regfile(broadcaster, rf_elem)
-                else:
-                    # _expand_regfile will add mappings directly to self.bl.broadcast_map
-                    self._expand_regfile(broadcaster, target)
+            if target.is_array:
+                final_targets.extend(self._expand_array(target))
+            else:
+                final_targets.append(target)
 
-            elif isinstance(target, RegNode):
-                if target.is_array:
-                    # _expand_array returns a list of individual elements
-                    final_reg_targets.extend(self._expand_array(target))
-                else:
-                    final_reg_targets.append(target)
-
-        return final_reg_targets
-
+        return final_targets
 
     def _add_broadcast_map(self, broadcaster: AddressableNode, target: RegNode):
         """Helper to add a broadcaster -> target mapping"""
@@ -232,48 +226,3 @@ class BroadcastScanner(RDLListener):
         """
         # Simply return the node - RDL references should already be explicit
         return [node]
-
-    def _expand_regfile(self, broadcaster: Node, target: RegfileNode):
-        """
-        Expand a target regfile into its constituent registers.
-
-        If broadcaster is a RegfileNode:
-            Structural broadcast: Map broadcaster's registers to target's registers by relative path.
-        """
-
-        if isinstance(broadcaster, RegfileNode):
-            # Structural broadcast: Regfile -> Regfile
-            # We need to iterate over all registers in the BROADCASTER regfile
-            # and find the corresponding register in the TARGET regfile.
-
-            # 1. Get all registers in the broadcaster
-            broadcaster_regs = []
-            for node in broadcaster.descendants():
-                if isinstance(node, RegNode):
-                    broadcaster_regs.append(node)
-
-            # 2. For each broadcaster register, find the match in the target
-            for b_reg in broadcaster_regs:
-                # Get relative path from broadcaster root
-                # e.g. if broadcaster is 'top.b_rf' and reg is 'top.b_rf.sub.reg', rel is 'sub.reg'
-                # SystemRDL Node.get_path() does not support rel_to, so we do it manually
-                b_path = broadcaster.get_path()
-                reg_path = b_reg.get_path()
-
-                if reg_path.startswith(b_path + '.'):
-                    rel_path = reg_path[len(b_path)+1:]
-                else:
-                    # Should not happen if b_reg is a descendant
-                    continue
-
-                # Find corresponding node in target
-                # e.g. target is 'top.t_rf', look for 'top.t_rf.sub.reg'
-                t_reg = target.find_by_path(rel_path)
-
-                if t_reg and isinstance(t_reg, RegNode):
-                    # Add this mapping
-                    # We treat 'b_reg' as a broadcaster for 't_reg'
-                    self._add_broadcast_map(b_reg, t_reg)
-                else:
-                    # Warning? Mismatch in structure
-                    pass
