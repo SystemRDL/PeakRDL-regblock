@@ -95,7 +95,7 @@ class ReadbackAssignmentGenerator(RDLForLoopGenerator):
 
     def enter_Reg(self, node: RegNode) -> WalkerAction:
         # Skip broadcaster registers - they have no storage to read back
-        if self.exp.broadcast_logic.is_broadcaster(node):
+        if self.exp.broadcast_logic.is_in_broadcast_scope(node):
             return WalkerAction.SkipDescendants
 
         if not node.has_sw_readable:

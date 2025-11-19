@@ -42,6 +42,20 @@ class BroadcastWriteLogic:
         """Check if a node is a broadcaster"""
         return node in self.broadcasters
 
+    def is_in_broadcast_scope(self, node: AddressableNode) -> bool:
+        """
+        Check if a node is within a broadcast scope.
+        This includes:
+        1. The node itself is a broadcaster
+        2. The node is a child of a broadcaster (e.g. reg in a broadcast regfile)
+        """
+        curr = node
+        while curr is not None:
+            if isinstance(curr, AddressableNode) and self.is_broadcaster(curr):
+                return True
+            curr = curr.parent
+        return False
+
     def is_target(self, node: RegNode) -> bool:
         """Check if a node is a broadcast target"""
         return node in self.targets

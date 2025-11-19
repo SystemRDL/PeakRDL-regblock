@@ -275,7 +275,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
     def enter_Field(self, node: 'FieldNode') -> None:
         # Skip fields in broadcaster registers - they have no outputs
         parent_reg = node.parent
-        if self.hwif.exp.broadcast_logic.is_broadcaster(parent_reg):
+        if self.hwif.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
             return
 
         type_name = self.get_typdef_name(node)
@@ -305,7 +305,7 @@ class OutputStructGenerator_Hier(HWIFStructGenerator):
     def exit_Field(self, node: 'FieldNode') -> None:
         # Skip fields in broadcaster registers
         parent_reg = node.parent
-        if self.hwif.exp.broadcast_logic.is_broadcaster(parent_reg):
+        if self.hwif.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
             return
 
         self.pop_struct()

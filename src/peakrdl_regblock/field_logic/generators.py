@@ -36,7 +36,7 @@ class CombinationalStructGenerator(RDLStructGenerator):
 
         # Skip fields in broadcaster registers
         parent_reg = node.parent
-        if self.field_logic.exp.broadcast_logic.is_broadcaster(parent_reg):
+        if self.field_logic.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
             return
 
         # collect any extra combo signals that this field requires
@@ -94,7 +94,7 @@ class FieldStorageStructGenerator(RDLStructGenerator):
     def enter_Field(self, node: 'FieldNode') -> None:
         # Skip fields in broadcaster registers
         parent_reg = node.parent
-        if self.field_logic.exp.broadcast_logic.is_broadcaster(parent_reg):
+        if self.field_logic.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
             return
 
         self.push_struct(kwf(node.inst_name))
@@ -158,7 +158,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
     def enter_Field(self, node: 'FieldNode') -> None:
         # Skip fields in broadcaster registers - they don't have storage or outputs
         parent_reg = node.parent
-        if self.exp.broadcast_logic.is_broadcaster(parent_reg):
+        if self.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
             return
 
         if node.implements_storage:
