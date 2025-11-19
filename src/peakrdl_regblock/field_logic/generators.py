@@ -34,6 +34,11 @@ class CombinationalStructGenerator(RDLStructGenerator):
         if not node.implements_storage:
             return
 
+        # Skip fields in broadcaster registers
+        parent_reg = node.parent
+        if self.field_logic.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
+            return
+
         # collect any extra combo signals that this field requires
         extra_combo_signals = OrderedDict() # type: OrderedDict[str, SVLogic]
         for conditional in self.field_logic.get_conditionals(node):
@@ -87,6 +92,11 @@ class FieldStorageStructGenerator(RDLStructGenerator):
         return WalkerAction.Continue
 
     def enter_Field(self, node: 'FieldNode') -> None:
+        # Skip fields in broadcaster registers
+        parent_reg = node.parent
+        if self.field_logic.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
+            return
+
         self.push_struct(kwf(node.inst_name))
 
         if node.implements_storage:
@@ -146,6 +156,11 @@ class FieldLogicGenerator(RDLForLoopGenerator):
 
 
     def enter_Field(self, node: 'FieldNode') -> None:
+        # Skip fields in broadcaster registers - they don't have storage or outputs
+        parent_reg = node.parent
+        if self.exp.broadcast_logic.is_in_broadcast_scope(parent_reg):
+            return
+
         if node.implements_storage:
             self.generate_field_storage(node)
 

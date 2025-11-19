@@ -1,0 +1,21 @@
+addrmap top {
+    default regwidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg my_reg_t {
+        field {
+            sw=rw; hw=r;
+            reset=0;
+        } f[8];
+    };
+
+    // Target registers
+    my_reg_t rega @ 0x0;
+    my_reg_t regb @ 0x4;
+    my_reg_t regc @ 0x8;
+
+    // Broadcaster register
+    my_reg_t reg_all @ 0x10;
+    reg_all -> broadcast = '{ rega, regb, regc };
+};

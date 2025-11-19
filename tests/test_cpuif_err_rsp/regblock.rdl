@@ -73,4 +73,38 @@ addrmap top {
           } f[31:0] = 100;
       } r_wo;
     } external_rf @ 0x40;
+
+    // Broadcast regfile test
+    // Define a regfile type with different access types
+    regfile broadcast_target_t {
+        reg {
+            field {
+                sw=rw; hw=r;
+                reset=0;
+            } f[31:0];
+        } r_rw @ 0x00;
+
+        reg {
+            field {
+                sw=r; hw=na;
+                reset=0;
+            } f[31:0];
+        } r_ro @ 0x04;
+
+        reg {
+            field {
+                sw=w; hw=r;
+                reset=0;
+            } f[31:0];
+        } r_wo @ 0x08;
+    };
+
+    // Target regfiles
+    broadcast_target_t bc_target_a @ 0x50;
+    broadcast_target_t bc_target_b @ 0x60;
+    broadcast_target_t bc_target_c @ 0x70;
+
+    // Broadcaster regfile
+    broadcast_target_t bc_all @ 0x80;
+    bc_all -> broadcast = '{ bc_target_a, bc_target_b, bc_target_c };
 };

@@ -1,0 +1,19 @@
+addrmap top {
+    default regwidth = 32;
+    default sw = rw;
+    default hw = r;
+
+    reg my_reg_t {
+        field {
+            sw=rw; hw=r;
+            reset=0;
+        } f[8];
+    };
+
+    // Array of target registers (4 elements)
+    my_reg_t reg_array[4] @ 0x00 += 0x4;
+
+    // Broadcaster that writes to entire array (must list all elements explicitly)
+    my_reg_t broadcast_all @ 0x20;
+    broadcast_all -> broadcast = '{ reg_array[0], reg_array[1], reg_array[2], reg_array[3] };
+};

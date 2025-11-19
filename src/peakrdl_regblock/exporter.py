@@ -18,6 +18,7 @@ from .cpuif.apb4 import APB4_Cpuif
 from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
+from .broadcast import BroadcastLogic
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
 from .parity import ParityErrorReduceGenerator
 from .sv_int import SVInt
@@ -34,6 +35,7 @@ class RegblockExporter:
     readback: Readback
     write_buffering: WriteBuffering
     read_buffering: ReadBuffering
+    broadcast_logic: BroadcastLogic
     dereferencer: Dereferencer
     ds: 'DesignState'
 
@@ -157,6 +159,7 @@ class RegblockExporter:
         self.field_logic = FieldLogic(self)
         self.write_buffering = WriteBuffering(self)
         self.read_buffering = ReadBuffering(self)
+        self.broadcast_logic = BroadcastLogic(self)
         self.dereferencer = Dereferencer(self)
         ext_write_acks = ExternalWriteAckGenerator(self)
         ext_read_acks = ExternalReadAckGenerator(self)
@@ -180,6 +183,7 @@ class RegblockExporter:
             "get_module_port_list": self.get_module_port_list,
             "write_buffering": self.write_buffering,
             "read_buffering": self.read_buffering,
+            "broadcast_logic": self.broadcast_logic,
             "get_resetsignal": self.dereferencer.get_resetsignal,
             "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,

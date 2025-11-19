@@ -201,20 +201,53 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         subword_index: Union[int, None] = None,
         subword_stride: Union[int, None] = None) -> None:
         if subword_index is None or subword_stride is None:
-            addr_decoding_str = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)})"
+            addr_decoding_str = f"(cpuif_addr == {self._get_address_str(node)})"
         else:
-            addr_decoding_str = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=subword_index*subword_stride)})"
-        rhs_valid_addr = addr_decoding_str
+            addr_decoding_str = f"(cpuif_addr == {self._get_address_str(node, subword_offset=subword_index*subword_stride)})"
+
+        # Check if this register is a broadcast target
+        # If so, OR in the broadcaster's address decode
+        broadcasters = self.addr_decode.exp.broadcast_logic.get_broadcasters_for_target(node)
+
+        if broadcasters:
+            # For both reads and writes: OR in the broadcaster's address decode directly
+            # This eliminates the need for separate broadcast_wr_* wires
+            broadcaster_addr_terms = []
+
+            for broadcaster_node in broadcasters:
+                expr_width = self.addr_decode.exp.ds.addr_width
+                broadcaster_addr = broadcaster_node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address
+                broadcaster_addr_str = str(SVInt(broadcaster_addr, expr_width))
+
+                # Add broadcaster's own array offsets if it's in an array
+                if broadcaster_node.is_array:
+                    # Calculate which loop indices apply to the broadcaster
+                    # We need to figure out the broadcaster's position in the loop hierarchy
+                    # For now, assume broadcasters are not in arrays (simplification)
+                    # TODO: Handle array broadcasters properly
+                    pass
+
+                broadcaster_addr_terms.append(f"(cpuif_addr == {broadcaster_addr_str})")
+
+            # OR all broadcaster addresses into the main address decode
+            if broadcaster_addr_terms:
+                broadcaster_addrs = " | ".join(broadcaster_addr_terms)
+                # Modify addr_decoding_str to include broadcaster addresses
+                # The original rhs already has the direct address check, we just OR in the broadcaster addresses
+                addr_decoding_str = f"({addr_decoding_str} | {broadcaster_addrs})"
+
+        rhs_valid_addr = f"cpuif_req_masked & {addr_decoding_str}"
         readable = node.has_sw_readable
         writable = node.has_sw_writable
         if readable and writable:
-            rhs = addr_decoding_str
+            rhs = f"cpuif_req_masked & {addr_decoding_str}"
         elif readable and not writable:
-            rhs = f"{addr_decoding_str} & !cpuif_req_is_wr"
+            rhs = f"cpuif_req_masked & {addr_decoding_str} & !cpuif_req_is_wr"
         elif not readable and writable:
-            rhs = f"{addr_decoding_str} & cpuif_req_is_wr"
+            rhs = f"cpuif_req_masked & {addr_decoding_str} & cpuif_req_is_wr"
         else:
             raise RuntimeError
+
         # Add decoding flags
         if subword_index is None:
             self.add_content(f"{self.addr_decode.get_access_strobe(node)} = {rhs};")
@@ -232,6 +265,10 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
     def enter_Reg(self, node: RegNode) -> None:
         regwidth = node.get_property('regwidth')
         accesswidth = node.get_property('accesswidth')
+
+        if self.addr_decode.exp.broadcast_logic.is_in_broadcast_scope(node):
+            # Register is within a broadcaster scope. Do not add decoding flags
+            return
 
         if regwidth == accesswidth:
             self._add_reg_decoding_flags(node)
