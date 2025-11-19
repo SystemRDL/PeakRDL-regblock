@@ -72,7 +72,15 @@ class BroadcastWriteLogic:
             # But its unrolled instances (sharing the same underlying Component 'inst') might be.
 
             # Count how many targets share the same underlying component instance
-            match_count = sum(1 for t in targets if t.inst == target.inst)
+            match_count = 0
+            for t in targets:
+                if t.inst == target.inst:
+                    # If current_idx is None, this node represents the entire array (all elements)
+                    if t.current_idx is None:
+                        match_count += t.n_elements
+                    else:
+                        # Otherwise it represents a single element
+                        match_count += 1
 
             if match_count == expected_count and expected_count > 0:
                 broadcasters.append(broadcaster_node)
