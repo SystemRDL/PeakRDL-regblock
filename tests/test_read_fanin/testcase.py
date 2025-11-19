@@ -1,9 +1,11 @@
 from parameterized import parameterized_class
 
+from ..lib.cpuifs import ALL_CPUIF
 from ..lib.sim_testcase import SimTestCase
 from ..lib.test_params import get_permutation_class_name, get_permutations
 
 PARAMS = get_permutations({
+    "cpuif": ALL_CPUIF,
     "regwidth" : [8, 16, 32, 64],
 })
 @parameterized_class(PARAMS, class_name_func=get_permutation_class_name)
