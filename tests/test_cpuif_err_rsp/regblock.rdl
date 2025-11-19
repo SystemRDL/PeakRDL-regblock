@@ -106,5 +106,5 @@ addrmap top {
 
     // Broadcaster regfile
     broadcast_target_t bc_all @ 0x80;
-    bc_all -> broadcast_write = '{ bc_target_a, bc_target_b, bc_target_c };
+    bc_all -> broadcast = '{ bc_target_a, bc_target_b, bc_target_c };
 };

@@ -29,10 +29,10 @@ addrmap top {
     // Broadcaster that writes to all regfile instances
     // This should automatically expand to all registers within each regfile
     my_regfile_t broadcast_all @ 0x40;
-    broadcast_all -> broadcast_write = '{ regfile_a, regfile_b, regfile_c };
+    broadcast_all -> broadcast = '{ regfile_a, regfile_b, regfile_c };
 
     // Broadcaster that writes to the regfile array
     // Must explicitly list array elements due to SystemRDL syntax limitation
     my_regfile_t broadcast_to_array @ 0x80;
-    broadcast_to_array -> broadcast_write = '{ regfile_array[0], regfile_array[1] };
+    broadcast_to_array -> broadcast = '{ regfile_array[0], regfile_array[1] };
 };

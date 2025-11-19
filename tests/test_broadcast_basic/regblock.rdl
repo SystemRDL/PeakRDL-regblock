@@ -17,5 +17,5 @@ addrmap top {
 
     // Broadcaster register
     my_reg_t reg_all @ 0x10;
-    reg_all -> broadcast_write = '{ rega, regb, regc };
+    reg_all -> broadcast = '{ rega, regb, regc };
 };

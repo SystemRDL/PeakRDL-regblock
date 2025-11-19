@@ -8,9 +8,9 @@ if TYPE_CHECKING:
     from ..exporter import RegblockExporter
 
 
-class BroadcastWriteLogic:
+class BroadcastLogic:
     """
-    Manages broadcast write logic for registers and regfiles.
+    Manages broadcast logic for registers and regfiles.
 
     A broadcaster register/regfile does not have hardware storage.
     Instead, writes to the broadcaster address generate write strobes
@@ -105,7 +105,7 @@ class BroadcastWriteLogic:
 class BroadcastScanner(RDLListener):
     """Listener that scans the design to build the broadcast mapping"""
 
-    def __init__(self, broadcast_logic: BroadcastWriteLogic) -> None:
+    def __init__(self, broadcast_logic: BroadcastLogic) -> None:
         self.bl = broadcast_logic
         # Stack of active broadcaster scopes: List[Tuple[BroadcasterNode, List[TargetNode]]]
         self.scope_stack = []
@@ -133,7 +133,7 @@ class BroadcastScanner(RDLListener):
 
         # 2. Check if this node defines a new broadcast (is a Broadcaster)
         if isinstance(node, (RegNode, RegfileNode)):
-            broadcast_targets = node.get_property('broadcast_write')
+            broadcast_targets = node.get_property('broadcast')
 
             if broadcast_targets is not None:
                 self.bl.broadcasters.append(node)

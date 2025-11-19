@@ -53,7 +53,7 @@ property fracwidth {
     component = field;
 };
 
-property broadcast_write {
-    component = reg | regfile;
+property broadcast {
     type = ref[];
+    component = reg | regfile;
 };

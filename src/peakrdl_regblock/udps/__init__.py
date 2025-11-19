@@ -3,7 +3,7 @@ from .rw_buffering import BufferReads, RBufferTrigger
 from .extended_swacc import ReadSwacc, WriteSwacc
 from .fixedpoint import IntWidth, FracWidth
 from .signed import IsSigned
-from .broadcast_write import BroadcastWrite
+from .broadcast import Broadcast
 
 ALL_UDPS = [
     BufferWrites,
@@ -15,5 +15,5 @@ ALL_UDPS = [
     IntWidth,
     FracWidth,
     IsSigned,
-    BroadcastWrite
+    Broadcast
 ]

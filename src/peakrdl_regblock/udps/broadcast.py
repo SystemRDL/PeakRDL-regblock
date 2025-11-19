@@ -8,15 +8,15 @@ from systemrdl.rdltypes import NoValue
 from systemrdl.node import Node, RegNode, RegfileNode
 
 
-class BroadcastWrite(UDPDefinition):
-    name = "broadcast_write"
+class Broadcast(UDPDefinition):
+    name = "broadcast"
     valid_components = {Reg, Regfile}
     valid_type = ArrayedType(RefType)
 
     def validate(self, node: Node, value: Any) -> None:
         if value is NoValue:
             self.msg.error(
-                "The 'broadcast_write' property requires a target assignment",
+                "The 'broadcast' property requires a target assignment",
                 self.get_src_ref(node)
             )
             return
@@ -74,9 +74,9 @@ class BroadcastWrite(UDPDefinition):
             )
 
         # Check for circular references (target is also a broadcaster)
-        if target.get_property('broadcast_write') is not None:
+        if target.get_property('broadcast') is not None:
             self.msg.error(
-                f"Broadcast target '{target.inst_name}' cannot itself be a broadcaster (circular reference)",
+                f"Broadcast target '{target.inst_name}' cannot also be a broadcaster",
                 self.get_src_ref(broadcaster)
             )
 

@@ -15,5 +15,5 @@ addrmap top {
 
     // Broadcaster that writes to entire array (must list all elements explicitly)
     my_reg_t broadcast_all @ 0x20;
-    broadcast_all -> broadcast_write = '{ reg_array[0], reg_array[1], reg_array[2], reg_array[3] };
+    broadcast_all -> broadcast = '{ reg_array[0], reg_array[1], reg_array[2], reg_array[3] };
 };
