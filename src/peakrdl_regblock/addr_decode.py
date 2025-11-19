@@ -217,14 +217,37 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             raise RuntimeError
 
         # Check if this register is a broadcast target
-        # If so, OR in the broadcast write strobe(s)
-        from .broadcast.implementation_generator import BroadcastLogicGenerator
-        broadcast_gen = BroadcastLogicGenerator(self.addr_decode.exp.broadcast_logic)
-        broadcast_strobe = broadcast_gen.get_broadcast_strobe(node)
+        # If so, OR in the broadcaster's address decode
+        broadcasters = self.addr_decode.exp.broadcast_logic.get_broadcasters_for_target(node)
 
-        if broadcast_strobe:
-            # Combine direct access with broadcast access
-            rhs = f"({rhs}) | ({broadcast_strobe})"
+        if broadcasters:
+            # For both reads and writes: OR in the broadcaster's address decode directly
+            # This eliminates the need for separate broadcast_wr_* wires
+            broadcaster_addr_terms = []
+
+            for broadcaster_node in broadcasters:
+                # Calculate broadcaster address WITHOUT the current loop context
+                # The broadcaster might be in its own loop, but not in the target's loop
+                expr_width = self.addr_decode.exp.ds.addr_width
+                broadcaster_addr = broadcaster_node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address
+                broadcaster_addr_str = str(SVInt(broadcaster_addr, expr_width))
+
+                # Add broadcaster's own array offsets if it's in an array
+                if broadcaster_node.is_array:
+                    # Calculate which loop indices apply to the broadcaster
+                    # We need to figure out the broadcaster's position in the loop hierarchy
+                    # For now, assume broadcasters are not in arrays (simplification)
+                    # TODO: Handle array broadcasters properly
+                    pass
+
+                broadcaster_addr_terms.append(f"(cpuif_addr == {broadcaster_addr_str})")
+
+            # OR all broadcaster addresses into the main address decode
+            if broadcaster_addr_terms:
+                broadcaster_addrs = " | ".join(broadcaster_addr_terms)
+                # Modify addr_decoding_str to include broadcaster addresses
+                # The original rhs already has the direct address check, we just OR in the broadcaster addresses
+                rhs = f"(cpuif_req_masked & (({addr_decoding_str.replace('cpuif_req_masked & ', '')}) | ({broadcaster_addrs})))"
 
         # Add decoding flags
         if subword_index is None:

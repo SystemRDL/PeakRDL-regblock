@@ -135,10 +135,6 @@ module {{ds.module_name}}
     assign decoded_wr_biten_bswap = {<<{decoded_wr_biten}};
 {%- endif %}
 
-{%- if broadcast_logic.broadcast_map %}
-
-{{broadcast_logic_impl|indent}}
-{%- endif %}
 
     always_comb begin
         automatic logic is_valid_addr;

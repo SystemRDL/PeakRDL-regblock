@@ -174,14 +174,6 @@ class RegblockExporter:
         # before any other templates are rendered
         readback_implementation = self.readback.get_implementation()
 
-        # Generate broadcast write logic
-        from .broadcast.implementation_generator import BroadcastLogicGenerator
-        broadcast_gen = BroadcastLogicGenerator(self.broadcast_logic)
-
-        broadcast_logic_impl = broadcast_gen.get_content(self.ds.top_node)
-
-
-
         # Build Jinja template context
         context = {
             "cpuif": self.cpuif,
@@ -192,7 +184,6 @@ class RegblockExporter:
             "write_buffering": self.write_buffering,
             "read_buffering": self.read_buffering,
             "broadcast_logic": self.broadcast_logic,
-            "broadcast_logic_impl": broadcast_logic_impl,
             "get_resetsignal": self.dereferencer.get_resetsignal,
             "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,
