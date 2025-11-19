@@ -201,20 +201,9 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         subword_index: Union[int, None] = None,
         subword_stride: Union[int, None] = None) -> None:
         if subword_index is None or subword_stride is None:
-            addr_decoding_str = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node)})"
+            addr_decoding_str = f"(cpuif_addr == {self._get_address_str(node)})"
         else:
-            addr_decoding_str = f"cpuif_req_masked & (cpuif_addr == {self._get_address_str(node, subword_offset=subword_index*subword_stride)})"
-        rhs_valid_addr = addr_decoding_str
-        readable = node.has_sw_readable
-        writable = node.has_sw_writable
-        if readable and writable:
-            rhs = addr_decoding_str
-        elif readable and not writable:
-            rhs = f"{addr_decoding_str} & !cpuif_req_is_wr"
-        elif not readable and writable:
-            rhs = f"{addr_decoding_str} & cpuif_req_is_wr"
-        else:
-            raise RuntimeError
+            addr_decoding_str = f"(cpuif_addr == {self._get_address_str(node, subword_offset=subword_index*subword_stride)})"
 
         # Check if this register is a broadcast target
         # If so, OR in the broadcaster's address decode
@@ -226,8 +215,6 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
             broadcaster_addr_terms = []
 
             for broadcaster_node in broadcasters:
-                # Calculate broadcaster address WITHOUT the current loop context
-                # The broadcaster might be in its own loop, but not in the target's loop
                 expr_width = self.addr_decode.exp.ds.addr_width
                 broadcaster_addr = broadcaster_node.raw_absolute_address - self.addr_decode.top_node.raw_absolute_address
                 broadcaster_addr_str = str(SVInt(broadcaster_addr, expr_width))
@@ -247,7 +234,19 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
                 broadcaster_addrs = " | ".join(broadcaster_addr_terms)
                 # Modify addr_decoding_str to include broadcaster addresses
                 # The original rhs already has the direct address check, we just OR in the broadcaster addresses
-                rhs = f"(cpuif_req_masked & (({addr_decoding_str.replace('cpuif_req_masked & ', '')}) | ({broadcaster_addrs})))"
+                addr_decoding_str = f"({addr_decoding_str} | {broadcaster_addrs})"
+
+        rhs_valid_addr = f"cpuif_req_masked & {addr_decoding_str}"
+        readable = node.has_sw_readable
+        writable = node.has_sw_writable
+        if readable and writable:
+            rhs = f"cpuif_req_masked & {addr_decoding_str}"
+        elif readable and not writable:
+            rhs = f"cpuif_req_masked & {addr_decoding_str} & !cpuif_req_is_wr"
+        elif not readable and writable:
+            rhs = f"cpuif_req_masked & {addr_decoding_str} & cpuif_req_is_wr"
+        else:
+            raise RuntimeError
 
         # Add decoding flags
         if subword_index is None:
