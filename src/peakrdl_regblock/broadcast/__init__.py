@@ -138,19 +138,16 @@ class BroadcastScanner(RDLListener):
             if broadcast_targets is not None:
                 self.bl.broadcasters.append(node)
 
-                # Resolve targets (handle arrays)
-                expanded_targets = self._expand_targets(broadcast_targets)
-
                 if isinstance(node, RegfileNode):
                     # Structural Broadcast: Push to stack to handle children
                     # Filter targets to only RegfileNodes (validation ensures they are compatible)
-                    rf_targets = [t for t in expanded_targets if isinstance(t, RegfileNode)]
+                    rf_targets = [t for t in broadcast_targets if isinstance(t, RegfileNode)]
                     if rf_targets:
                         self.scope_stack.append((node, rf_targets))
 
                 elif isinstance(node, RegNode):
                     # Direct Register Broadcast: Map immediately
-                    for target in expanded_targets:
+                    for target in broadcast_targets:
                         if isinstance(target, RegNode):
                             self._add_broadcast_map(node, target)
 
@@ -158,27 +155,6 @@ class BroadcastScanner(RDLListener):
         # Pop scope if we are exiting the current broadcaster scope
         if self.scope_stack and self.scope_stack[-1][0] == node:
             self.scope_stack.pop()
-
-    def _expand_targets(self, targets: Any) -> List[AddressableNode]:
-        """
-        Expand broadcast targets into a flat list of nodes.
-        Handles:
-        - Single reference
-        - List of references
-        - Array references (expand to all array elements)
-        """
-        # Normalize to list
-        if not isinstance(targets, list):
-            targets = [targets]
-
-        final_targets = []
-        for target in targets:
-            if target.is_array:
-                final_targets.extend(self._expand_array(target))
-            else:
-                final_targets.append(target)
-
-        return final_targets
 
     def _add_broadcast_map(self, broadcaster: AddressableNode, target: RegNode) -> None:
         """Helper to add a broadcaster -> target mapping"""
