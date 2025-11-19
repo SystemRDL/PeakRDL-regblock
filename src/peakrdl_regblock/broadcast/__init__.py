@@ -20,10 +20,9 @@ class BroadcastWriteLogic:
     def __init__(self, exp: 'RegblockExporter') -> None:
         self.exp = exp
 
-        # Maps broadcaster node PATH to list of target nodes
-        # Using path strings as keys since RegNode is not hashable
-        # After expansion, all targets are individual RegNodes
-        self.broadcast_map: Dict[str, List[RegNode]] = {}
+        # Maps broadcaster node to list of target nodes
+        # List of tuples: (broadcaster_node, [target_nodes])
+        self.broadcast_map: List[Tuple[AddressableNode, List[RegNode]]] = []
 
         # List of all broadcaster nodes (no hardware implementation)
         self.broadcasters: List[AddressableNode] = []
@@ -47,84 +46,73 @@ class BroadcastWriteLogic:
         """Check if a node is a broadcast target"""
         return node in self.targets
 
-    def get_broadcasters_for_target(self, target: RegNode) -> List[str]:
+    def get_broadcasters_for_target(self, target: RegNode) -> List[AddressableNode]:
         """
-        Get all broadcaster paths that write to this target.
-
-        For array iteration (target path has empty brackets []), only returns broadcasters
-        that target ALL elements of the array, as we cannot conditionally OR subset
-        broadcasts in the FOR loop.
+        Get all broadcaster nodes that write to this target.
         """
         broadcasters = []
-        target_path = target.get_path()
 
-        for broadcaster_path, targets in self.broadcast_map.items():
-            # Compare by path since array elements may be different node objects
+        for broadcaster_node, targets in self.broadcast_map:
+            # 1. Exact match check
+            if target in targets:
+                broadcasters.append(broadcaster_node)
+                continue
+
+            # 2. Array iteration match check
+            # If target is a canonical node inside an array loop, it won't be in the map (which has unrolled nodes).
+            # We need to check if the nodes in 'targets' correspond to this canonical 'target'.
+            # We do this by checking if they share the same underlying Instance object and parent Instance.
+
+            array_element_count = 0
+            expected_count = 0
+
+            # We only need to calculate expected_count if we find at least one potential match
+            found_potential_match = False
+
             for t in targets:
-                t_path = t.get_path()
+                # Check if t is an instance of target
+                # 1. Must share the same Instance object (same register definition/instance)
+                # 2. Must share the same parent Instance object (same regfile/array instance)
+                #    (This distinguishes between regfile_a.reg_a and regfile_b.reg_a)
 
-                # Handle two cases:
-                # 1. Exact match: 'regblock.rega' == 'regblock.rega'
-                # 2. Array iteration match: 'regblock.reg_array[]' matches only if broadcaster targets ALL elements
-                is_match = False
-                if t_path == target_path:
-                    # Exact match
-                    is_match = True
-                elif '[]' in target_path:
-                    # Target has empty brackets (array iteration variable in FOR loop)
-                    # Example: 'regblock.regfile_array[].reg_a'
+                if t.inst == target.inst:
+                    # Check parent equality (handle root case)
+                    t_parent = t.parent
+                    target_parent = target.parent
 
-                    # Split path into prefix (before []) and suffix (after [])
-                    prefix, suffix = target_path.split('[]', 1)
+                    if t_parent is not None and target_parent is not None:
+                        if t_parent.inst == target_parent.inst:
+                            # Match found! 't' is an unrolled instance of 'target'
+                            array_element_count += 1
+                            found_potential_match = True
+                    elif t_parent is None and target_parent is None:
+                        # Both are root? Should have been caught by exact match, but ok.
+                        array_element_count += 1
+                        found_potential_match = True
 
-                    # Check if stored target matches pattern: prefix + [index] + suffix
-                    if t_path.startswith(prefix + '[') and t_path.endswith(suffix):
-                        # Extract the index part
-                        # t_path = prefix + '[' + index + ']' + suffix
-                        middle = t_path[len(prefix):-len(suffix) if suffix else None]
+            if found_potential_match:
+                # Calculate expected count (size of the array)
+                # The parent of the target should be the array
+                parent = target.parent
+                if parent and getattr(parent, 'is_array', False):
+                    expected_count = 1
+                    for dim in parent.array_dimensions:
+                        expected_count *= dim
 
-                        # Check if middle is '[<digits>]'
-                        if middle.startswith('[') and middle.endswith(']') and middle[1:-1].isdigit():
-                            # This is a match for a specific element of this array structure
+                # If target itself is an array (unlikely here as we usually target registers), handle that
+                elif getattr(target, 'is_array', False):
+                     expected_count = 1
+                     for dim in target.array_dimensions:
+                        expected_count *= dim
+                else:
+                    # If parent is not array and target is not array, expected is 1.
+                    # But then exact match should have worked.
+                    # Unless target is inside a generated loop for a non-array? (Unlikely)
+                    expected_count = 1
 
-                            # Now check if we are broadcasting to ALL elements of this array
-                            # We need to count how many elements of this array structure are targeted
+                if array_element_count == expected_count and expected_count > 0:
+                    broadcasters.append(broadcaster_node)
 
-                            array_element_count = 0
-                            for target_in_list in targets:
-                                t_list_path = target_in_list.get_path()
-                                if (t_list_path.startswith(prefix + '[') and
-                                    t_list_path.endswith(suffix) and
-                                    t_list_path[len(prefix):-len(suffix) if suffix else None].startswith('[') and
-                                    t_list_path[len(prefix):-len(suffix) if suffix else None].endswith(']')):
-                                    array_element_count += 1
-
-                            # Get the array size from the target node
-                            # Let's find the array node by path
-                            array_path = prefix.rstrip('.')
-
-                            # Try to find relative to top node if full path fails
-                            top_node = self.exp.ds.top_node
-                            top_path = top_node.get_path()
-
-                            array_node = top_node.find_by_path(array_path)
-
-                            if array_node is None and array_path.startswith(top_path + '.'):
-                                # Try relative path
-                                rel_path = array_path[len(top_path)+1:]
-                                array_node = top_node.find_by_path(rel_path)
-
-                            expected_count = 1
-                            if array_node and getattr(array_node, 'is_array', False):
-                                for dim in array_node.array_dimensions:
-                                    expected_count *= dim
-
-                            if array_element_count == expected_count:
-                                is_match = True
-
-                if is_match:
-                    broadcasters.append(broadcaster_path)
-                    break
         return broadcasters
 
 
@@ -208,16 +196,22 @@ class BroadcastScanner(RDLListener):
 
     def _add_broadcast_map(self, broadcaster: AddressableNode, target: RegNode):
         """Helper to add a broadcaster -> target mapping"""
-        b_path = broadcaster.get_path()
-        if b_path not in self.bl.broadcast_map:
-            self.bl.broadcast_map[b_path] = []
 
-        # Avoid duplicates
-        if target not in self.bl.broadcast_map[b_path]:
-            self.bl.broadcast_map[b_path].append(target)
-            # Also track in global targets list
-            if target not in self.bl.targets:
-                self.bl.targets.append(target)
+        # Find existing entry for this broadcaster
+        found = False
+        for b_node, t_list in self.bl.broadcast_map:
+            if b_node == broadcaster:
+                if target not in t_list:
+                    t_list.append(target)
+                found = True
+                break
+
+        if not found:
+            self.bl.broadcast_map.append((broadcaster, [target]))
+
+        # Also track in global targets list
+        if target not in self.bl.targets:
+            self.bl.targets.append(target)
 
     def _expand_array(self, node: AddressableNode) -> List[AddressableNode]:
         """

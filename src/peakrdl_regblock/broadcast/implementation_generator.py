@@ -25,16 +25,12 @@ class BroadcastLogicGenerator:
         # Build a list of broadcaster info for the template
         # Each entry has the broadcaster path and node
         broadcaster_list = []
-        for broadcaster_path in self.broadcast.broadcast_map.keys():
-            # Find the broadcaster node by path
-            broadcaster_node = self._find_node_by_path(top_node, broadcaster_path)
-
-            if broadcaster_node:
-                broadcaster_list.append({
-                    'path': broadcaster_path,
-                    'node': broadcaster_node,
-                    'targets': self.broadcast.broadcast_map[broadcaster_path]
-                })
+        for broadcaster_node, targets in self.broadcast.broadcast_map:
+            broadcaster_list.append({
+                'path': get_indexed_path(self.exp.ds.top_node, broadcaster_node),
+                'node': broadcaster_node,
+                'targets': targets
+            })
 
         # Helper functions for template
         def get_path(node):
@@ -88,32 +84,19 @@ class BroadcastLogicGenerator:
 
         return template.render(context)
 
-    def _find_node_by_path(self, top_node: AddressableNode, path: str) -> Optional[AddressableNode]:
-        """Find a node by its path string"""
-        # Simple implementation: walk the tree to find matching path
-        for node in top_node.descendants():
-            if node.get_path() == path:
-                return node
-        return None
-
 
     def get_broadcast_strobe(self, target: RegNode) -> Optional[str]:
         """
         Get the combined broadcast write strobe for a target register.
         Returns None if the target has no broadcasters.
         """
-        broadcaster_paths = self.broadcast.get_broadcasters_for_target(target)
-        if not broadcaster_paths:
+        broadcaster_nodes = self.broadcast.get_broadcasters_for_target(target)
+        if not broadcaster_nodes:
             return None
 
         # Build OR expression of all broadcaster strobes
         strobe_terms = []
-        for broadcaster_path in broadcaster_paths:
-            # Find the broadcaster node to check if it's an array
-            broadcaster_node = self._find_node_by_path(self.exp.ds.top_node, broadcaster_path)
-            if not broadcaster_node:
-                continue
-
+        for broadcaster_node in broadcaster_nodes:
             # Generate strobe signal name based on whether it's an array
             if broadcaster_node.is_array:
                 # For arrays, we'd need to handle each element
