@@ -52,6 +52,15 @@ class BroadcastWriteLogic:
         """
         broadcasters = []
 
+        # Calculate the total number of instances this target represents
+        # (including its own array dimensions and any parent array dimensions)
+        expected_count = 1
+        curr = target
+        while curr is not None:
+            if isinstance(curr, AddressableNode) and curr.is_array:
+                expected_count *= curr.n_elements
+            curr = curr.parent
+
         for broadcaster_node, targets in self.broadcast_map:
             # 1. Exact match check
             if target in targets:
@@ -59,59 +68,14 @@ class BroadcastWriteLogic:
                 continue
 
             # 2. Array iteration match check
-            # If target is a canonical node inside an array loop, it won't be in the map (which has unrolled nodes).
-            # We need to check if the nodes in 'targets' correspond to this canonical 'target'.
-            # We do this by checking if they share the same underlying Instance object and parent Instance.
+            # If target is a canonical node inside an array loop, it won't be in the map.
+            # But its unrolled instances (sharing the same underlying Component 'inst') might be.
 
-            array_element_count = 0
-            expected_count = 0
+            # Count how many targets share the same underlying component instance
+            match_count = sum(1 for t in targets if t.inst == target.inst)
 
-            # We only need to calculate expected_count if we find at least one potential match
-            found_potential_match = False
-
-            for t in targets:
-                # Check if t is an instance of target
-                # 1. Must share the same Instance object (same register definition/instance)
-                # 2. Must share the same parent Instance object (same regfile/array instance)
-                #    (This distinguishes between regfile_a.reg_a and regfile_b.reg_a)
-
-                if t.inst == target.inst:
-                    # Check parent equality (handle root case)
-                    t_parent = t.parent
-                    target_parent = target.parent
-
-                    if t_parent is not None and target_parent is not None:
-                        if t_parent.inst == target_parent.inst:
-                            # Match found! 't' is an unrolled instance of 'target'
-                            array_element_count += 1
-                            found_potential_match = True
-                    elif t_parent is None and target_parent is None:
-                        # Both are root? Should have been caught by exact match, but ok.
-                        array_element_count += 1
-                        found_potential_match = True
-
-            if found_potential_match:
-                # Calculate expected count (size of the array)
-                # The parent of the target should be the array
-                parent = target.parent
-                if parent and getattr(parent, 'is_array', False):
-                    expected_count = 1
-                    for dim in parent.array_dimensions:
-                        expected_count *= dim
-
-                # If target itself is an array (unlikely here as we usually target registers), handle that
-                elif getattr(target, 'is_array', False):
-                     expected_count = 1
-                     for dim in target.array_dimensions:
-                        expected_count *= dim
-                else:
-                    # If parent is not array and target is not array, expected is 1.
-                    # But then exact match should have worked.
-                    # Unless target is inside a generated loop for a non-array? (Unlikely)
-                    expected_count = 1
-
-                if array_element_count == expected_count and expected_count > 0:
-                    broadcasters.append(broadcaster_node)
+            if match_count == expected_count and expected_count > 0:
+                broadcasters.append(broadcaster_node)
 
         return broadcasters
 
