@@ -16,7 +16,7 @@ class BroadcastWrite(UDPDefinition):
     def validate(self, node: Node, value: Any) -> None:
         if value is NoValue:
             self.msg.error(
-                "The 'broadcast_write' property requires a value assignment",
+                "The 'broadcast_write' property requires a target assignment",
                 self.get_src_ref(node)
             )
             return
@@ -50,25 +50,11 @@ class BroadcastWrite(UDPDefinition):
             return
 
         # Check type compatibility
-        # Allow Reg -> Reg (same type)
-        # Allow Regfile -> Regfile (structural broadcast)
-        # Do NOT allow Reg -> Regfile (ambiguous - broadcast to all? user says no)
-
+        # TODO: How to check identity more thoroughly?
         broadcaster_type = type(broadcaster.inst)
         target_type = type(target.inst)
 
-        is_compatible = False
-        if broadcaster_type == target_type:
-            # For regfiles, we should ideally check if they are the same definition
-            # or at least structurally compatible.
-            # For now, strict type equality of the component class is a start,
-            # but we should probably check if they are instances of the same RDL type.
-            # SystemRDL's 'type_name' or similar might be useful, but 'inst.type_name' isn't always available.
-            # Let's rely on the fact that if they are both Regfiles, we will try to match children.
-            # If children don't match, the expansion logic will just find nothing (or we can add a check there).
-            is_compatible = True
-
-        if not is_compatible:
+        if broadcaster_type != target_type:
             self.msg.error(
                 f"Incompatible broadcast types. "
                 f"Broadcaster '{broadcaster_type.__name__.lower()}' cannot target '{target_type.__name__.lower()}'. "
@@ -76,16 +62,6 @@ class BroadcastWrite(UDPDefinition):
                 self.get_src_ref(broadcaster)
             )
             return
-
-        # For registers, check that they have the same regwidth
-        if isinstance(broadcaster, RegNode) and isinstance(target, RegNode):
-            broadcaster_width = broadcaster.get_property('regwidth')
-            target_width = target.get_property('regwidth')
-            if broadcaster_width != target_width:
-                self.msg.error(
-                    f"Broadcaster register width ({broadcaster_width}) must match target register width ({target_width})",
-                    self.get_src_ref(broadcaster)
-                )
 
         # Check internal/external boundary
         # A broadcaster and its targets must both be internal, or both be external
@@ -96,14 +72,6 @@ class BroadcastWrite(UDPDefinition):
                 f"target is {'external' if target.external else 'internal'}",
                 self.get_src_ref(broadcaster)
             )
-
-        # Check that target is writable
-        if isinstance(target, RegNode):
-            if not target.has_sw_writable:
-                self.msg.error(
-                    f"Broadcast target register '{target.inst_name}' has no software-writable fields",
-                    self.get_src_ref(broadcaster)
-                )
 
         # Check for circular references (target is also a broadcaster)
         if target.get_property('broadcast_write') is not None:
