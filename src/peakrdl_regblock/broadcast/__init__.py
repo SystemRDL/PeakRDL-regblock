@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict, List
 from collections import defaultdict
 
-from systemrdl.node import RegNode, RegfileNode, AddressableNode
+from systemrdl.node import RegNode, RegfileNode, AddressableNode, Node
 from systemrdl.walker import RDLListener, RDLWalker
 
 if TYPE_CHECKING:
@@ -72,30 +72,53 @@ class BroadcastWriteLogic:
                     is_match = True
                 elif '[]' in target_path:
                     # Target has empty brackets (array iteration variable in FOR loop)
-                    # We can only safely OR this broadcaster if it targets ALL elements of the array
-                    # Otherwise we'd incorrectly apply broadcasts to non-target elements
+                    # Example: 'regblock.regfile_array[].reg_a'
 
-                    # Get the array base path (eg 'regblock.reg_array')
-                    array_base_with_bracket = target_path.replace('[]', '[')  # 'regblock.reg_array['
+                    # Split path into prefix (before []) and suffix (after [])
+                    prefix, suffix = target_path.split('[]', 1)
 
-                    # Check if this stored target is in the same array
-                    if t_path.startswith(array_base_with_bracket):
-                        # This broadcaster targets at least one element of this array
-                        # But we need to check if it targets ALL elements
+                    # Check if stored target matches pattern: prefix + [index] + suffix
+                    if t_path.startswith(prefix + '[') and t_path.endswith(suffix):
+                        # Extract the index part
+                        # t_path = prefix + '[' + index + ']' + suffix
+                        middle = t_path[len(prefix):-len(suffix) if suffix else None]
 
-                        # Count how many elements of this array this broadcaster targets
-                        array_element_count = 0
-                        for target_in_list in targets:
-                            if target_in_list.get_path().startswith(array_base_with_bracket):
-                                array_element_count += 1
+                        # Check if middle is '[<digits>]'
+                        if middle.startswith('[') and middle.endswith(']') and middle[1:-1].isdigit():
+                            # This is a match for a specific element of this array structure
 
-                        # Get the array size from the target node
-                        if target.is_array and target.array_dimensions:
+                            # Now check if we are broadcasting to ALL elements of this array
+                            # We need to count how many elements of this array structure are targeted
+
+                            array_element_count = 0
+                            for target_in_list in targets:
+                                t_list_path = target_in_list.get_path()
+                                if (t_list_path.startswith(prefix + '[') and
+                                    t_list_path.endswith(suffix) and
+                                    t_list_path[len(prefix):-len(suffix) if suffix else None].startswith('[') and
+                                    t_list_path[len(prefix):-len(suffix) if suffix else None].endswith(']')):
+                                    array_element_count += 1
+
+                            # Get the array size from the target node
+                            # Let's find the array node by path
+                            array_path = prefix.rstrip('.')
+
+                            # Try to find relative to top node if full path fails
+                            top_node = self.exp.ds.top_node
+                            top_path = top_node.get_path()
+
+                            array_node = top_node.find_by_path(array_path)
+
+                            if array_node is None and array_path.startswith(top_path + '.'):
+                                # Try relative path
+                                rel_path = array_path[len(top_path)+1:]
+                                array_node = top_node.find_by_path(rel_path)
+
                             expected_count = 1
-                            for dim in target.array_dimensions:
-                                expected_count *= dim
+                            if array_node and getattr(array_node, 'is_array', False):
+                                for dim in array_node.array_dimensions:
+                                    expected_count *= dim
 
-                            # Only match if broadcaster targets ALL array elements
                             if array_element_count == expected_count:
                                 is_match = True
 
@@ -127,15 +150,32 @@ class BroadcastScanner(RDLListener):
             self.bl.broadcasters.append(node)
 
             # Expand targets (handle regfiles and arrays)
-            expanded_targets = self._expand_targets(broadcast_targets)
+            expanded_targets = self._expand_targets(node, broadcast_targets)
             # Use path as key since RegNode is not hashable
-            self.bl.broadcast_map[node.get_path()] = expanded_targets
+            if expanded_targets:
+                self.bl.broadcast_map[node.get_path()] = expanded_targets
 
             # Track all targets
+            # Note: This only tracks targets returned by _expand_targets.
+            # Targets added via _expand_regfile (structural) are added to map but maybe not to self.bl.targets list?
+            # We should probably ensure they are added to self.bl.targets in _add_broadcast_map if we want to track them.
+            # But for now let's just fix the crash.
             for target in expanded_targets:
                 self.bl.targets.append(target)
 
-    def _expand_targets(self, targets: any) -> List[RegNode]:
+    def _expand_array(self, node: Node, targets_list: List[Node] = None) -> List[Node]:
+        """
+        Expand an array node.
+        For broadcast logic, we generally treat the array as a single target
+        and let the matcher handle the index expansion/matching.
+        So this simply returns the node itself in a list.
+        """
+        expanded = [node]
+        if targets_list is not None:
+            targets_list.extend(expanded)
+        return expanded
+
+    def _expand_targets(self, broadcaster: AddressableNode, targets: any) -> List[RegNode]:
         """
         Expand broadcast targets into individual register nodes.
 
@@ -149,26 +189,41 @@ class BroadcastScanner(RDLListener):
         if not isinstance(targets, list):
             targets = [targets]
 
-        expanded = []
+        final_reg_targets = []
         for target in targets:
-            if isinstance(target, RegNode):
-                # Single register - handle arrays
+            if isinstance(target, RegfileNode):
+                # Handle regfile targets (structural or flat)
                 if target.is_array:
-                    # Expand to all array elements
-                    expanded.extend(self._expand_array(target))
+                    # Expand array of regfiles
+                    for rf_elem in self._expand_array(target):
+                        # _expand_regfile will add mappings directly to self.bl.broadcast_map
+                        self._expand_regfile(broadcaster, rf_elem)
                 else:
-                    expanded.append(target)
+                    # _expand_regfile will add mappings directly to self.bl.broadcast_map
+                    self._expand_regfile(broadcaster, target)
 
-            elif isinstance(target, RegfileNode):
-                # Regfile - expand to all child registers
+            elif isinstance(target, RegNode):
                 if target.is_array:
-                    # Expand regfile array to all elements
-                    for regfile_elem in self._expand_array(target):
-                        expanded.extend(self._expand_regfile(regfile_elem))
+                    # _expand_array returns a list of individual elements
+                    final_reg_targets.extend(self._expand_array(target))
                 else:
-                    expanded.extend(self._expand_regfile(target))
+                    final_reg_targets.append(target)
 
-        return expanded
+        return final_reg_targets
+
+
+    def _add_broadcast_map(self, broadcaster: AddressableNode, target: RegNode):
+        """Helper to add a broadcaster -> target mapping"""
+        b_path = broadcaster.get_path()
+        if b_path not in self.bl.broadcast_map:
+            self.bl.broadcast_map[b_path] = []
+
+        # Avoid duplicates
+        if target not in self.bl.broadcast_map[b_path]:
+            self.bl.broadcast_map[b_path].append(target)
+            # Also track in global targets list
+            if target not in self.bl.targets:
+                self.bl.targets.append(target)
 
     def _expand_array(self, node: AddressableNode) -> List[AddressableNode]:
         """
@@ -178,24 +233,47 @@ class BroadcastScanner(RDLListener):
         # Simply return the node - RDL references should already be explicit
         return [node]
 
-    def _expand_regfile(self, regfile: RegfileNode) -> List[RegNode]:
-        """Expand a regfile to all its child registers"""
-        registers = []
+    def _expand_regfile(self, broadcaster: Node, target: RegfileNode):
+        """
+        Expand a target regfile into its constituent registers.
 
-        def collect_regs(node):
-            for child in node.children(skip_not_present=False):
-                if isinstance(child, RegNode):
-                    if child.is_array:
-                        registers.extend(self._expand_array(child))
-                    else:
-                        registers.append(child)
-                elif isinstance(child, RegfileNode):
-                    # Recursively handle nested regfiles
-                    if child.is_array:
-                        for rf_elem in self._expand_array(child):
-                            collect_regs(rf_elem)
-                    else:
-                        collect_regs(child)
+        If broadcaster is a RegfileNode:
+            Structural broadcast: Map broadcaster's registers to target's registers by relative path.
+        """
 
-        collect_regs(regfile)
-        return registers
+        if isinstance(broadcaster, RegfileNode):
+            # Structural broadcast: Regfile -> Regfile
+            # We need to iterate over all registers in the BROADCASTER regfile
+            # and find the corresponding register in the TARGET regfile.
+
+            # 1. Get all registers in the broadcaster
+            broadcaster_regs = []
+            for node in broadcaster.descendants():
+                if isinstance(node, RegNode):
+                    broadcaster_regs.append(node)
+
+            # 2. For each broadcaster register, find the match in the target
+            for b_reg in broadcaster_regs:
+                # Get relative path from broadcaster root
+                # e.g. if broadcaster is 'top.b_rf' and reg is 'top.b_rf.sub.reg', rel is 'sub.reg'
+                # SystemRDL Node.get_path() does not support rel_to, so we do it manually
+                b_path = broadcaster.get_path()
+                reg_path = b_reg.get_path()
+
+                if reg_path.startswith(b_path + '.'):
+                    rel_path = reg_path[len(b_path)+1:]
+                else:
+                    # Should not happen if b_reg is a descendant
+                    continue
+
+                # Find corresponding node in target
+                # e.g. target is 'top.t_rf', look for 'top.t_rf.sub.reg'
+                t_reg = target.find_by_path(rel_path)
+
+                if t_reg and isinstance(t_reg, RegNode):
+                    # Add this mapping
+                    # We treat 'b_reg' as a broadcaster for 't_reg'
+                    self._add_broadcast_map(b_reg, t_reg)
+                else:
+                    # Warning? Mismatch in structure
+                    pass

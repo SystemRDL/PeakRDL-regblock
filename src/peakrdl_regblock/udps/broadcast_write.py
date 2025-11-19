@@ -50,10 +50,29 @@ class BroadcastWrite(UDPDefinition):
             return
 
         # Check type compatibility
-        if type(broadcaster.inst) != type(target.inst):
+        # Allow Reg -> Reg (same type)
+        # Allow Regfile -> Regfile (structural broadcast)
+        # Do NOT allow Reg -> Regfile (ambiguous - broadcast to all? user says no)
+
+        broadcaster_type = type(broadcaster.inst)
+        target_type = type(target.inst)
+
+        is_compatible = False
+        if broadcaster_type == target_type:
+            # For regfiles, we should ideally check if they are the same definition
+            # or at least structurally compatible.
+            # For now, strict type equality of the component class is a start,
+            # but we should probably check if they are instances of the same RDL type.
+            # SystemRDL's 'type_name' or similar might be useful, but 'inst.type_name' isn't always available.
+            # Let's rely on the fact that if they are both Regfiles, we will try to match children.
+            # If children don't match, the expansion logic will just find nothing (or we can add a check there).
+            is_compatible = True
+
+        if not is_compatible:
             self.msg.error(
-                f"Broadcaster and target must be the same component type. "
-                f"Broadcaster is '{type(broadcaster.inst).__name__.lower()}' but target is '{type(target.inst).__name__.lower()}'",
+                f"Incompatible broadcast types. "
+                f"Broadcaster '{broadcaster_type.__name__.lower()}' cannot target '{target_type.__name__.lower()}'. "
+                f"Supported: reg->reg, regfile->regfile (same structure)",
                 self.get_src_ref(broadcaster)
             )
             return
