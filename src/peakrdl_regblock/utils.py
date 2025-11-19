@@ -1,8 +1,11 @@
 import re
-from typing import Match, Union, Optional
+from typing import Match, Union, Optional, TYPE_CHECKING
 
 from systemrdl.rdltypes.references import PropertyReference
 from systemrdl.node import Node, AddrmapNode
+
+if TYPE_CHECKING:
+    from systemrdl.node import RegfileNode, RegNode
 
 from .identifier_filter import kw_filter as kwf
 from .sv_int import SVInt
@@ -102,3 +105,64 @@ def do_bitswap(value: Union[SVInt, str]) -> Union[SVInt, str]:
             vswap = (vswap << 1) + (v & 1)
             v >>= 1
         return SVInt(vswap, value.width)
+
+
+def is_inside_external_block(node: Node, top_node: AddrmapNode) -> bool:
+    """
+    Check if node is inside an external regfile/addrmap.
+    
+    Args:
+        node: The node to check
+        top_node: The top-level addrmap node
+        
+    Returns:
+        True if node is inside an external block, False otherwise
+    """
+    parent = node.parent
+    while parent is not None and parent != top_node:
+        if hasattr(parent, "external") and parent.external:
+            return True
+        parent = parent.parent if hasattr(parent, "parent") else None
+    return False
+
+
+def has_sw_readable_descendants(node: Union["RegfileNode", "AddrmapNode"]) -> bool:
+    """Check if node has any sw-readable descendants."""
+    from systemrdl.walker import RDLWalker
+    
+    class ReadableChecker(RDLWalker):
+        def __init__(self):
+            self.has_readable = False
+            
+        def enter_Reg(self, node: "RegNode") -> None:
+            if node.has_sw_readable:
+                self.has_readable = True
+                
+        def enter_Mem(self, node) -> None:
+            if node.is_sw_readable:
+                self.has_readable = True
+    
+    checker = ReadableChecker()
+    checker.walk(node)
+    return checker.has_readable
+
+
+def has_sw_writable_descendants(node: Union["RegfileNode", "AddrmapNode"]) -> bool:
+    """Check if node has any sw-writable descendants."""
+    from systemrdl.walker import RDLWalker
+    
+    class WritableChecker(RDLWalker):
+        def __init__(self):
+            self.has_writable = False
+            
+        def enter_Reg(self, node: "RegNode") -> None:
+            if node.has_sw_writable:
+                self.has_writable = True
+                
+        def enter_Mem(self, node) -> None:
+            if node.is_sw_writable:
+                self.has_writable = True
+    
+    checker = WritableChecker()
+    checker.walk(node)
+    return checker.has_writable
