@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, Dict, List, Tuple, Any, Optional
 from collections import defaultdict
 
 from systemrdl.node import RegNode, RegfileNode, AddressableNode, Node
@@ -49,7 +49,7 @@ class BroadcastLogic:
         1. The node itself is a broadcaster
         2. The node is a child of a broadcaster (e.g. reg in a broadcast regfile)
         """
-        curr = node
+        curr: Optional[Node] = node
         while curr is not None:
             if isinstance(curr, AddressableNode) and self.is_broadcaster(curr):
                 return True
@@ -64,12 +64,12 @@ class BroadcastLogic:
         """
         Get all broadcaster nodes that write to this target.
         """
-        broadcasters = []
+        broadcasters: List[AddressableNode] = []
 
         # Calculate the total number of instances this target represents
         # (including its own array dimensions and any parent array dimensions)
         expected_count = 1
-        curr = target
+        curr: Optional[Node] = target
         while curr is not None:
             if isinstance(curr, AddressableNode) and curr.is_array:
                 expected_count *= curr.n_elements
@@ -108,9 +108,9 @@ class BroadcastScanner(RDLListener):
     def __init__(self, broadcast_logic: BroadcastLogic) -> None:
         self.bl = broadcast_logic
         # Stack of active broadcaster scopes: List[Tuple[BroadcasterNode, List[TargetNode]]]
-        self.scope_stack = []
+        self.scope_stack: List[Tuple[AddressableNode, List[RegfileNode]]] = []
 
-    def enter_Component(self, node: AddressableNode) -> None:
+    def enter_Component(self, node: Node) -> None:
 
         # 1. Check if we are inside an active broadcaster scope (Structural Broadcast)
         if self.scope_stack and isinstance(node, RegNode):
@@ -154,12 +154,12 @@ class BroadcastScanner(RDLListener):
                         if isinstance(target, RegNode):
                             self._add_broadcast_map(node, target)
 
-    def exit_Component(self, node: AddressableNode) -> None:
+    def exit_Component(self, node: Node) -> None:
         # Pop scope if we are exiting the current broadcaster scope
         if self.scope_stack and self.scope_stack[-1][0] == node:
             self.scope_stack.pop()
 
-    def _expand_targets(self, targets: any) -> List[AddressableNode]:
+    def _expand_targets(self, targets: Any) -> List[AddressableNode]:
         """
         Expand broadcast targets into a flat list of nodes.
         Handles:
@@ -180,7 +180,7 @@ class BroadcastScanner(RDLListener):
 
         return final_targets
 
-    def _add_broadcast_map(self, broadcaster: AddressableNode, target: RegNode):
+    def _add_broadcast_map(self, broadcaster: AddressableNode, target: RegNode) -> None:
         """Helper to add a broadcaster -> target mapping"""
 
         # Find existing entry for this broadcaster
