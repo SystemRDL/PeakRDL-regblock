@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Tuple
 from collections import defaultdict
 
 from systemrdl.node import RegNode, RegfileNode, AddressableNode, Node

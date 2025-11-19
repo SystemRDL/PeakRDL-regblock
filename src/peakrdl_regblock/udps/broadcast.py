@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 from systemrdl.udp import UDPDefinition
 from systemrdl.component import Reg, Regfile
