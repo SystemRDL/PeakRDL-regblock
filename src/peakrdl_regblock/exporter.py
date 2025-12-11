@@ -165,12 +165,6 @@ class RegblockExporter:
         # Validate that there are no unsupported constructs
         DesignValidator(self).do_validate()
 
-        # Compute readback implementation early.
-        # Readback has the capability to disable retiming if the fanin is tiny.
-        # This affects the rest of the design's implementation, and must be known
-        # before any other templates are rendered
-        readback_implementation = self.readback.get_implementation()
-
         # Build Jinja template context
         context = {
             "cpuif": self.cpuif,
@@ -184,7 +178,7 @@ class RegblockExporter:
             "default_resetsignal_name": self.dereferencer.default_resetsignal_name,
             "address_decode": self.address_decode,
             "field_logic": self.field_logic,
-            "readback_implementation": readback_implementation,
+            "readback_implementation": self.readback.get_implementation(),
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
             "parity": parity,
@@ -319,6 +313,10 @@ class DesignState:
             )
             self.cpuif_data_width = 32
 
+            # Also, to avoid silly edge cases, disable read fanin retiming since
+            # it has little benefit anyways
+            self.retime_read_fanin = False
+
         #------------------------
         # Min address width encloses the total size AND at least 1 useful address bit
         self.addr_width = max(clog2(self.top_node.size), clog2(self.cpuif_data_width//8) + 1)
@@ -327,6 +325,15 @@ class DesignState:
             if user_addr_width < self.addr_width:
                 msg.fatal(f"User-specified address width shall be greater than or equal to {self.addr_width}.")
             self.addr_width = user_addr_width
+
+        if self.retime_read_fanin:
+            # Check if address width is sufficient to even bother with read fanin retiming
+            data_width_bytes = self.cpuif_data_width // 8
+            unused_low_addr_bits = clog2(data_width_bytes)
+            relevant_addr_width = self.addr_width - unused_low_addr_bits
+            if relevant_addr_width < 2:
+                # Unable to partition the address space. Disable retiming
+                self.retime_read_fanin = False
 
     @property
     def min_read_latency(self) -> int:

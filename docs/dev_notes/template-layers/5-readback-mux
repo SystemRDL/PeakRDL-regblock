@@ -1,35 +1,84 @@
 --------------------------------------------------------------------------------
 Readback mux layer
 --------------------------------------------------------------------------------
+Use a large always_comb block + many if statements that select the read data
+based on the cpuif address.
+Loops are handled the same way as address decode.
 
-Implementation:
-    - Big always_comb block
-    - Initialize default rd_data value
-    - Lotsa if statements that operate on reg strb to assign rd_data
-    - Merges all fields together into reg
-    - pulls value from storage element struct, or input struct
-    - Provision for optional flop stage?
+Other options that were considered:
+    - Flat case statement
+        con: Difficult to represent arrays. Essentially requires unrolling
+        con: complicates retiming strategies
+        con: Representing a range (required for externals) is cumbersome. Possible with stacked casez wildcards.
+    - AND field data with strobe, then massive OR reduce
+        This was the strategy prior to v1.3, but turned out to infer more overhead
+        than originally anticipated
+    - Assigning data to a flat register array, then directly indexing via address
+        con: Would work fine, but scales poorly for sparse regblocks.
+        Namely, simulators would likely allocate memory for the entire array
+    - Assign to a flat array that is packed sequentially, then directly indexing using a derived packed index
+        Concern that for sparse regfiles, the translation of addr --> packed index
+        becomes a nontrivial logic function
 
-Mux Strategy:
-    Flat case statement:
-        -- Cant parameterize
-        + better performance?
+Pros:
+    - Scales well for arrays since loops can be used
+    - Externals work well, as address ranges can be compared
+    - Synthesis results show more efficient logic inference
 
-    Flat 1-hot array then OR reduce:
-        - Create a bus-wide flat array
-            eg: 32-bits x N readable registers
-        - Assign each element:
-            the readback value of each register
-            ... masked by the register's access strobe
-        - I could also stuff an extra bit into the array that denotes the read is valid
-            A missed read will OR reduce down to a 0
-        - Finally, OR reduce all the elements in the array down to a flat 32-bit bus
-        - Retiming the large OR fanin can be done by chopping up the array into stages
-            for 2 stages, sqrt(N) gives each stage's fanin size. Round to favor
-            more fanin on 2nd stage
-            3 stages uses cube-root. etc...
-        - This has the benefit of re-using the address decode logic.
-          synth can choose to replicate logic if fanout is bad
+Example:
+    logic [7:0] out;
+    always_comb begin
+        out = '0;
+        for(int i=0; i<64; i++) begin
+            if(i == addr) out = data[i];
+        end
+    end
+
+
+How to implement retiming:
+    Ideally this would partition the design into several equal sub-regions, but
+    with loop structures, this is pretty difficult..
+    What if instead, it is partitioned into equal address ranges?
+
+    First stage compares the lower-half of the address bits.
+    Values are assigned to the appropriate output "bin"
+
+        logic [7:0] out[8];
+        always_comb begin
+            for(int i=0; i<8; i++) out[i] = '0;
+
+            for(int i=0; i<64; i++) begin
+                automatic bit [5:0] this_addr = i;
+
+                if(this_addr[2:0] == addr[2:0]) out[this_addr[5:3]] = data[i];
+            end
+        end
+
+    (not showing retiming ff for `out` and `addr`)
+    The second stage muxes down the resulting bins using the high address bits.
+    If the user up-sizes the address bits, need to check the upper bits to prevent aliasing
+    Assuming min address bit range is [5:0], but it was padded up to [8:0], do the following:
+
+        logic [7:0] rd_data;
+        always_comb begin
+            if(addr[8:6] != '0) begin
+                // Invalid read range
+                rd_data = '0;
+            end else begin
+                rd_data = out[addr[5:3]];
+            end
+        end
+
+Retiming with external blocks
+    One minor downside is the above scheme does not work well for external blocks
+    that span a range of addresses. Depending on the range, it may span multiple
+    retiming bins which complicates how this would be assigned cleanly.
+    This would be complicated even further with arrays of externals since the
+    span of bins could change depending on the iteration.
+
+    Since externals can already be retimed, and large fanin of external blocks
+    is likely less of a concern, implement these as a separate readback mux on
+    the side that does not get retimed at all.
 
 
 WARNING:
@@ -42,8 +91,14 @@ WARNING:
 
 Forwards response strobe back up to cpu interface layer
 
-TODO:
-    Dont forget about alias registers here
 
-TODO:
-    Does the endinness the user sets matter anywhere?
+Variables:
+    From decode:
+        decoded_addr
+        decoded_req
+        decoded_req_is_wr
+
+    Response:
+        readback_done
+        readback_err
+        readback_data

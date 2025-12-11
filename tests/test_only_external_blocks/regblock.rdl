@@ -1,0 +1,11 @@
+addrmap top {
+    mem ext_mem #(
+        longint SIZE = 0x100
+    ) {
+        memwidth = 32;
+        mementries = SIZE / 4;
+    };
+
+    external ext_mem #(.SIZE(0x10))  mem1 @ 0x0000;
+    external ext_mem #(.SIZE(0x90))  mem2 @ 0x0200;
+};

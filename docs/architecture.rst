@@ -38,18 +38,15 @@ This section also assigns any hardware interface outputs.
 
 Readback
 --------
-The readback layer aggregates and reduces all readable registers into a single
-read response. During a read operation, the same address decode strobes are used
-to select the active register that is being accessed.
-This allows for a simple OR-reduction operation to be used to compute the read
-data response.
+The readback layer aggregates and MUXes all readable registers into a single
+read response.
 
 For designs with a large number of software-readable registers, an optional
 fanin re-timing stage can be enabled. This stage is automatically inserted at a
 balanced point in the read-data reduction so that fanin and logic-levels are
 optimally reduced.
 
-.. figure:: diagrams/readback.png
+.. figure:: diagrams/rt-readback-fanin.png
     :width: 65%
     :align: center
 

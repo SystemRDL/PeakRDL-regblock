@@ -133,8 +133,9 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
         self._array_stride_stack = [] # type: List[int]
 
     def _add_addressablenode_decoding_flags(self, node: 'AddressableNode') -> None:
-        addr_str = self._get_address_str(node)
-        addr_decoding_str = f"cpuif_req_masked & (cpuif_addr >= {addr_str}) & (cpuif_addr <= {addr_str} + {SVInt(node.size - 1, self.addr_decode.exp.ds.addr_width)})"
+        addr_lo = self._get_address_str(node)
+        addr_hi = f"{addr_lo} + {SVInt(node.size - 1, self.addr_decode.exp.ds.addr_width)}"
+        addr_decoding_str = f"cpuif_req_masked & (cpuif_addr >= {addr_lo}) & (cpuif_addr <= {addr_hi})"
         rhs = addr_decoding_str
         rhs_valid_addr = addr_decoding_str
         if isinstance(node, MemNode):

@@ -30,24 +30,7 @@ module {{ds.module_name}}
 
     logic cpuif_req_masked;
 {%- if ds.has_external_addressable %}
-    logic external_req;
     logic external_pending;
-    logic external_wr_ack;
-    logic external_rd_ack;
-    always_ff {{get_always_ff_event(cpuif.reset)}} begin
-        if({{get_resetsignal(cpuif.reset)}}) begin
-            external_pending <= '0;
-        end else begin
-            if(external_req & ~external_wr_ack & ~external_rd_ack) external_pending <= '1;
-            else if(external_wr_ack | external_rd_ack) external_pending <= '0;
-            `ifndef SYNTHESIS
-                assert_bad_ext_wr_ack: assert(!external_wr_ack || (external_pending | external_req))
-                    else $error("An external wr_ack strobe was asserted when no external request was active");
-                assert_bad_ext_rd_ack: assert(!external_rd_ack || (external_pending | external_req))
-                    else $error("An external rd_ack strobe was asserted when no external request was active");
-            `endif
-        end
-    end
 {%- endif %}
 {% if ds.min_read_latency == ds.min_write_latency %}
     // Read & write latencies are balanced. Stalls not required
@@ -109,11 +92,9 @@ module {{ds.module_name}}
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_err;
 {%- if ds.has_external_addressable %}
-    logic decoded_strb_is_external;
+    logic decoded_req_is_external;
 {% endif %}
-{%- if ds.has_external_block %}
     logic [{{cpuif.addr_width-1}}:0] decoded_addr;
-{% endif %}
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [{{cpuif.data_width-1}}:0] decoded_wr_data;
@@ -147,15 +128,31 @@ module {{ds.module_name}}
         decoded_err = '0;
     {%- endif %}
     {%- if ds.has_external_addressable %}
-        decoded_strb_is_external = is_external;
-        external_req = is_external;
+        decoded_req_is_external = is_external;
     {%- endif %}
     end
 
+{%- if ds.has_external_addressable %}
+    logic external_wr_ack;
+    logic external_rd_ack;
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            external_pending <= '0;
+        end else begin
+            if(decoded_req_is_external & ~external_wr_ack & ~external_rd_ack) external_pending <= '1;
+            else if(external_wr_ack | external_rd_ack) external_pending <= '0;
+            `ifndef SYNTHESIS
+                assert_bad_ext_wr_ack: assert(!external_wr_ack || (external_pending | decoded_req_is_external))
+                    else $error("An external wr_ack strobe was asserted when no external request was active");
+                assert_bad_ext_rd_ack: assert(!external_rd_ack || (external_pending | decoded_req_is_external))
+                    else $error("An external rd_ack strobe was asserted when no external request was active");
+            `endif
+        end
+    end
+{%- endif %}
+
     // Pass down signals to next stage
-{%- if ds.has_external_block %}
     assign decoded_addr = cpuif_addr;
-{% endif %}
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -223,7 +220,7 @@ module {{ds.module_name}}
         {{ext_write_acks.get_implementation()|indent(8)}}
         external_wr_ack = wr_ack;
     end
-    assign cpuif_wr_ack = external_wr_ack | (decoded_req & decoded_req_is_wr & ~decoded_strb_is_external);
+    assign cpuif_wr_ack = external_wr_ack | (decoded_req & decoded_req_is_wr & ~decoded_req_is_external);
 {%- else %}
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
 {%- endif %}
@@ -262,10 +259,26 @@ module {{ds.module_name}}
     {%- endif %}
 {%- endif %}
 
+    logic [{{cpuif.addr_width-1}}:0] rd_mux_addr;
+{%- if ds.has_external_addressable %}
+    logic [{{cpuif.addr_width-1}}:0] pending_rd_addr;
+    // Hold read mux address to guarantee it is stable throughout any external accesses
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            pending_rd_addr <= '0;
+        end else begin
+            if(decoded_req) pending_rd_addr <= decoded_addr;
+        end
+    end
+    assign rd_mux_addr = decoded_req ? decoded_addr : pending_rd_addr;
+{%- else %}
+    assign rd_mux_addr = decoded_addr;
+{%- endif %}
+
     logic readback_err;
     logic readback_done;
     logic [{{cpuif.data_width-1}}:0] readback_data;
-{{readback_implementation|indent}}
+    {{readback_implementation|indent}}
 {% if ds.retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
