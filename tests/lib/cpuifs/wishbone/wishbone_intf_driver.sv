@@ -10,6 +10,7 @@ interface wishbone_intf_driver #(
     timeprecision 1ps;
 
 
+    logic wb_cyc;
     logic wb_stb;
     logic wb_we;
     logic wb_stall;
@@ -20,6 +21,7 @@ interface wishbone_intf_driver #(
     logic wb_err;
     logic [DATA_WIDTH-1:0] wb_idat;
 
+    assign wb.cyc = wb_cyc;
     assign wb.stb = wb_stb;
     assign wb.we = wb_we;
     assign wb_stall = wb.stall;
@@ -32,6 +34,7 @@ interface wishbone_intf_driver #(
 
     default clocking cb @(posedge clk);
         default input #1step output #1;
+        output wb_cyc;
         output wb_stb;
         output wb_we;
         input wb_stall;
@@ -44,6 +47,7 @@ interface wishbone_intf_driver #(
     endclocking
 
     task automatic reset();
+        cb.wb_cyc <= '0;
         cb.wb_stb <= '0;
         cb.wb_we <= '0;
         cb.wb_adr <= '0;
