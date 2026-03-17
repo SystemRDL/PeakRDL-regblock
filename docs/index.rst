@@ -64,6 +64,7 @@ Links
     cpuif/avalon
     cpuif/obi
     cpuif/passthrough
+    cpuif/wishbone
     cpuif/internal_protocol
     cpuif/customizing
 
