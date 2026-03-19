@@ -1,8 +1,8 @@
 Wishbone Bus
 ============
 
-Implements the register block using an
-`Wishbone B4 <https://en.wikipedia.org/wiki/Wishbone_(computer_bus)>`
+Implements the register block using a
+`Wishbone B4 <https://cdn.opencores.org/downloads/wbspec_b4.pdf>`_
 CPU interface.
 
 The wishbone interface comes in two i/o port flavors:
@@ -22,8 +22,9 @@ Flattened inputs/outputs
 Implementation Details
 ----------------------
 This implementation of the Wishbone protocol has the following features:
-- Classic Wishbone Operaions (SINGLE_READ and SINGLE_WRITE)
+- Classic Wishbone Operations (SINGLE_READ and SINGLE_WRITE)
 - Stall and Error optional output signals
 
-Note that the ``cyc`` signal is not connected and it is a placeholder, since it is redundant in wishbone classic operations.
+Note that the ``cyc`` signal is not connected and it is a placeholder, since it
+is redundant in wishbone classic operations.
 Commands are captured based on ``stb``.
