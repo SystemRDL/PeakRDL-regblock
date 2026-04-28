@@ -41,7 +41,7 @@ always_comb begin
     {{field_logic.get_field_combo_identifier(node, "load_next")}} = load_next_c;
 
     {%- if node.get_property('paritycheck') %}
-    {{field_logic.get_parity_error_identifier(node)}} = ({{field_logic.get_parity_identifier(node)}} != ^{{field_logic.get_storage_identifier(node)}});
+    {{field_logic.get_parity_error_identifier(node)}} = ({{field_logic.get_parity_identifier(node)}} != {% if ds.odd_parity %}~{% endif %}^{{field_logic.get_storage_identifier(node)}});
     {%- endif %}
 end
 
@@ -52,7 +52,7 @@ always_ff {{get_always_ff_event(resetsignal)}} begin
     if({{get_resetsignal(resetsignal)}}) begin
         {{field_logic.get_storage_identifier(node)}} <= {{reset}};
         {%- if node.get_property('paritycheck') %}
-        {{field_logic.get_parity_identifier(node)}} <= ^{{reset}};
+        {{field_logic.get_parity_identifier(node)}} <= {% if ds.odd_parity %}~{% endif %}^{{reset}};
         {%- endif %}
         {%- if field_logic.has_next_q(node) %}
         {{field_logic.get_next_q_identifier(node)}} <= {{reset}};
@@ -61,7 +61,7 @@ always_ff {{get_always_ff_event(resetsignal)}} begin
         if({{field_logic.get_field_combo_identifier(node, "load_next")}}) begin
             {{field_logic.get_storage_identifier(node)}} <= {{field_logic.get_field_combo_identifier(node, "next")}};
             {%- if node.get_property('paritycheck') %}
-            {{field_logic.get_parity_identifier(node)}} <= ^{{field_logic.get_field_combo_identifier(node, "next")}};
+            {{field_logic.get_parity_identifier(node)}} <= {% if ds.odd_parity %}~{% endif %}^{{field_logic.get_field_combo_identifier(node, "next")}};
             {%- endif %}
         end
         {%- if field_logic.has_next_q(node) %}
@@ -76,7 +76,7 @@ always_ff @(posedge clk) begin
     if({{field_logic.get_field_combo_identifier(node, "load_next")}}) begin
         {{field_logic.get_storage_identifier(node)}} <= {{field_logic.get_field_combo_identifier(node, "next")}};
         {%- if node.get_property('paritycheck') %}
-        {{field_logic.get_parity_identifier(node)}} <= ^{{field_logic.get_field_combo_identifier(node, "next")}};
+        {{field_logic.get_parity_identifier(node)}} <= {% if ds.odd_parity %}~{% endif %}^{{field_logic.get_field_combo_identifier(node, "next")}};
         {%- endif %}
     end
     {%- if field_logic.has_next_q(node) %}
