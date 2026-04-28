@@ -19,7 +19,11 @@ from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
-from .parity import ParityErrorReduceGenerator, BytewiseParityModuleGenerator
+from .parity import (
+    ParityErrorReduceGenerator,
+    BytewiseParityModuleGenerator,
+    BytewiseParityPackageGenerator,
+)
 from .sv_int import SVInt
 
 if TYPE_CHECKING:
@@ -162,6 +166,7 @@ class RegblockExporter:
         ext_read_acks = ExternalReadAckGenerator(self)
         parity = ParityErrorReduceGenerator(self)
         bytewise_parity_mod = BytewiseParityModuleGenerator(self)
+        bytewise_parity_pkg = BytewiseParityPackageGenerator(self)
 
         # Validate that there are no unsupported constructs
         DesignValidator(self).do_validate()
@@ -184,6 +189,7 @@ class RegblockExporter:
             "ext_read_acks": ext_read_acks,
             "parity": parity,
             "bytewise_parity_mod": bytewise_parity_mod,
+            "bytewise_parity_pkg": bytewise_parity_pkg,
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
             "ds": self.ds,
             "kwf": kwf,
