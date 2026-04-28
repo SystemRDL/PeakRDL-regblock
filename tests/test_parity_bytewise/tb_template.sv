@@ -76,6 +76,54 @@
     assert(field_parity_error[regblock_pkg::FERR_IDX_MBR_F_11BIT] == 1'b1)
         else $error("SEU on mbr.f_11bit not detected");
 
+    // -------------------------------------------------------------------------
+    // 4b) Parity is FROZEN between SW writes — a bit flip on stored data
+    //     remains detected even after a long idle period.
+    //
+    //     mbr.f_11bit is sw=rw, hw=r (no HW write path), so the only way
+    //     parity should ever change is via a SW write through load_next.
+    //     If parity were instead recomputed from the live `value` every
+    //     cycle, the comparator could never catch a bit flip.
+    // -------------------------------------------------------------------------
+    // Restore coherence and clear the sticky from step 4.
+    cpuif.write('h0, 32'h0);
+    @cb;
+    cb.error_clear_i <= 1'b1;
+    @cb;
+    cb.error_clear_i <= 1'b0;
+    @cb;
+    assert(field_parity_error == '0);
+
+    // Write a non-trivial pattern.
+    //   mbr.f_11bit = 0x055 → parity[0] = ^8'h55 = 0, parity[1] = ^3'h0 = 0
+    cpuif.write('h0, 32'h055);
+    @cb;
+    assert(field_parity_error == '0)
+        else $error("After write 0x055, expected no error");
+
+    // Hold for a long idle period with NO writes; the comparator must
+    // continue to see value/parity coherent every cycle.
+    repeat (20) @cb;
+    assert(field_parity_error == '0)
+        else $error("Idle hold: parity_error toggled without any data change");
+
+    // Now force a bit flip on the stored value. Because the field has no
+    // HW-write path AND no SW write occurs, no load_next pulse will fire.
+    // Parity must NOT track the change. The comparator must catch it
+    // immediately and the sticky must latch.
+`ifdef XILINX_XSIM
+    assign dut.field_storage.mbr.f_11bit.value[0] = 1'b0;
+    deassign dut.field_storage.mbr.f_11bit.value[0];
+`else
+    force dut.field_storage.mbr.f_11bit.value[0] = 1'b0;
+    release dut.field_storage.mbr.f_11bit.value[0];
+`endif
+    // Hold for a long idle period — parity stays frozen, so the mismatch
+    // persists every cycle and the sticky bit must remain set.
+    repeat (10) @cb;
+    assert(field_parity_error[regblock_pkg::FERR_IDX_MBR_F_11BIT] == 1'b1)
+        else $error("Frozen-parity check: SEU on f_11bit was silently absorbed (parity refreshing?)");
+
     // Restore good data via a SW write (force/release leaves the variable
     // in its forced state per SV LRM, so a SW write is needed to refresh
     // both value and parity together).
