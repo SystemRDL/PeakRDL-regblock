@@ -56,8 +56,14 @@ class CombinationalStructGenerator(RDLStructGenerator):
             self.add_down_counter_members(node)
         if self.field_logic.ds.bytewise_parity and node.implements_storage:
             byte_count = (node.width + 7) // 8
-            self.add_member("mismatch", byte_count)
-            self.add_member("inject_hit", byte_count)
+            # Always emit as packed vectors so single-byte fields can be
+            # uniformly bit-selected with `[0]`.
+            self.current_struct.children.append(
+                f"logic [{byte_count - 1}:0] mismatch;"
+            )
+            self.current_struct.children.append(
+                f"logic [{byte_count - 1}:0] inject_hit;"
+            )
         elif node.get_property('paritycheck'):
             self.add_member("parity_error")
         self.pop_struct()
@@ -97,7 +103,11 @@ class FieldStorageStructGenerator(RDLStructGenerator):
             self.add_member("value", node.width)
             if self.field_logic.ds.bytewise_parity:
                 byte_count = (node.width + 7) // 8
-                self.add_member("parity", byte_count)
+                # Always emit as a packed vector so single-byte fields can be
+                # uniformly bit-selected with `parity[0]`.
+                self.current_struct.children.append(
+                    f"logic [{byte_count - 1}:0] parity;"
+                )
             elif node.get_property('paritycheck'):
                 self.add_member("parity")
 

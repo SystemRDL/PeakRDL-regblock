@@ -48,7 +48,11 @@ always_comb begin
     {%- for i in range(byte_count) %}
     {%- set slice_lo = 8 * i %}
     {%- set slice_hi = ([8 * i + 7, node.width - 1] | min) %}
+    {%- if node.width == 1 %}
+    {{field_logic.get_parity_byte_mismatch_identifier(node, i)}} = ({{field_logic.get_parity_byte_storage_identifier(node, i)}} != ({% if ds.odd_parity %}~{% endif %}{{field_logic.get_storage_identifier(node)}} ^ {{field_logic.get_parity_byte_inject_hit_identifier(node, i)}}));
+    {%- else %}
     {{field_logic.get_parity_byte_mismatch_identifier(node, i)}} = ({{field_logic.get_parity_byte_storage_identifier(node, i)}} != ({% if ds.odd_parity %}~{% endif %}^{{field_logic.get_storage_identifier(node)}}[{{slice_hi}}:{{slice_lo}}] ^ {{field_logic.get_parity_byte_inject_hit_identifier(node, i)}}));
+    {%- endif %}
     {%- endfor %}
     {%- endif %}
 end
@@ -84,7 +88,11 @@ always_ff {{get_always_ff_event(resetsignal)}} begin
             {%- for i in range(byte_count) %}
             {%- set slice_lo = 8 * i %}
             {%- set slice_hi = ([8 * i + 7, node.width - 1] | min) %}
+            {%- if node.width == 1 %}
+            {{field_logic.get_parity_byte_storage_identifier(node, i)}} <= {% if ds.odd_parity %}~{% endif %}{{field_logic.get_field_combo_identifier(node, "next")}};
+            {%- else %}
             {{field_logic.get_parity_byte_storage_identifier(node, i)}} <= {% if ds.odd_parity %}~{% endif %}^{{field_logic.get_field_combo_identifier(node, "next")}}[{{slice_hi}}:{{slice_lo}}];
+            {%- endif %}
             {%- endfor %}
             {%- endif %}
         end
@@ -107,7 +115,11 @@ always_ff @(posedge clk) begin
         {%- for i in range(byte_count) %}
         {%- set slice_lo = 8 * i %}
         {%- set slice_hi = ([8 * i + 7, node.width - 1] | min) %}
+        {%- if node.width == 1 %}
+        {{field_logic.get_parity_byte_storage_identifier(node, i)}} <= {% if ds.odd_parity %}~{% endif %}{{field_logic.get_field_combo_identifier(node, "next")}};
+        {%- else %}
         {{field_logic.get_parity_byte_storage_identifier(node, i)}} <= {% if ds.odd_parity %}~{% endif %}^{{field_logic.get_field_combo_identifier(node, "next")}}[{{slice_hi}}:{{slice_lo}}];
+        {%- endif %}
         {%- endfor %}
         {%- endif %}
     end
