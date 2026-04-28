@@ -130,3 +130,21 @@ def test_paritycheck_alone_no_redundancy_warning(tmp_path):
         f"Unexpected warnings in legacy mode: "
         f"{initial} -> {len(printer.warnings)}: {printer.warnings[initial:]}"
     )
+
+
+def test_parity_path_id_format(tmp_path):
+    from peakrdl_regblock.parity import parity_path_id
+
+    root = _elaborate("tests/test_parity/regblock.rdl")
+    e = RegblockExporter()
+    e.export(
+        root, str(tmp_path),
+        module_name="regblock", package_name="regblock_pkg",
+        bytewise_parity=True,
+    )
+
+    # The first parity field should be r1.f1 (depth-first ordering).
+    first_node, *_ = e.ds.parity_fields[0]
+    assert parity_path_id(e.ds.top_node, first_node) == "R1_F1"
+    assert parity_path_id(e.ds.top_node, first_node, byte=0) == "R1_F1_BYTE0"
+    assert parity_path_id(e.ds.top_node, first_node, byte=1) == "R1_F1_BYTE1"

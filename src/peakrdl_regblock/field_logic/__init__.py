@@ -282,6 +282,33 @@ class FieldLogic:
         path = get_indexed_path(self.top_node, field)
         return f"field_combo.{path}.parity_error"
 
+    def get_parity_byte_storage_identifier(self, field: 'FieldNode', byte: int) -> str:
+        """
+        Returns the Verilog string referencing one byte of the bytewise-parity
+        storage for `field`, e.g. `field_storage.r1.f1.parity[0]`.
+        """
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
+        return f"field_storage.{path}.parity[{byte}]"
+
+    def get_parity_byte_mismatch_identifier(self, field: 'FieldNode', byte: int) -> str:
+        """
+        Returns the Verilog string referencing one byte of the bytewise-parity
+        mismatch combo signal, e.g. `field_combo.r1.f1.mismatch[0]`.
+        """
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
+        return f"field_combo.{path}.mismatch[{byte}]"
+
+    def get_parity_byte_inject_hit_identifier(self, field: 'FieldNode', byte: int) -> str:
+        """
+        Returns the Verilog string referencing one byte of the bytewise-parity
+        injection-hit combo signal, e.g. `field_combo.r1.f1.inject_hit[0]`.
+        """
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
+        return f"field_combo.{path}.inject_hit[{byte}]"
+
     def has_next_q(self, field: 'FieldNode') -> bool:
         """
         Some fields require a delayed version of their 'next' input signal in
