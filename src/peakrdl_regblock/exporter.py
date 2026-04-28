@@ -282,6 +282,9 @@ class DesignState:
         # Parity polarity
         self.odd_parity = kwargs.pop("odd_parity", False) # type: bool
 
+        # Bytewise parity mode
+        self.bytewise_parity = kwargs.pop("bytewise_parity", False) # type: bool
+
         #------------------------
         # Info about the design
         #------------------------
@@ -299,6 +302,14 @@ class DesignState:
         self.has_external_addressable = False
 
         self.has_paritycheck = False
+
+        # Bytewise parity bookkeeping. Populated by DesignScanner when
+        # bytewise_parity is True. Each entry is a tuple:
+        #   parity_fields: (field_node, byte_count, ferr_idx, first_pinj_idx)
+        #   parity_bits:   (field_node, byte_index, slice_lo, slice_hi, pinj_idx, ferr_idx)
+        self.has_bytewise_parity = False # type: bool
+        self.parity_fields = [] # type: List[tuple]
+        self.parity_bits = [] # type: List[tuple]
 
         # Track any referenced enums
         self.user_enums = [] # type: List[Type[UserEnum]]

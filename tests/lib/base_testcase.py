@@ -42,6 +42,7 @@ class BaseTestCase(unittest.TestCase):
     err_if_bad_addr = False
     err_if_bad_rw = False
     odd_parity = False
+    bytewise_parity = False
 
     #: this gets auto-loaded via the _load_request autouse fixture
     request = None # type: pytest.FixtureRequest
@@ -124,6 +125,7 @@ class BaseTestCase(unittest.TestCase):
             err_if_bad_addr=self.err_if_bad_addr,
             err_if_bad_rw=self.err_if_bad_rw,
             odd_parity=self.odd_parity,
+            bytewise_parity=self.bytewise_parity,
         )
 
     def delete_run_dir(self) -> None:
