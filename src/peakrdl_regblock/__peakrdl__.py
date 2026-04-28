@@ -163,6 +163,15 @@ class Exporter(ExporterSubcommandPlugin):
             performed to a read-only or write-only register."""
         )
 
+        arg_group.add_argument(
+            "--odd-parity",
+            action="store_true",
+            default=False,
+            help="""When parity logic is generated, use odd parity (parity bit
+            inverted) instead of the default even parity. Applies to fields with
+            the 'paritycheck' RDL property and to byte-wise parity (--parity-byte)."""
+        )
+
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         cpuifs = self.get_cpuifs()
 
@@ -227,4 +236,5 @@ class Exporter(ExporterSubcommandPlugin):
             err_if_bad_addr=options.err_if_bad_addr or self.cfg['err_if_bad_addr'],
             err_if_bad_rw=options.err_if_bad_rw or self.cfg['err_if_bad_rw'],
             default_reset_async=default_reset_async,
+            odd_parity=options.odd_parity,
         )

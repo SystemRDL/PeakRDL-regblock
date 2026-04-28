@@ -279,6 +279,9 @@ class DesignState:
         self.err_if_bad_addr = kwargs.pop("err_if_bad_addr", False) # type: bool
         self.err_if_bad_rw = kwargs.pop("err_if_bad_rw", False) # type: bool
 
+        # Parity polarity
+        self.odd_parity = kwargs.pop("odd_parity", False) # type: bool
+
         #------------------------
         # Info about the design
         #------------------------
