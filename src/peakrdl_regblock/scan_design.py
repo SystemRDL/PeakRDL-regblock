@@ -57,6 +57,11 @@ class DesignScanner(RDLListener):
             )
 
         RDLWalker().walk(self.top_node, self)
+
+        # Bytewise parity needs unrolled array instances.
+        if self.ds.bytewise_parity:
+            RDLWalker(unroll=True).walk(self.top_node, _BytewiseParityScanner(self.ds))
+
         if self.msg.had_error:
             self.msg.fatal(
                 "Unable to export due to previous errors"
@@ -106,16 +111,70 @@ class DesignScanner(RDLListener):
             self.ds.has_writable_msb0_fields = True
 
         if node.get_property('paritycheck') and node.implements_storage:
-            self.ds.has_paritycheck = True
-
-            if node.get_property('reset') is None:
+            if self.ds.bytewise_parity:
+                # Bytewise mode covers every storage field; the per-field
+                # paritycheck property is redundant. Warn the user so they
+                # notice and can clean up the RDL.
                 self.msg.warning(
-                    f"Field '{node.inst_name}' includes parity check logic, but "
-                    "its reset value was not defined. Will result in an undefined "
-                    "value on the module's 'parity_error' output.",
+                    f"Field '{node.inst_name}' has 'paritycheck' set, but the "
+                    "regblock is being generated with --parity-byte. The new "
+                    "byte-wise parity architecture covers every storage field; "
+                    "the per-field paritycheck property is ignored in this mode "
+                    "and can be removed from the RDL.",
                     self.top_node.property_src_ref.get('paritycheck', self.top_node.inst_src_ref)
                 )
+            else:
+                # Legacy mode: only fields explicitly tagged.
+                self.ds.has_paritycheck = True
+
+                if node.get_property('reset') is None:
+                    self.msg.warning(
+                        f"Field '{node.inst_name}' includes parity check logic, but "
+                        "its reset value was not defined. Will result in an undefined "
+                        "value on the module's 'parity_error' output.",
+                        self.top_node.property_src_ref.get('paritycheck', self.top_node.inst_src_ref)
+                    )
 
         encode = node.get_property("encode")
         if encode and encode not in self.ds.user_enums:
             self.ds.user_enums.append(encode)
+
+
+class _BytewiseParityScanner(RDLListener):
+    """Second-pass listener (unroll=True) that populates the bytewise
+    parity enumerations on the design state."""
+
+    def __init__(self, ds: 'DesignState') -> None:
+        self.ds = ds
+
+    @property
+    def top_node(self) -> 'AddrmapNode':
+        return self.ds.top_node
+
+    def enter_Component(self, node: 'Node') -> Optional[WalkerAction]:
+        # Skip externals — same rule as the main scanner.
+        if node.external and node != self.top_node:
+            return WalkerAction.SkipDescendants
+        return WalkerAction.Continue
+
+    def enter_Field(self, node: 'FieldNode') -> None:
+        if not node.implements_storage:
+            return
+
+        self.ds.has_bytewise_parity = True
+
+        width = node.width
+        byte_count = (width + 7) // 8
+
+        ferr_idx = len(self.ds.parity_fields)
+        first_pinj_idx = len(self.ds.parity_bits)
+
+        self.ds.parity_fields.append((node, byte_count, ferr_idx, first_pinj_idx))
+
+        for i in range(byte_count):
+            slice_lo = 8 * i
+            slice_hi = min(8 * i + 7, width - 1)
+            pinj_idx = first_pinj_idx + i
+            self.ds.parity_bits.append(
+                (node, i, slice_lo, slice_hi, pinj_idx, ferr_idx)
+            )
