@@ -6,7 +6,7 @@ from systemrdl.walker import WalkerAction
 from .forloop_generator import RDLForLoopGenerator
 
 if TYPE_CHECKING:
-    from .exporter import RegblockExporter
+    from .exporter import RegblockExporter, DesignState
     from systemrdl.node import FieldNode, AddressableNode, AddrmapNode
 
 
@@ -32,6 +32,68 @@ class ParityErrorReduceGenerator(RDLForLoopGenerator):
             self.add_content(
                 f"err |= {self.exp.field_logic.get_parity_error_identifier(node)};"
             )
+
+
+class BytewiseParityModuleGenerator:
+    """
+    Emits the SV that lives in module_tmpl.sv when --parity-byte is on:
+      - per-field error reducer (OR of mismatch bytes)
+      - per-parity-bit one-hot inject decoder
+      - sticky field_parity_error always_ff
+    """
+
+    def __init__(self, exp: 'RegblockExporter') -> None:
+        self.exp = exp
+
+    @property
+    def ds(self) -> 'DesignState':
+        return self.exp.ds
+
+    def get_inject_decode(self) -> str:
+        """Combinational decoder: drives field_combo.<path>.inject_hit[i] for each parity bit."""
+        if not self.ds.has_bytewise_parity:
+            return ""
+        fl = self.exp.field_logic
+        lines = []
+        for (node, byte, _lo, _hi, pinj_idx, _ferr_idx) in self.ds.parity_bits:
+            ident = fl.get_parity_byte_inject_hit_identifier(node, byte)
+            lines.append(
+                f"assign {ident} = parity_inject_strobe & "
+                f"(parity_inject_sel == {pinj_idx});"
+            )
+        return "\n".join(lines)
+
+    def get_field_error_reducers(self) -> str:
+        """For each parity field, OR all its mismatch bytes into a single combinational signal."""
+        if not self.ds.has_bytewise_parity:
+            return ""
+        fl = self.exp.field_logic
+        lines = []
+        for (node, byte_count, ferr_idx, _first_pinj) in self.ds.parity_fields:
+            ident = parity_path_id(self.ds.top_node, node)
+            mismatch_terms = " | ".join(
+                fl.get_parity_byte_mismatch_identifier(node, b)
+                for b in range(byte_count)
+            )
+            lines.append(f"logic field_parity_mismatch_{ident};")
+            lines.append(f"assign field_parity_mismatch_{ident} = {mismatch_terms};")
+        return "\n".join(lines)
+
+    def get_sticky_latch_block(self) -> str:
+        """Always_ff that latches each per-field mismatch into the sticky field_parity_error vector."""
+        if not self.ds.has_bytewise_parity:
+            return ""
+        lines = []
+        for (node, _bc, ferr_idx, _fp) in self.ds.parity_fields:
+            ident = parity_path_id(self.ds.top_node, node)
+            lines.append(
+                f"if (error_clear_i) field_parity_error[{ferr_idx}] <= 1'b0;"
+            )
+            lines.append(
+                f"else if (field_parity_mismatch_{ident}) "
+                f"field_parity_error[{ferr_idx}] <= 1'b1;"
+            )
+        return "\n".join(lines)
 
 
 def parity_path_id(top_node: 'AddrmapNode', field: 'FieldNode', byte: Optional[int] = None) -> str:
