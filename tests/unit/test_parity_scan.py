@@ -148,3 +148,17 @@ def test_parity_path_id_format(tmp_path):
     assert parity_path_id(e.ds.top_node, first_node) == "R1_F1"
     assert parity_path_id(e.ds.top_node, first_node, byte=0) == "R1_F1_BYTE0"
     assert parity_path_id(e.ds.top_node, first_node, byte=1) == "R1_F1_BYTE1"
+
+
+def test_external_register_is_skipped(tmp_path):
+    """An external register's fields must not appear in parity_fields."""
+    root = _elaborate("tests/test_parity_bytewise/regblock.rdl")
+    e = RegblockExporter()
+    e.export(
+        root, str(tmp_path),
+        module_name="regblock", package_name="regblock_pkg",
+        bytewise_parity=True,
+    )
+    field_names = [node.inst_name for (node, *_) in e.ds.parity_fields]
+    assert "f_ext" not in field_names, \
+        f"Field 'f_ext' from external reg should be skipped; got {field_names}"

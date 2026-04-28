@@ -161,6 +161,17 @@ class _BytewiseParityScanner(RDLListener):
         if not node.implements_storage:
             return
 
+        # Defense: external descendants must already be skipped by enter_Component.
+        # Keep this assertion to make the contract explicit.
+        n = node.parent
+        while n is not None and n != self.top_node:
+            assert not n.external, (
+                f"Field '{node.inst_name}' lives beneath an external component "
+                f"'{n.inst_name}' but reached the bytewise parity scanner. "
+                f"_BytewiseParityScanner.enter_Component should have skipped it."
+            )
+            n = n.parent
+
         self.ds.has_bytewise_parity = True
 
         width = node.width
