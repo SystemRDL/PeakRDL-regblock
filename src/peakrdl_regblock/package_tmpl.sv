@@ -10,5 +10,10 @@ package {{ds.package_name}};
     {{-hwif.get_extra_package_params()|indent}}
 
     {{-hwif.get_package_contents()|indent}}
+{%- if ds.has_bytewise_parity %}
+
+{{bytewise_parity_pkg.get_implementation()|indent}}
+
+{%- endif %}
 endpackage
 {# (eof newline anchor) #}

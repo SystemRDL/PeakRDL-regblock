@@ -1,0 +1,46 @@
+addrmap top {
+    default sw=rw;
+    default hw=na;
+
+    // 1) Multi-byte field with non-byte-aligned width (11 bits)
+    reg multi_byte_reg {
+        field { sw=rw; hw=r; } f_11bit[11] = 0;
+    };
+
+    // 2) HW-write without we (continuous load)
+    reg hw_continuous_reg {
+        field { sw=r; hw=w; } f_cont[16] = 0;
+    };
+
+    // 3) HW-write with we (gated)
+    reg hw_gated_reg {
+        field { sw=r; hw=w; we; } f_gated[8] = 0;
+    };
+
+    // 4) Compound: SW-write + HW-write + level intr + woclr
+    reg compound_reg {
+        field {
+            sw=rw;
+            hw=w;
+            level intr;
+            woclr;
+        } f_intr[1] = 0;
+    };
+
+    // 5) Counter
+    reg counter_reg {
+        field { sw=rw; hw=na; counter; } f_cnt[8] = 0;
+    };
+
+    // 6) External register (parity should NOT be emitted for this)
+    reg ext_reg_t {
+        field { sw=rw; hw=r; } f_ext[8] = 0;
+    };
+
+    multi_byte_reg     mbr   @ 0x000;
+    hw_continuous_reg  hcr   @ 0x004;
+    hw_gated_reg       hgr   @ 0x008;
+    compound_reg       cmr   @ 0x00C;
+    counter_reg        cnr   @ 0x010;
+    external ext_reg_t extr  @ 0x014;
+};

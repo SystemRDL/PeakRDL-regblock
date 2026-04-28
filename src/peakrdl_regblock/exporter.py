@@ -19,7 +19,11 @@ from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
-from .parity import ParityErrorReduceGenerator
+from .parity import (
+    ParityErrorReduceGenerator,
+    BytewiseParityModuleGenerator,
+    BytewiseParityPackageGenerator,
+)
 from .sv_int import SVInt
 
 if TYPE_CHECKING:
@@ -161,6 +165,8 @@ class RegblockExporter:
         ext_write_acks = ExternalWriteAckGenerator(self)
         ext_read_acks = ExternalReadAckGenerator(self)
         parity = ParityErrorReduceGenerator(self)
+        bytewise_parity_mod = BytewiseParityModuleGenerator(self)
+        bytewise_parity_pkg = BytewiseParityPackageGenerator(self)
 
         # Validate that there are no unsupported constructs
         DesignValidator(self).do_validate()
@@ -182,6 +188,8 @@ class RegblockExporter:
             "ext_write_acks": ext_write_acks,
             "ext_read_acks": ext_read_acks,
             "parity": parity,
+            "bytewise_parity_mod": bytewise_parity_mod,
+            "bytewise_parity_pkg": bytewise_parity_pkg,
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
             "ds": self.ds,
             "kwf": kwf,
@@ -234,6 +242,19 @@ class RegblockExporter:
         if self.ds.has_paritycheck:
             groups.append("output logic parity_error")
 
+        # Bytewise parity ports
+        if self.ds.has_bytewise_parity:
+            n_fields = len(self.ds.parity_fields)
+            n_bits = len(self.ds.parity_bits)
+            sel_w = max(1, (n_bits - 1).bit_length())
+            bw_ports = [
+                f"output logic [{n_fields - 1}:0] field_parity_error",
+                "input wire error_clear_i",
+                f"input wire [{sel_w - 1}:0] parity_inject_sel",
+                "input wire parity_inject_strobe",
+            ]
+            groups.append(",\n".join(bw_ports))
+
         # CPU interface ports
         groups.append(self.cpuif.port_declaration)
 
@@ -279,6 +300,12 @@ class DesignState:
         self.err_if_bad_addr = kwargs.pop("err_if_bad_addr", False) # type: bool
         self.err_if_bad_rw = kwargs.pop("err_if_bad_rw", False) # type: bool
 
+        # Parity polarity
+        self.odd_parity = kwargs.pop("odd_parity", False) # type: bool
+
+        # Bytewise parity mode
+        self.bytewise_parity = kwargs.pop("bytewise_parity", False) # type: bool
+
         #------------------------
         # Info about the design
         #------------------------
@@ -296,6 +323,14 @@ class DesignState:
         self.has_external_addressable = False
 
         self.has_paritycheck = False
+
+        # Bytewise parity bookkeeping. Populated by DesignScanner when
+        # bytewise_parity is True. Each entry is a tuple:
+        #   parity_fields: (field_node, byte_count, ferr_idx, first_pinj_idx)
+        #   parity_bits:   (field_node, byte_index, slice_lo, slice_hi, pinj_idx, ferr_idx)
+        self.has_bytewise_parity = False # type: bool
+        self.parity_fields = [] # type: List[tuple]
+        self.parity_bits = [] # type: List[tuple]
 
         # Track any referenced enums
         self.user_enums = [] # type: List[Type[UserEnum]]

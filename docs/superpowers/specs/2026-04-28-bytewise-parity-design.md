@@ -40,7 +40,7 @@ Threaded through `RegblockExporter.export(..., odd_parity: bool = False)` and st
 
 Enables the new byte-wise per-field architecture for **every** storage field in the design. When this flag is set:
 
-- The legacy `paritycheck` RDL property is ignored (no error, no warning — the new mode covers all fields).
+- The legacy `paritycheck` RDL property is ignored. **A warning is emitted for every field that has `paritycheck=true`,** noting that the new mode covers all storage fields and the property is redundant.
 - The legacy single-bit per-field parity logic is **not** emitted alongside; the new byte-wise logic replaces it.
 - New top-level ports (Section 6) are added.
 
@@ -332,7 +332,7 @@ Future work in this repo appends to the same file.
 - Without either new flag, generated SV is bit-identical to today.
 - With `--odd-parity` alone, the only diff is `^` → `~^` on parity assignments and on comparator XOR-reductions inside the legacy `paritycheck` branches.
 - With `--parity-byte`, the new architecture replaces legacy parity for *all* storage fields. Designs that relied on `paritycheck` for selective protection should migrate to the new flag (which protects everything) or stay on the legacy path.
-- `paritycheck` RDL property remains valid in both modes; it is silently ignored when `--parity-byte` is set.
+- `paritycheck` RDL property remains valid in both modes; when `--parity-byte` is set, the property has no effect on emission and a per-field warning is logged so users notice it is redundant.
 
 ## 9. Testing
 
