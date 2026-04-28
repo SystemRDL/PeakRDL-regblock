@@ -10,18 +10,51 @@
 
 ---
 
-## Pre-flight: pytest must work
+## Pre-flight: pytest environment
 
-Before starting Task 1, confirm pytest is available and the existing suite collects:
+A virtualenv has already been set up by the previous session at `tests/.venv`. **All `pytest` and `python` commands in this plan assume that venv's interpreter.** Use the absolute path to the venv's Python:
+
+```bash
+/proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock/tests/.venv/bin/python -m pytest ...
+```
+
+Or activate it for the duration of the session:
+
+```bash
+source /proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock/tests/.venv/bin/activate
+# now plain `python` and `pytest` resolve to the venv
+```
+
+Verify it still works before starting Task 1:
 
 ```bash
 cd /proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock
-python -m pytest tests/test_parity --collect-only -q
+tests/.venv/bin/python -m pytest tests/test_parity --collect-only -q
 ```
 
-Expected: collection lists `Test::test_dut`. If the command fails (pytest not installed, environment not sourced, simulator dependency missing on collection), **STOP and ask the user how to run tests in this environment.** The user's standard project setup typically requires sourcing an env script (e.g. `source bin/setup_env.sh`) — they will tell you which one. Do not improvise or proceed without test execution working.
+Expected: lists `Test::test_dut` and reports `1 test collected`.
 
-The same rule applies for Task 11 (behavioral simulation) — that step needs both pytest and a configured Verilog simulator; if either is missing, STOP and ask.
+### How the venv was created (for re-creation if needed)
+
+The project's `tests/run.sh` hardcodes `python3.13`, which is not installed on this workstation. The closest available Python is `3.12.10` at `/tools_soc/opensrc/python/python-3.12.10/bin/python3.12`. The venv was bootstrapped manually with the equivalent of `tests/run.sh`'s setup steps (skipping pylint/mypy and the test run), using 3.12 instead of 3.13:
+
+```bash
+/tools_soc/opensrc/python/python-3.12.10/bin/python3.12 \
+    -m venv /proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock/tests/.venv
+
+source /proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock/tests/.venv/bin/activate
+pip install --upgrade pip
+pip install -r /proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock/tests/requirements.txt
+pip install -e "/proj_soc/user_dev/ataback/oca_hw/PeakRDL-regblock[cli]"
+```
+
+`tests/.venv/` is already covered by the existing `**/.venv` line in `.gitignore`, so it stays out of git automatically.
+
+### When tests still cannot run
+
+If for any reason the venv is unusable (deleted, corrupted, Python interpreter missing) and re-creation fails, **STOP and ask the user.** Do not improvise with a different test runner or skip tests. The user has a working EDA environment they can point you at.
+
+The same rule applies for Task 11 (behavioral simulation) — that step needs the venv *and* a configured Verilog simulator (Questa, VCS, etc.); if the simulator isn't visible to pytest, STOP and ask.
 
 ---
 
