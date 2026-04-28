@@ -199,6 +199,23 @@ module {{ds.module_name}}
         end
     end
 {%- endif %}
+{%- if ds.has_bytewise_parity %}
+
+    //--------------------------------------------------------------------------
+    // Byte-wise Parity — inject decoder, per-field reducers, sticky latch
+    //--------------------------------------------------------------------------
+    {{bytewise_parity_mod.get_inject_decode()|indent}}
+
+    {{bytewise_parity_mod.get_field_error_reducers()|indent}}
+
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            field_parity_error <= '0;
+        end else begin
+            {{bytewise_parity_mod.get_sticky_latch_block()|indent(12)}}
+        end
+    end
+{%- endif %}
 
 {%- if ds.has_buffered_read_regs %}
 

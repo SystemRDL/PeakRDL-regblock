@@ -236,6 +236,19 @@ class RegblockExporter:
         if self.ds.has_paritycheck:
             groups.append("output logic parity_error")
 
+        # Bytewise parity ports
+        if self.ds.has_bytewise_parity:
+            n_fields = len(self.ds.parity_fields)
+            n_bits = len(self.ds.parity_bits)
+            sel_w = max(1, (n_bits - 1).bit_length())
+            bw_ports = [
+                f"output logic [{n_fields - 1}:0] field_parity_error",
+                "input  logic                            error_clear_i",
+                f"input  logic [{sel_w - 1}:0] parity_inject_sel",
+                "input  logic                            parity_inject_strobe",
+            ]
+            groups.append(",\n".join(bw_ports))
+
         # CPU interface ports
         groups.append(self.cpuif.port_declaration)
 
