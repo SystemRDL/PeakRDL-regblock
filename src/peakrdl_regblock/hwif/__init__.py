@@ -24,7 +24,8 @@ class Hwif:
 
     def __init__(
         self, exp: 'RegblockExporter',
-        hwif_report_file: Optional[TextIO]
+        hwif_report_file: Optional[TextIO],
+        allow_external_err: bool = False
     ):
         self.exp = exp
 
@@ -32,6 +33,7 @@ class Hwif:
         self.has_output_struct = False
 
         self.hwif_report_file = hwif_report_file
+        self.allow_external_err = allow_external_err
 
         if not self.ds.reuse_hwif_typedefs:
             self._gen_in_cls = InputStructGenerator_Hier
@@ -194,6 +196,20 @@ class Hwif:
         """
         path = get_indexed_path(self.top_node, node)
         return "hwif_in." + path + ".wr_ack"
+
+    def get_external_rd_err(self, node: AddressableNode) -> str:
+        """
+        Returns the identifier string for an external component's rd_ack signal
+        """
+        path = get_indexed_path(self.top_node, node)
+        return "hwif_in." + path + ".rd_err"
+
+    def get_external_wr_err(self, node: AddressableNode) -> str:
+        """
+        Returns the identifier string for an external component's wr_ack signal
+        """
+        path = get_indexed_path(self.top_node, node)
+        return "hwif_in." + path + ".wr_err"
 
     def get_implied_prop_input_identifier(self, field: FieldNode, prop: str) -> str:
         assert prop in {

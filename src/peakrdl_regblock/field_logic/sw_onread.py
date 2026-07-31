@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import Optional, TYPE_CHECKING, List
 
 from systemrdl.rdltypes import OnReadType
 
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from systemrdl.node import FieldNode
 
 class _OnRead(NextStateConditional):
-    onreadtype = None # type: OnReadType
+    onreadtype = None # type: Optional[OnReadType]
     def is_match(self, field: 'FieldNode') -> bool:
         return field.get_property('onread') == self.onreadtype
 

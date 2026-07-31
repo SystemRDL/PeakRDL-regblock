@@ -72,6 +72,9 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
         self.add_member("rd_ack")
         self.add_member("rd_data", self.hwif.ds.cpuif_data_width)
         self.add_member("wr_ack")
+        if self.hwif.allow_external_err:
+            self.add_member("rd_err")
+            self.add_member("wr_err")
 
     def enter_Addrmap(self, node: 'AddrmapNode') -> Optional[WalkerAction]:
         super().enter_Addrmap(node)
@@ -99,9 +102,13 @@ class InputStructGenerator_Hier(HWIFStructGenerator):
             n_subwords = node.get_property("regwidth") // node.get_property("accesswidth")
             if node.has_sw_readable:
                 self.add_member("rd_ack")
+                if self.hwif.allow_external_err:
+                    self.add_member("rd_err")
                 self.add_external_reg_rd_data(node, width, n_subwords)
             if node.has_sw_writable:
                 self.add_member("wr_ack")
+                if self.hwif.allow_external_err:
+                    self.add_member("wr_err")
             return WalkerAction.SkipDescendants
 
         return WalkerAction.Continue

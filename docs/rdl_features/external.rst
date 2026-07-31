@@ -91,6 +91,12 @@ hwif_in..rd_data
 
     If the register does not contain any readable fields, this signal is omitted.
 
+hwif_in..rd_err
+    Read response error state (Optional).
+
+    Requires ``--allow-external-err`` flag to be set.
+    If the register does not contain any readable fields, this signal is omitted.
+
 Write Response
 ^^^^^^^^^^^^^^
 hwif_in..wr_ack
@@ -101,6 +107,11 @@ hwif_in..wr_ack
 
     If the register does not contain any writable fields, this signal is omitted.
 
+hwif_in..wr_err
+    Write response error state (Optional).
+
+    Requires ``--allow-external-err`` flag to be set.
+    If the register does not contain any readable fields, this signal is omitted.
 
 
 External Blocks
@@ -149,7 +160,19 @@ hwif_in..rd_ack
 hwif_in..rd_data
     Read response data.
 
+hwif_in..rd_err
+    Read response error state (Optional).
+
+    Requires ``--allow-external-err`` flag to be set.
+    If the register does not contain any readable fields, this signal is omitted.
+
 Write Response
 ^^^^^^^^^^^^^^
 hwif_in..wr_ack
     Single-cycle strobe indicating a write transfer has completed.
+
+hwif_in..wr_err
+    Write response error state (Optional).
+
+    Requires ``--allow-external-err`` flag to be set.
+    If the register does not contain any readable fields, this signal is omitted.
