@@ -19,6 +19,7 @@ from .hwif import Hwif
 from .write_buffering import WriteBuffering
 from .read_buffering import ReadBuffering
 from .external_acks import ExternalWriteAckGenerator, ExternalReadAckGenerator
+from .external_errs import ExternalWriteErrGenerator, ExternalReadErrGenerator
 from .parity import ParityErrorReduceGenerator
 from .sv_int import SVInt
 
@@ -127,6 +128,9 @@ class RegblockExporter:
             If overriden to True: If an illegal access is performed to a read-only or write-only
             register, the CPUIF response signal shows an error. For example: APB.PSLVERR = 1'b1,
             AXI4LITE.*RESP = 2'b10.
+        allow_external_err: bool
+            If overriden to True: Allows for the "external" elements to return error state after
+            an access request.
         """
         # If it is the root node, skip to top addrmap
         if isinstance(node, RootNode):
@@ -138,6 +142,7 @@ class RegblockExporter:
 
         cpuif_cls = kwargs.pop("cpuif_cls", None) or APB4_Cpuif # type: Type[CpuifBase]
         generate_hwif_report = kwargs.pop("generate_hwif_report", False) # type: bool
+        allow_external_err = kwargs.pop("allow_external_err", False) # type: bool
 
         # Check for stray kwargs
         if kwargs:
@@ -151,7 +156,7 @@ class RegblockExporter:
 
         # Construct exporter components
         self.cpuif = cpuif_cls(self)
-        self.hwif = Hwif(self, hwif_report_file=hwif_report_file)
+        self.hwif = Hwif(self, hwif_report_file=hwif_report_file, allow_external_err=allow_external_err)
         self.readback = Readback(self)
         self.address_decode = AddressDecode(self)
         self.field_logic = FieldLogic(self)
@@ -159,7 +164,9 @@ class RegblockExporter:
         self.read_buffering = ReadBuffering(self)
         self.dereferencer = Dereferencer(self)
         ext_write_acks = ExternalWriteAckGenerator(self)
+        ext_write_errs = ExternalWriteErrGenerator(self)
         ext_read_acks = ExternalReadAckGenerator(self)
+        ext_read_errs = ExternalReadErrGenerator(self)
         parity = ParityErrorReduceGenerator(self)
 
         # Validate that there are no unsupported constructs
@@ -180,7 +187,9 @@ class RegblockExporter:
             "field_logic": self.field_logic,
             "readback_implementation": self.readback.get_implementation(),
             "ext_write_acks": ext_write_acks,
+            "ext_write_errs": ext_write_errs,
             "ext_read_acks": ext_read_acks,
+            "ext_read_errs": ext_read_errs,
             "parity": parity,
             "get_always_ff_event": self.dereferencer.get_always_ff_event,
             "ds": self.ds,
@@ -278,6 +287,9 @@ class DesignState:
         # Generating a cpuif error
         self.err_if_bad_addr = kwargs.pop("err_if_bad_addr", False) # type: bool
         self.err_if_bad_rw = kwargs.pop("err_if_bad_rw", False) # type: bool
+
+        # Generating an "external" error
+        self.allow_external_err = kwargs.get("allow_external_err", False) # type: bool
 
         #------------------------
         # Info about the design

@@ -163,6 +163,15 @@ class Exporter(ExporterSubcommandPlugin):
             performed to a read-only or write-only register."""
         )
 
+        arg_group.add_argument(
+            "--allow-external-err",
+            action="store_true",
+            default=False,
+            help="""Allow external elements to report error states after
+            read/write operations.
+            """
+        )
+
     def do_export(self, top_node: 'AddrmapNode', options: 'argparse.Namespace') -> None:
         cpuifs = self.get_cpuifs()
 
@@ -227,4 +236,5 @@ class Exporter(ExporterSubcommandPlugin):
             err_if_bad_addr=options.err_if_bad_addr or self.cfg['err_if_bad_addr'],
             err_if_bad_rw=options.err_if_bad_rw or self.cfg['err_if_bad_rw'],
             default_reset_async=default_reset_async,
+            allow_external_err=options.allow_external_err
         )

@@ -224,12 +224,28 @@ module {{ds.module_name}}
 {%- else %}
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
 {%- endif %}
-    // Writes are always granted with no error response
+{%- if ds.allow_external_err and ds.has_external_addressable %}
+
+    logic external_wr_err;
+
+    always_comb begin
+        automatic logic wr_err;
+        wr_err = '0;
+        {{ext_write_errs.get_implementation()|indent(8)}}
+        external_wr_err = wr_err;
+    end
+    {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
+    assign cpuif_wr_err = external_wr_err | decoded_err;
+    {%- else %}
+    assign cpuif_wr_err = external_wr_err;
+    {%- endif %}
+{%- else %}
     {%- if ds.err_if_bad_addr or ds.err_if_bad_rw %}
     assign cpuif_wr_err = decoded_err;
     {%- else %}
     assign cpuif_wr_err = '0;
     {%- endif %}
+{%- endif %}
 
     //--------------------------------------------------------------------------
     // Readback
@@ -258,6 +274,32 @@ module {{ds.module_name}}
     assign readback_external_rd_ack = readback_external_rd_ack_c;
     {%- endif %}
 {%- endif %}
+{%- if ds.allow_external_err and ds.has_external_addressable %}
+
+    logic readback_external_rd_err_c;
+    always_comb begin
+        automatic logic rd_err;
+        rd_err = '0;
+        {{ext_read_errs.get_implementation()|indent(8)}}
+        readback_external_rd_err_c = rd_err;
+    end
+
+    logic readback_external_rd_err;
+    {%- if ds.retime_read_fanin %}
+    always_ff {{get_always_ff_event(cpuif.reset)}} begin
+        if({{get_resetsignal(cpuif.reset)}}) begin
+            readback_external_rd_err <= '0;
+        end else begin
+            readback_external_rd_err <= readback_external_rd_err_c;
+        end
+    end
+
+    {%- else %}
+
+    assign readback_external_rd_err = readback_external_rd_err_c;
+    {%- endif %}
+
+{%- endif %}
 
     logic [{{cpuif.addr_width-1}}:0] rd_mux_addr;
 {%- if ds.has_external_addressable %}
@@ -279,7 +321,7 @@ module {{ds.module_name}}
     logic readback_done;
     logic [{{cpuif.data_width-1}}:0] readback_data;
     {{readback_implementation|indent}}
-{% if ds.retime_read_response %}
+{%- if ds.retime_read_response %}
     always_ff {{get_always_ff_event(cpuif.reset)}} begin
         if({{get_resetsignal(cpuif.reset)}}) begin
             cpuif_rd_ack <= '0;
@@ -296,10 +338,14 @@ module {{ds.module_name}}
             cpuif_rd_ack <= readback_done;
         {%- endif %}
             cpuif_rd_data <= readback_data;
+        {%- if ds.allow_external_err and ds.has_external_addressable %}
+            cpuif_rd_err <= readback_err | readback_external_rd_err;
+        {%- else %}
             cpuif_rd_err <= readback_err;
+        {%- endif %}
         end
     end
-{% else %}
+{%- else %}
     {%- if ds.has_external_addressable %}
     assign external_rd_ack = readback_external_rd_ack;
     assign cpuif_rd_ack = readback_done | readback_external_rd_ack;
@@ -307,7 +353,11 @@ module {{ds.module_name}}
     assign cpuif_rd_ack = readback_done;
     {%- endif %}
     assign cpuif_rd_data = readback_data;
+    {%- if ds.allow_external_err and ds.has_external_addressable %}
+    assign cpuif_rd_err = readback_err | readback_external_rd_err;
+    {%- else %}
     assign cpuif_rd_err = readback_err;
+    {%- endif %}
 {%- endif %}
 endmodule
 {# (eof newline anchor) #}
