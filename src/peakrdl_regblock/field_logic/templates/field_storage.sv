@@ -84,3 +84,13 @@ always_ff @(posedge clk) begin
     {%- endif %}
 end
 {%- endif %}
+
+{%- if field_logic.has_write_once(node) %}
+always_ff {{get_always_ff_event(write_once_resetsignal)}} begin
+    if({{get_resetsignal(write_once_resetsignal)}}) begin
+        {{field_logic.get_write_once_identifier(node)}} <= 1'b1;
+    end else if({{field_logic.get_field_combo_identifier(node, "write_once_clr")}}) begin
+        {{field_logic.get_write_once_identifier(node)}} <= 1'b0;
+    end
+end
+{%- endif %}

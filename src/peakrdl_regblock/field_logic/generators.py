@@ -93,6 +93,8 @@ class FieldStorageStructGenerator(RDLStructGenerator):
             self.add_member("value", node.width)
             if node.get_property('paritycheck'):
                 self.add_member("parity")
+            if self.field_logic.has_write_once(node):
+                self.add_member("write_once")
 
         if self.field_logic.has_next_q(node):
             self.add_member("next_q", node.width)
@@ -252,6 +254,8 @@ class FieldLogicGenerator(RDLForLoopGenerator):
             'conditionals': conditionals,
             'unconditional': unconditional,
             'resetsignal': resetsignal,
+            # Write-once lock bit is always reset
+            'write_once_resetsignal': node.get_property("resetsignal"),
             'get_always_ff_event': self.exp.dereferencer.get_always_ff_event,
             'get_value': self.exp.dereferencer.get_value,
             'get_resetsignal': self.exp.dereferencer.get_resetsignal,

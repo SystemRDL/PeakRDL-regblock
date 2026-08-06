@@ -2,12 +2,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from systemrdl.rdltypes import OnWriteType
 
-from .bases import NextStateConditional
+from .bases import NextStateConditional, SVLogic
 
 if TYPE_CHECKING:
     from systemrdl.node import FieldNode
 
-# TODO: implement sw=w1 "write once" fields
 
 class _OnWrite(NextStateConditional):
     onwritetype: Optional[OnWriteType] = None
@@ -17,24 +16,30 @@ class _OnWrite(NextStateConditional):
     def get_predicate(self, field: 'FieldNode') -> str:
         if field.parent.get_property('buffer_writes'):
             # Is buffered write. Use alternate strobe
-            wstrb = self.exp.write_buffering.get_write_strobe(field)
-
-            if field.get_property('swwe') or field.get_property('swwel'):
-                # dereferencer will wrap swwel complement if necessary
-                qualifier = self.exp.dereferencer.get_field_propref_value(field, 'swwe')
-                return f"{wstrb} && {qualifier}"
-
-            return wstrb
+            predicate = self.exp.write_buffering.get_write_strobe(field)
         else:
             # is regular register
             strb = self.exp.dereferencer.get_access_strobe(field)
+            predicate = f"{strb} && decoded_req_is_wr"
 
-            if field.get_property('swwe') or field.get_property('swwel'):
-                # dereferencer will wrap swwel complement if necessary
-                qualifier = self.exp.dereferencer.get_field_propref_value(field, 'swwe')
-                return f"{strb} && decoded_req_is_wr && {qualifier}"
+        if field.get_property('swwe') or field.get_property('swwel'):
+            # dereferencer will wrap swwel complement if necessary
+            qualifier = self.exp.dereferencer.get_field_propref_value(field, 'swwe')
+            predicate += f" && {qualifier}"
 
-            return f"{strb} && decoded_req_is_wr"
+        if self.exp.field_logic.has_write_once(field):
+            predicate += f" && {self.exp.field_logic.get_write_once_identifier(field)}"
+
+        return predicate
+
+    def get_extra_combo_signals(self, field: 'FieldNode') -> List[SVLogic]:
+        """Get additional signals that need to be added to the combinatorial logic for this field.
+
+        - Write-once fields require a write_once_clr signal to be added to the logic.
+        """
+        if self.exp.field_logic.has_write_once(field):
+            return [SVLogic("write_once_clr", 1, "1'b0")]
+        return []
 
     def get_assignments(self, field: 'FieldNode') -> List[str]:
         accesswidth = field.parent.get_property("accesswidth")
@@ -52,6 +57,9 @@ class _OnWrite(NextStateConditional):
             f"next_c = {self.get_onwrite_rhs(R, D, S)};",
             "load_next_c = '1;",
         ]
+        if self.exp.field_logic.has_write_once(field):
+            write_once_clr = self.exp.field_logic.get_field_combo_identifier(field, "write_once_clr")
+            lines.append(f"{write_once_clr} = '1;")
         return lines
 
     def get_onwrite_rhs(self, reg: str, data: str, strb: str) -> str:
