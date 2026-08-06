@@ -51,4 +51,37 @@ addrmap top {
             hw=na;
         } f[8] = 0x55;
     } r5;
+
+    /////////////////////////////////////////////
+    // rw1 with a register-scoped custom reset //
+    /////////////////////////////////////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8] = 0x66;
+
+        signal {
+            field_reset;
+            activehigh;
+            sync;
+        } my_reset;
+    } r6;
+
+    //////////////////////////////////////////////
+    // rw1 with an explicitly wired async reset //
+    //////////////////////////////////////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8] = 0x77;
+    } r7;
+
+    signal {
+        activelow;
+        async;
+    } f_areset_n;
+
+    r7.f->resetsignal = f_areset_n;
 };

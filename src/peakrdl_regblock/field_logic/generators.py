@@ -215,7 +215,7 @@ class FieldLogicGenerator(RDLForLoopGenerator):
 
     def generate_field_storage(self, node: 'FieldNode') -> None:
         conditionals = self.field_logic.get_conditionals(node)
-        extra_combo_signals = OrderedDict()
+        extra_combo_signals: OrderedDict[str, SVLogic] = OrderedDict()
         unconditional: Optional[NextStateUnconditional] = None
         new_conditionals = []
         for conditional in conditionals:

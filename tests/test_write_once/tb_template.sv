@@ -2,10 +2,15 @@
 
 {% block seq %}
     {% sv_line_anchor %}
-    cb.hwif_in.r3.f.swwe <= '0;
+    cb.hwif_in.r3.f.swwe   <= '0;
+    cb.hwif_in.r6.my_reset <= '1;
+    cb.hwif_in.f_areset_n  <= '0;
+    @cb;
     ##1;
     cb.rst <= '0;
-    ##1;
+    cb.hwif_in.r6.my_reset <= '0;
+    cb.hwif_in.f_areset_n  <= '1;
+    @cb;
 
     // r1: basic write onec (rw1)
     @cb;
@@ -55,8 +60,10 @@
 
     // reset restores the write-once
     @cb;
+    ##1;
     cb.rst <= '1;
-    ##2;
+    @cb;
+    ##1;
     cb.rst <= '0;
     ##1;
     @cb;
@@ -65,5 +72,47 @@
     cpuif.assert_read('h0, 'h14);
     cpuif.write      ('h0, 'h15); // ignored
     cpuif.assert_read('h0, 'h14);
+
+    // r6: register-scoped custom reset restores the write once
+    @cb;
+    cpuif.assert_read('h5, 'h66);
+    cpuif.write      ('h5, 'h67);
+    cpuif.assert_read('h5, 'h67);
+    cpuif.write      ('h5, 'h68); // ignored
+    cpuif.assert_read('h5, 'h67);
+    @cb;
+    ##1;
+    cb.hwif_in.r6.my_reset <= '1;
+    @cb;
+    ##1;
+    cb.hwif_in.r6.my_reset <= '0;
+    @cb;
+    ##1;
+    cpuif.assert_read('h5, 'h66); // reset value restored
+    cpuif.write      ('h5, 'h69); // write-once is re-armed
+    cpuif.assert_read('h5, 'h69);
+    cpuif.write      ('h5, 'h6a); // ignored again
+    cpuif.assert_read('h5, 'h69);
+
+    // r7: explicitly wired async active-low reset restores the write-once
+    @cb;
+    cpuif.assert_read('h6, 'h77);
+    cpuif.write      ('h6, 'h78);
+    cpuif.assert_read('h6, 'h78);
+    cpuif.write      ('h6, 'h79); // ignored
+    cpuif.assert_read('h6, 'h78);
+    @cb;
+    ##1;
+    hwif_in.f_areset_n <= '0;
+    @cb;
+    ##1;
+    hwif_in.f_areset_n <= '1;
+    @cb;
+    ##1;
+    cpuif.assert_read('h6, 'h77); // reset value restored
+    cpuif.write      ('h6, 'h7a); // write-once is re-armed
+    cpuif.assert_read('h6, 'h7a);
+    cpuif.write      ('h6, 'h7b); // ignored again
+    cpuif.assert_read('h6, 'h7a);
 
 {% endblock %}
