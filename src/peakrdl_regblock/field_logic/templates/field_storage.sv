@@ -6,7 +6,7 @@ always_comb begin
     next_c = {{field_logic.get_storage_identifier(node)}};
     load_next_c = '0;
 
-    {%- for signal in extra_combo_signals %}
+    {%- for signal in extra_combo_signals.values() %}
     {{field_logic.get_field_combo_identifier(node, signal.name)}} = {{signal.default_assignment}};
     {%- endfor %}
     {% for conditional in conditionals %}
