@@ -32,7 +32,36 @@ If set, field will get cleared back to zero after being written.
 
 sw
 ^^^
-All sw access modes are supported except for ``w1`` and ``rw1``.
+
+All sw access modes are supported.
+
+For write-once (``w1`` / ``rw1```) fields an additional storage bit is inferred.
+On first successful software write it is blown and all further software writes
+are ignored. A software write only consumes the signle write if it actually
+reaches the field:
+
+* If ``swwe`` / ``swwel`` is blocking the write, the field remains writable.
+* If the register sets ``buffer_writes``, the write is consumed when the buffer
+  commits to the field.
+
+Resetting the field makes it writable again. It uses either the reset
+associated with the field or the default reset when the field itself is not
+resettable.
+
+.. wavedrom::
+    {"signal": [
+        {"name": "clk",           "wave": "p................"},
+        {"name": "rst",           "wave": "01.....01........"},
+        {"name": "<sw write>",    "wave": "0.10.10..10.10.10"},
+        {"name": "<write data>",  "wave": "x.=x.=x..=x.=x.=x",
+            "data": ["A", "B", "C", "D", "E"]},
+        {"name": "<field swwe>",  "wave": "1......0...1....."},
+        {"name": "<field value>", "wave": "=..=....=....=...",
+            "data": ["reset", "A", "reset", "D"]}
+    ]}
+
+.. note:: A software write to a write-once field that was written still asserts
+    ``swacc`` and ``swmod``.
 
 swacc
 ^^^^^
