@@ -111,4 +111,7 @@ addrmap top {
     external regfile {
         myreg reg1;
     } ext_block;
+
+    // https://github.com/SystemRDL/PeakRDL-regblock/issues/208
+    external myreg ext_reg_array[2];
 };

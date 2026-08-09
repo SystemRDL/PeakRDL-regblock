@@ -19,9 +19,10 @@ class RBufLogicGenerator(RDLForLoopGenerator):
         )
 
     def enter_AddressableComponent(self, node: AddressableNode) -> Optional[WalkerAction]:
+        super().enter_AddressableComponent(node)
         if node.external:
             return WalkerAction.SkipDescendants
-        return super().enter_AddressableComponent(node)
+        return None
 
     def enter_Reg(self, node: RegNode) -> None:
         super().enter_Reg(node)
