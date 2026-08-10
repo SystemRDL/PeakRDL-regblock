@@ -108,4 +108,17 @@ addrmap top {
 
         field {} f1[0:31] = 0x1234_5678;
     } r_reg4;
+
+    // https://github.com/SystemRDL/PeakRDL-regblock/issues/210
+    reg {
+        regwidth = 32;
+        accesswidth = 16;
+        default hw=w;
+        default sw=r;
+
+        field {
+            intwidth = 16;
+            fracwidth = 16;
+        } f1[32];
+    } r_reg5;
 };

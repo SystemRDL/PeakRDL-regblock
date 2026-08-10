@@ -267,6 +267,13 @@ class ReadbackMuxGenerator(RDLForLoopGenerator):
                     f_low -= field.low
                     f_high -= field.low
 
+                    # Adjust for fixedpoint LSB (only for HWIF inputs)
+                    if not field.implements_storage and self.exp.hwif.has_value_input(field):
+                        fracwidth = field.get_property("fracwidth")
+                        lsb = 0 if fracwidth is None else -fracwidth
+                        f_low += lsb
+                        f_high += lsb
+
                     if field.msb < field.lsb:
                         # Field gets bitswapped since it is in [low:high] orientation
                         # Mirror the low/high indexes

@@ -118,4 +118,10 @@
     cpuif.assert_read('h3A, 16'h1E6A);
     assert(cb.hwif_out.r_reg4.f1.value == 32'h12345678);
 
+    // r_reg5
+    // https://github.com/SystemRDL/PeakRDL-regblock/issues/210
+    cb.hwif_in.r_reg5.f1.next <= 32'h8765_4321;
+    cpuif.assert_read('h3C, 16'h4321);
+    cpuif.assert_read('h3E, 16'h8765);
+
 {% endblock %}
