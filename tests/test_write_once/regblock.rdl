@@ -1,0 +1,87 @@
+addrmap top {
+    default regwidth = 8;
+
+    ///////////////
+    // basic rw1 //
+    ///////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8] = 0x11;
+    } r1;
+
+    /////////////////////////
+    // w1, observed via hw //
+    /////////////////////////
+    reg {
+        field {
+            sw=w1; hw=r;
+        } f[8] = 0x22;
+    } r2;
+
+    //////////////////////////////////////////////////
+    // locked write does not consume the write-once //
+    //////////////////////////////////////////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+            swwe;
+        } f[8] = 0x33;
+    } r3;
+
+    ///////////////////////////////
+    // rw1 without a reset value //
+    ///////////////////////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8];
+    } r4;
+
+    //////////////////////////////////////
+    // rw1 in a write-buffered register //
+    //////////////////////////////////////
+    reg {
+        buffer_writes = true;
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8] = 0x55;
+    } r5;
+
+    /////////////////////////////////////////////
+    // rw1 with a register-scoped custom reset //
+    /////////////////////////////////////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8] = 0x66;
+
+        signal {
+            field_reset;
+            activehigh;
+            sync;
+        } my_reset;
+    } r6;
+
+    //////////////////////////////////////////////
+    // rw1 with an explicitly wired async reset //
+    //////////////////////////////////////////////
+    reg {
+        field {
+            sw=rw1;
+            hw=na;
+        } f[8] = 0x77;
+    } r7;
+
+    signal {
+        activelow;
+        async;
+    } f_areset_n;
+
+    r7.f->resetsignal = f_areset_n;
+};

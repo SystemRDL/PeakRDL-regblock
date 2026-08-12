@@ -6,7 +6,7 @@ always_comb begin
     next_c = {{field_logic.get_storage_identifier(node)}};
     load_next_c = '0;
 
-    {%- for signal in extra_combo_signals %}
+    {%- for signal in extra_combo_signals.values() %}
     {{field_logic.get_field_combo_identifier(node, signal.name)}} = {{signal.default_assignment}};
     {%- endfor %}
     {% for conditional in conditionals %}
@@ -82,5 +82,15 @@ always_ff @(posedge clk) begin
     {%- if field_logic.has_next_q(node) %}
     {{field_logic.get_next_q_identifier(node)}} <= {{get_input_identifier(node)}};
     {%- endif %}
+end
+{%- endif %}
+
+{%- if field_logic.has_write_once(node) %}
+always_ff {{get_always_ff_event(write_once_resetsignal)}} begin
+    if({{get_resetsignal(write_once_resetsignal)}}) begin
+        {{field_logic.get_write_once_identifier(node)}} <= 1'b1;
+    end else if({{field_logic.get_field_combo_identifier(node, "write_once_clr")}}) begin
+        {{field_logic.get_write_once_identifier(node)}} <= 1'b0;
+    end
 end
 {%- endif %}

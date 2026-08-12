@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Union
 
-from systemrdl.rdltypes import PrecedenceType, InterruptType
+from systemrdl.rdltypes import PrecedenceType, InterruptType, AccessType
 
 from .bases import AssignmentPrecedence, NextStateConditional
 from . import sw_onread
@@ -281,6 +281,20 @@ class FieldLogic:
         """
         path = get_indexed_path(self.top_node, field)
         return f"field_combo.{path}.parity_error"
+
+    def has_write_once(self, field: 'FieldNode') -> bool:
+        """
+        Returns True if the field is software write once (sw = w1 or rw1)
+        """
+        return field.get_property('sw') in (AccessType.rw1, AccessType.w1)
+
+    def get_write_once_identifier(self, field: 'FieldNode') -> str:
+        """"
+        Returns the identifier for the write-once lock bit of the field
+        """
+        assert field.implements_storage
+        path = get_indexed_path(self.top_node, field)
+        return f"field_storage.{path}.write_once"
 
     def has_next_q(self, field: 'FieldNode') -> bool:
         """
