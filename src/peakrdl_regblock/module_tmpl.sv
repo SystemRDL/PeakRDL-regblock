@@ -168,6 +168,16 @@ module {{ds.module_name}}
 {%- if ds.has_buffered_write_regs %}
 
     //--------------------------------------------------------------------------
+    // Field storage
+    //
+    // Declared before the write buffers. A `wbuffer_trigger` may reference a
+    // field value (a `singlepulse` field, or a propref such as `anded`), so
+    // the write-buffer implementation can read `field_storage`. Data must be
+    // declared before it is used.
+    //--------------------------------------------------------------------------
+    {{field_logic.get_storage_struct()|indent}}
+
+    //--------------------------------------------------------------------------
     // Write double-buffers
     //--------------------------------------------------------------------------
     {{write_buffering.get_storage_struct()|indent}}
@@ -178,8 +188,10 @@ module {{ds.module_name}}
     // Field logic
     //--------------------------------------------------------------------------
     {{field_logic.get_combo_struct()|indent}}
+{%- if not ds.has_buffered_write_regs %}
 
     {{field_logic.get_storage_struct()|indent}}
+{%- endif %}
 
     {{field_logic.get_implementation()|indent}}
 
