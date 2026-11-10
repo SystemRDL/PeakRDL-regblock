@@ -24,10 +24,14 @@ class LoopBody(Body):
 
     def __str__(self) -> str:
         s = super().__str__()
+
         return (
-            f"for({self.i_type} {self.iterator}=0; {self.iterator}<{self.dim}; {self.iterator}++) begin\n"
-            + textwrap.indent(s, "    ")
-            + "\nend"
+            f"genvar {self.iterator};\n"
+            f"generate\n"
+            f"    for({self.iterator}=0; {self.iterator}<{self.dim}; {self.iterator}++) begin : g_{self.iterator}\n"
+            + textwrap.indent(s, "        ")
+            + f"\n    end\n"
+            f"endgenerate"
         )
 
 
