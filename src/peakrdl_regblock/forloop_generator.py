@@ -6,16 +6,14 @@ from systemrdl.walker import RDLListener, RDLWalker, WalkerAction
 if TYPE_CHECKING:
     from systemrdl.node import AddressableNode, Node
 
-
 class Body:
 
     def __init__(self) -> None:
-        self.children = []  # type: List[Union[str, Body]]
+        self.children = [] # type: List[Union[str, Body]]
 
     def __str__(self) -> str:
-        s = "\n".join((str(x) for x in self.children))
+        s = '\n'.join((str(x) for x in self.children))
         return s
-
 
 class LoopBody(Body):
     def __init__(self, dim: int, iterator: str, i_type: str) -> None:
@@ -27,21 +25,13 @@ class LoopBody(Body):
     def __str__(self) -> str:
         s = super().__str__()
 
-        # Patch : Make sure Quartus is happy with it !
-        if self.i_type == "genvar":
-            return (
-                f"genvar {self.iterator};\n"
-                f"generate\n"
-                f"    for({self.iterator}=0; {self.iterator}<{self.dim}; {self.iterator}++) begin : g_{self.iterator}\n"
-                + textwrap.indent(s, "        ")
-                + f"\n    end\n"
-                f"endgenerate"
-            )
-
         return (
-            f"for({self.i_type} {self.iterator}=0; {self.iterator}<{self.dim}; {self.iterator}++) begin\n"
-            + textwrap.indent(s, "    ")
-            + "\nend"
+            f"genvar {self.iterator};\n"
+            f"generate\n"
+            f"    for({self.iterator}=0; {self.iterator}<{self.dim}; {self.iterator}++) begin : g_{self.iterator}\n"
+            + textwrap.indent(s, "        ")
+            + f"\n    end\n"
+            f"endgenerate"
         )
 
 
@@ -51,7 +41,7 @@ class ForLoopGenerator:
 
     def __init__(self) -> None:
         self._loop_level = 0
-        self._stack = []  # type: List[Body]
+        self._stack = [] # type: List[Body]
 
     @property
     def current_loop(self) -> Body:
@@ -87,18 +77,15 @@ class ForLoopGenerator:
             return None
         return str(b)
 
-
 class RDLForLoopGenerator(ForLoopGenerator, RDLListener):
 
-    def get_content(self, node: "Node") -> Optional[str]:
+    def get_content(self, node: 'Node') -> Optional[str]:
         self.start()
         walker = RDLWalker()
         walker.walk(node, self, skip_top=True)
         return self.finish()
 
-    def enter_AddressableComponent(
-        self, node: "AddressableNode"
-    ) -> Optional[WalkerAction]:
+    def enter_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         if not node.array_dimensions:
             return None
 
@@ -106,9 +93,7 @@ class RDLForLoopGenerator(ForLoopGenerator, RDLListener):
             self.push_loop(dim)
         return None
 
-    def exit_AddressableComponent(
-        self, node: "AddressableNode"
-    ) -> Optional[WalkerAction]:
+    def exit_AddressableComponent(self, node: 'AddressableNode') -> Optional[WalkerAction]:
         if not node.array_dimensions:
             return None
 
