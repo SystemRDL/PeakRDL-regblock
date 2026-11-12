@@ -12,6 +12,30 @@ struct ports. The presence of each depends on the specific contents of the desig
 being exported.
 
 
+Struct type names
+~~~~~~~~~~~~~~~~~
+
+The generated package declares the top-level hardware interface structs using
+the addrmap's RDL type name:
+
+* ``<addrmap_type_name>__in_t``
+* ``<addrmap_type_name>__out_t``
+
+The elaborated instance name and generated module name do not affect these
+typedef names. This allows a reusable addrmap type to be exported under
+different instance or module names while retaining a stable hardware interface
+type name. Addrmap type parameters also do not change these names.
+
+For example, exporting the ``my_sub`` addrmap as an instance named ``regblock``
+produces ``my_sub__in_t`` and ``my_sub__out_t`` in the generated package, while
+the module ports are still named ``hwif_in`` and ``hwif_out``.
+
+The ``--type-style`` option controls how nested struct type names are generated.
+The top-level struct typedefs always follow the addrmap type name. If the top
+addrmap is anonymous or imported without type information, the exporter falls
+back to a generated type name or the instance name.
+
+
 Using structs for the hardware interface has the following benefits:
 
 * Preserves register map component grouping, arrays, and hierarchy.

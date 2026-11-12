@@ -1,0 +1,21 @@
+addrmap my_sub {
+    reg {
+        field {
+            sw = rw;
+            hw = rw;
+            we;
+        } f = 0;
+    } sub_reg;
+};
+
+addrmap my_param_sub #(
+    longint WIDTH = 32
+) {
+    reg {
+        field {
+            sw = rw;
+            hw = rw;
+            we;
+        } f[WIDTH] = 0;
+    } sub_reg;
+};
