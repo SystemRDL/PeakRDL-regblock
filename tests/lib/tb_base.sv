@@ -28,11 +28,11 @@ module tb;
     // DUT Signal declarations
     //--------------------------------------------------------------------------
 {%- if exporter.hwif.has_input_struct %}
-    regblock_pkg::regblock__in_t hwif_in;
+    {{exporter.ds.package_name}}::{{exporter.hwif.input_struct_type_name}} hwif_in;
 {%- endif %}
 
 {%- if exporter.hwif.has_output_struct %}
-    regblock_pkg::regblock__out_t hwif_out;
+    {{exporter.ds.package_name}}::{{exporter.hwif.output_struct_type_name}} hwif_out;
 {%- endif %}
 
 {%- if exporter.ds.has_paritycheck %}

@@ -48,6 +48,30 @@ class Hwif:
     def top_node(self) -> AddrmapNode:
         return self.exp.ds.top_node
 
+    @property
+    def top_struct_type_name(self) -> str:
+        """
+        Base name for the top-level hwif struct typedefs.
+
+        Derive this from the addrmap's type so that exporting a reusable
+        addrmap under different instance names does not change its hwif
+        interface typedefs.
+        """
+        name = self.top_node.orig_type_name
+        if name is None:
+            name = self.top_node.get_global_type_name("__")
+        if name is None:
+            name = self.top_node.inst_name
+        return name
+
+    @property
+    def input_struct_type_name(self) -> str:
+        return f"{self.top_struct_type_name}__in_t"
+
+    @property
+    def output_struct_type_name(self) -> str:
+        return f"{self.top_struct_type_name}__out_t"
+
 
     def get_extra_package_params(self) -> str:
         lines = [""]
@@ -73,7 +97,7 @@ class Hwif:
         gen_in = self._gen_in_cls(self)
         structs_in = gen_in.get_struct(
             self.top_node,
-            f"{self.top_node.inst_name}__in_t"
+            self.input_struct_type_name
         )
         if structs_in is not None:
             self.has_input_struct = True
@@ -84,7 +108,7 @@ class Hwif:
         gen_out = self._gen_out_cls(self)
         structs_out = gen_out.get_struct(
             self.top_node,
-            f"{self.top_node.inst_name}__out_t"
+            self.output_struct_type_name
         )
         if structs_out is not None:
             self.has_output_struct = True
@@ -108,11 +132,9 @@ class Hwif:
 
         lines = []
         if self.has_input_struct:
-            type_name = f"{self.top_node.inst_name}__in_t"
-            lines.append(f"input {self.ds.package_name}::{type_name} hwif_in")
+            lines.append(f"input {self.ds.package_name}::{self.input_struct_type_name} hwif_in")
         if self.has_output_struct:
-            type_name = f"{self.top_node.inst_name}__out_t"
-            lines.append(f"output {self.ds.package_name}::{type_name} hwif_out")
+            lines.append(f"output {self.ds.package_name}::{self.output_struct_type_name} hwif_out")
 
         return ",\n".join(lines)
 
