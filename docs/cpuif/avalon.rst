@@ -27,7 +27,7 @@ This implementation of the Avalon protocol has the following features:
 * Supports `pipelined transfers <https://www.intel.com/content/www/us/en/docs/programmable/683091/22-3/pipelined-transfers.html>`_
 * Responses may have variable latency
 
-  In most cases, latency is fixed and is determined by how many retiming
-  stages are enabled in your design.
+  Responses are registered to satisfy Avalon's minimum response latency of
+  one clock cycle. Enabled retiming stages add to this latency.
   However if your design contains external components, access latency is
   not guaranteed to be uniform.

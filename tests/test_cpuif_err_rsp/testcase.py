@@ -1,6 +1,7 @@
 from parameterized import parameterized_class
 
 from ..lib.cpuifs import ALL_CPUIF
+from ..lib.cpuifs.avalon import Avalon, FlatAvalon
 from ..lib.sim_testcase import SimTestCase
 from ..lib.test_params import get_permutation_class_name, get_permutations
 
@@ -13,6 +14,16 @@ from ..lib.test_params import get_permutation_class_name, get_permutations
         "err_if_bad_addr": [True],
         "err_if_bad_rw": [True],
     }) +
+    # Errors in an inactive response channel must not affect the active one,
+    # including when the read path retains an earlier request's error.
+    get_permutations({
+        "cpuif": [Avalon(), FlatAvalon()],
+        "err_if_bad_addr": [True],
+        "err_if_bad_rw": [True],
+        "retime_read_response": [True],
+        "retime_read_fanin": [True, False],
+        "test_pipelined_errors": [True],
+    }) +
     get_permutations({
         "err_if_bad_addr": [True, False],
         "err_if_bad_rw": [True, False],
@@ -20,6 +31,7 @@ from ..lib.test_params import get_permutation_class_name, get_permutations
     class_name_func=get_permutation_class_name
 )
 class Test(SimTestCase):
+    test_pipelined_errors = False
     extra_tb_files = [
         "../lib/external_reg.sv",
         "../lib/external_block.sv",

@@ -178,4 +178,17 @@ logic [7:0] addr;
     cpuif.assert_read(addr, 'h0, .expects_err(expected_rd_err));
     cpuif.write(addr, 'hD0, .expects_err(expected_wr_err));
     cpuif.assert_read(addr, 'hD0, .expects_err(expected_rd_err));
+
+{%- if testcase.test_pipelined_errors %}
+    // Queue writes to keep an error in the retimed read path while a later
+    // write succeeds. Only the acknowledged channel's error is meaningful.
+    fork
+        cpuif.write('h4, 'hD2, .expects_err(1'b1));
+        begin
+            @cb;
+            cpuif.write('h0, 'hD1);
+        end
+    join
+    cpuif.assert_read('h0, 'hD1);
+{%- endif %}
 {% endblock %}

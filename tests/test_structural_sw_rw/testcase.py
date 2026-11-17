@@ -3,6 +3,7 @@ import os
 from parameterized import parameterized_class
 
 from ..lib.cpuifs import ALL_CPUIF
+from ..lib.cpuifs.avalon import Avalon, FlatAvalon
 from ..lib.sim_testcase import SimTestCase
 from ..lib.synth_testcase import SynthTestCase
 from ..lib.test_params import get_permutation_class_name, get_permutations
@@ -32,6 +33,16 @@ class TestTypedefs(SimTestCase):
     "default_reset_async": [True, False],
 }), class_name_func=get_permutation_class_name)
 class TestDefaultResets(SimTestCase):
+    def test_dut(self):
+        self.run_test()
+
+
+@parameterized_class(get_permutations({
+    "cpuif": [Avalon(), FlatAvalon()],
+    "default_reset_activelow": [True, False],
+    "default_reset_async": [True, False],
+}), class_name_func=get_permutation_class_name)
+class TestAvalonDefaultResets(SimTestCase):
     def test_dut(self):
         self.run_test()
 

@@ -130,6 +130,26 @@ interface avalon_mm_intf_driver #(
         reset();
     end
 
+    // A response may only retire a request accepted on an earlier clock edge.
+    // Check before counting this cycle's requests so zero-latency responses fail.
+    int unsigned pending_reads;
+    int unsigned pending_writes;
+    always @(posedge clk) begin
+        if(rst) begin
+            pending_reads <= 0;
+            pending_writes <= 0;
+        end else begin
+            assert(!av_readdatavalid || pending_reads > 0)
+                else $error("Read response arrived before a previously accepted request");
+            assert(!av_writeresponsevalid || pending_writes > 0)
+                else $error("Write response arrived before a previously accepted request");
+            pending_reads <= pending_reads + int'(av_read && !av_waitrequest)
+                - int'(av_readdatavalid);
+            pending_writes <= pending_writes + int'(av_write && !av_waitrequest)
+                - int'(av_writeresponsevalid);
+        end
+    end
+
     initial forever begin
         @cb;
         if(!rst) assert(!$isunknown(cb.av_waitrequest)) else $error("Saw X on av_waitrequest!");
