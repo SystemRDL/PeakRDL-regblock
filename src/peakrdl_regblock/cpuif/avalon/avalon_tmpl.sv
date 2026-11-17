@@ -26,16 +26,23 @@ always_comb begin
     {{cpuif.signal("waitrequest")}} = (cpuif_req_stall_rd & {{cpuif.signal("read")}}) | (cpuif_req_stall_wr & {{cpuif.signal("write")}});
 end
 
-// Response
-always_comb begin
-    {{cpuif.signal("readdatavalid")}} = cpuif_rd_ack;
-    {{cpuif.signal("writeresponsevalid")}} = cpuif_wr_ack;
-    {{cpuif.signal("readdata")}} = cpuif_rd_data;
-    if(cpuif_rd_err || cpuif_wr_err) begin
-        // SLVERR
-        {{cpuif.signal("response")}} = 2'b10;
+// Responses must arrive at least one cycle after the request is accepted.
+always_ff {{get_always_ff_event(cpuif.reset)}} begin
+    if({{get_resetsignal(cpuif.reset)}}) begin
+        {{cpuif.signal("readdatavalid")}} <= '0;
+        {{cpuif.signal("writeresponsevalid")}} <= '0;
+        {{cpuif.signal("readdata")}} <= '0;
+        {{cpuif.signal("response")}} <= '0;
     end else begin
-        // OK
-        {{cpuif.signal("response")}} = 2'b00;
+        {{cpuif.signal("readdatavalid")}} <= cpuif_rd_ack;
+        {{cpuif.signal("writeresponsevalid")}} <= cpuif_wr_ack;
+        {{cpuif.signal("readdata")}} <= cpuif_rd_data;
+        if((cpuif_rd_ack && cpuif_rd_err) || (cpuif_wr_ack && cpuif_wr_err)) begin
+            // SLVERR
+            {{cpuif.signal("response")}} <= 2'b10;
+        end else begin
+            // OK
+            {{cpuif.signal("response")}} <= 2'b00;
+        end
     end
 end
