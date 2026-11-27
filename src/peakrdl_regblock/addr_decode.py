@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Union, List, Optional
 from systemrdl.node import FieldNode, RegNode, MemNode
 from systemrdl.walker import WalkerAction
 
-from .utils import get_indexed_path
+from .utils import get_indexed_path, needs_external_block_upper_bound
 from .struct_generator import RDLStructGenerator
 from .forloop_generator import RDLForLoopGenerator
 from .identifier_filter import kw_filter as kwf
@@ -134,8 +134,13 @@ class DecodeLogicGenerator(RDLForLoopGenerator):
 
     def _add_addressablenode_decoding_flags(self, node: 'AddressableNode') -> None:
         addr_lo = self._get_address_str(node)
-        addr_hi = f"{addr_lo} + {SVInt(node.size - 1, self.addr_decode.exp.ds.addr_width)}"
-        addr_decoding_str = f"cpuif_req_masked & (cpuif_addr >= {addr_lo}) & (cpuif_addr <= {addr_hi})"
+        addr_width = self.addr_decode.exp.ds.addr_width
+        addr_decoding_str = f"cpuif_req_masked & (cpuif_addr >= {addr_lo})"
+        if needs_external_block_upper_bound(
+            node, self.addr_decode.top_node, addr_width, bool(self._array_stride_stack)
+        ):
+            addr_hi = f"{addr_lo} + {SVInt(node.size - 1, addr_width)}"
+            addr_decoding_str += f" & (cpuif_addr <= {addr_hi})"
         rhs = addr_decoding_str
         rhs_valid_addr = addr_decoding_str
         if isinstance(node, MemNode):

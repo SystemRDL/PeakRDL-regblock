@@ -2,7 +2,7 @@ import re
 from typing import Match, Union, Optional
 
 from systemrdl.rdltypes.references import PropertyReference
-from systemrdl.node import Node, AddrmapNode
+from systemrdl.node import Node, AddrmapNode, AddressableNode
 
 from .identifier_filter import kw_filter as kwf
 from .sv_int import SVInt
@@ -32,6 +32,14 @@ def get_indexed_path(top_node: Node, target_node: Node) -> str:
 
 def clog2(n: int) -> int:
     return (n-1).bit_length()
+
+def needs_external_block_upper_bound(
+    node: AddressableNode, top_node: AddrmapNode, addr_width: int, indexed: bool
+) -> bool:
+    if indexed:
+        return True  # Each array element has a different upper bound.
+    end = node.raw_absolute_address - top_node.raw_absolute_address + node.size
+    return end != (1 << addr_width)
 
 def is_pow2(x: int) -> bool:
     return (x > 0) and ((x & (x - 1)) == 0)
