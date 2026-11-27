@@ -4,7 +4,7 @@ from systemrdl.node import RegNode, AddressableNode, FieldNode
 from systemrdl.walker import WalkerAction
 
 from ..forloop_generator import RDLForLoopGenerator
-from ..utils import SVInt, do_bitswap, do_slice
+from ..utils import SVInt, do_bitswap, do_slice, needs_external_block_upper_bound
 
 if TYPE_CHECKING:
     from ..exporter import DesignState, RegblockExporter
@@ -46,12 +46,21 @@ class ReadbackMuxGenerator(RDLForLoopGenerator):
 
 
     def process_external_block(self, node: AddressableNode) -> None:
-        addr_lo = self._get_address_str(node)
-        addr_hi = f"{addr_lo} + {SVInt(node.size - 1, self.exp.ds.addr_width)}"
-        self.add_content(f"if((rd_mux_addr >= {addr_lo}) && (rd_mux_addr <= {addr_hi})) begin")
+        self.add_content(f"if({self._external_block_addr_condition(node)}) begin")
         data = self.exp.hwif.get_external_rd_data(node)
         self.add_content(f"    readback_data_var = {data};")
         self.add_content("end")
+
+
+    def _external_block_addr_condition(self, node: AddressableNode) -> str:
+        addr_lo = self._get_address_str(node)
+        condition = f"(rd_mux_addr >= {addr_lo})"
+        if needs_external_block_upper_bound(
+            node, self.ds.top_node, self.ds.addr_width, bool(self._array_stride_stack)
+        ):
+            addr_hi = f"{addr_lo} + {SVInt(node.size - 1, self.ds.addr_width)}"
+            condition += f" && (rd_mux_addr <= {addr_hi})"
+        return condition
 
 
     def enter_Reg(self, node: RegNode) -> WalkerAction:
@@ -352,9 +361,7 @@ class RetimedExtBlockReadbackMuxGenerator(ReadbackMuxGenerator):
         return WalkerAction.SkipDescendants
 
     def process_external_block(self, node: AddressableNode) -> None:
-        addr_lo = self._get_address_str(node)
-        addr_hi = f"{addr_lo} + {SVInt(node.size - 1, self.exp.ds.addr_width)}"
-        self.add_content(f"if((rd_mux_addr >= {addr_lo}) && (rd_mux_addr <= {addr_hi})) begin")
+        self.add_content(f"if({self._external_block_addr_condition(node)}) begin")
         data = self.exp.hwif.get_external_rd_data(node)
         self.add_content(f"    readback_data_var = {data};")
         self.add_content("    is_external_block_var = 1'b1;")
